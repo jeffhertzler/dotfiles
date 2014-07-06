@@ -18,10 +18,11 @@ git submodule foreach git submodule update
 
 FONTS=$DIR/fonts/SourceCodePro
 
-if [ $SYSTEM == "Darwin" ]; then
+if [ $SYSTEM = "Darwin" ]; then
     LOCAL_FONTS="$HOME/Library/Fonts"
 else
     LOCAL_FONTS="$HOME/.fonts"
+    mkdir -o "$LOCAL_FONTS"
 fi
 
 for FONT in $FONTS/*.otf
@@ -29,6 +30,9 @@ do
     cp "$FONT" "$LOCAL_FONTS"
 done
 
+if [ $SYSTEM != "Darwin" ]; then
+    fc-cache -f -v
+fi
 
 
 mkdir -p "$HOME/.antigen"
