@@ -30,5 +30,8 @@ do
 done
 
 
+
+mkdir -p "$HOME/.antigen"
+
 ln -sf "$DIR/zsh/antigen/antigen.zsh" "$HOME/.antigen/antigen.zsh"
 ln -sf "$DIR/zsh/zshrc" "$HOME/.zshrc"
