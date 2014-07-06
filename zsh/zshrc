@@ -7,3 +7,5 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 antigen theme agnoster
 
 antigen apply
+
+export PATH=/usr/local/bin:$PATH
