@@ -19,14 +19,14 @@ git submodule foreach git submodule update
 FONTS=$DIR/fonts/SourceCodePro
 
 if [ $SYSTEM == "Darwin" ]; then
-	LOCAL_FONTS="$HOME/Library/Fonts"
+    LOCAL_FONTS="$HOME/Library/Fonts"
 else
-	LOCAL_FONTS="$HOME/.fonts"
+    LOCAL_FONTS="$HOME/.fonts"
 fi
 
 for FONT in $FONTS/*.otf
 do
-	ln -sf "$FONT" "$LOCAL_FONTS"
+    ln -sf "$FONT" "$LOCAL_FONTS"
 done
 
 

@@ -4,7 +4,7 @@
 
 + Patched Source Code Pro
 + ZSH
-	+ Antigen
-	+ Syntax Highlighting
-	+ Oh My ZSH
-	+ Agnoster Theme
+    + Antigen
+    + Syntax Highlighting
+    + Oh My ZSH
+    + Agnoster Theme
