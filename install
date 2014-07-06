@@ -7,12 +7,12 @@ SYSTEM="$( uname )"
 cd $DIR
 
 
-git submodule sync
-git submodule init
-git submodule update
-git submodule foreach git pull origin master
-git submodule foreach git submodule init
-git submodule foreach git submodule update
+git submodule sync >> /dev/null
+git submodule init >> /dev/null
+git submodule update >> /dev/null
+git submodule foreach git pull origin master >> /dev/null
+git submodule foreach git submodule init >> /dev/null
+git submodule foreach git submodule update >> /dev/null
 
 
 
