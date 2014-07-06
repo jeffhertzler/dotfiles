@@ -1,6 +1,7 @@
 # Dotfiles
 
     ./install
+    source ~/.zshrc
 
 + Patched Source Code Pro
 + ZSH
