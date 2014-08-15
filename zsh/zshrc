@@ -16,4 +16,6 @@ fi
 
 export PATH=~/.composer/vendor/bin:$PATH
 
+export EDITOR=vim
+
 alias art='php artisan'
