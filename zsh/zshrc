@@ -13,3 +13,5 @@ if [ $? = 0 ]
     then
         export PATH="$(brew --prefix homebrew/php/php55)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
+
+export PATH=~/.composer/vendor/bin:$PATH
