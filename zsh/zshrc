@@ -2,6 +2,15 @@ source $HOME/.antigen/antigen.zsh
 
 antigen use oh-my-zsh
 
+antigen bundle brew
+antigen bundle composer
+antigen bundle extract
+antigen bundle git
+antigen bundle git-extras
+antigen bundle vagrant
+antigen bundle wp-cli
+antigen bundle zsh_reload
+
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 antigen theme agnoster
