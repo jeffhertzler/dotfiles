@@ -38,4 +38,5 @@ fi
 mkdir -p "$HOME/.antigen"
 
 ln -sf "$DIR/zsh/antigen/antigen.zsh" "$HOME/.antigen/antigen.zsh"
+ln -sf "$DIR/base16-shell" "$HOME/.base16-shell"
 ln -sf "$DIR/zsh/zshrc" "$HOME/.zshrc"

@@ -29,4 +29,7 @@ export PATH=~/.composer/vendor/bin:$PATH
 
 export EDITOR=vim
 
+BASE16_SHELL="$HOME/.base16-shell/base16-eighties.dark.sh"
+[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+
 alias art='php artisan'
