@@ -7,15 +7,6 @@ SYSTEM="$( uname )"
 cd $DIR
 
 
-git submodule sync >> /dev/null
-git submodule init >> /dev/null
-git submodule update >> /dev/null
-git submodule foreach git pull origin master >> /dev/null
-git submodule foreach git submodule init >> /dev/null
-git submodule foreach git submodule update >> /dev/null
-
-
-
 FONTS=$DIR/fonts/SourceCodePro
 
 if [ $SYSTEM = "Darwin" ]; then
@@ -34,6 +25,7 @@ if [ $SYSTEM != "Darwin" ]; then
     fc-cache -f -v
 fi
 
+git submodule update --recursive --init --quiet
 
 ln -sf "$DIR/zsh/antigen" "$HOME/.antigen"
 ln -sf "$DIR/base16-shell" "$HOME/.base16-shell"
