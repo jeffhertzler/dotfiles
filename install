@@ -6,26 +6,9 @@ SYSTEM="$( uname )"
 
 cd $DIR
 
-
-FONTS=$DIR/fonts/SourceCodePro
-
-if [ $SYSTEM = "Darwin" ]; then
-    LOCAL_FONTS="$HOME/Library/Fonts"
-else
-    LOCAL_FONTS="$HOME/.fonts"
-    mkdir -p "$LOCAL_FONTS"
-fi
-
-for FONT in $FONTS/*.otf
-do
-    cp "$FONT" "$LOCAL_FONTS"
-done
-
-if [ $SYSTEM != "Darwin" ]; then
-    fc-cache -f -v
-fi
-
 git submodule update --recursive --init --quiet
+
+$DIR/fonts/install.sh
 
 ln -sfn "$DIR/zsh/antigen" "$HOME/.antigen"
 ln -sfn "$DIR/base16-shell" "$HOME/.base16-shell"
