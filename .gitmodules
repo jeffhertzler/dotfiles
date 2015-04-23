@@ -4,7 +4,7 @@
     ignore = dirty
 [submodule "fonts"]
 	path = fonts
-	url = https://github.com/Lokaltog/powerline-fonts.git
+	url = https://github.com/powerline/fonts.git
     ignore = dirty
 [submodule "base16-shell"]
 	path = base16-shell
