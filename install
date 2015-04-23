@@ -22,7 +22,7 @@ if [ $SYSTEM = "Darwin" ]; then
     LOCAL_FONTS="$HOME/Library/Fonts"
 else
     LOCAL_FONTS="$HOME/.fonts"
-    mkdir -o "$LOCAL_FONTS"
+    mkdir -p "$LOCAL_FONTS"
 fi
 
 for FONT in $FONTS/*.otf
