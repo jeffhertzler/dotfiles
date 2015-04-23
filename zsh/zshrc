@@ -30,7 +30,12 @@ if [ $? = 0 ]
         export PATH="$(brew --prefix homebrew/php/php56)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
 
-export PATH=~/.composer/vendor/bin:$PATH
+
+which -s composer >> /dev/null
+if [ $? = 0 ]
+    then
+        export PATH=~/.composer/vendor/bin:$PATH
+fi
 
 export EDITOR=vim
 
