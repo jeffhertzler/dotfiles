@@ -27,6 +27,6 @@ fi
 
 git submodule update --recursive --init --quiet
 
-ln -sf "$DIR/zsh/antigen" "$HOME/.antigen"
-ln -sf "$DIR/base16-shell" "$HOME/.base16-shell"
+ln -sfn "$DIR/zsh/antigen" "$HOME/.antigen"
+ln -sfn "$DIR/base16-shell" "$HOME/.base16-shell"
 ln -sf "$DIR/zsh/zshrc" "$HOME/.zshrc"
