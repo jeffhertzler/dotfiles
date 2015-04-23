@@ -1,5 +1,8 @@
 source $HOME/.antigen/antigen.zsh
 
+# prompt configs
+export PROMPT_ON_NEWLINE=true
+export ZLE_RPROMPT_INDENT=0
 antigen use oh-my-zsh
 
 antigen bundle brew
@@ -10,10 +13,9 @@ antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
 antigen bundle zsh_reload
-
 antigen bundle zsh-users/zsh-syntax-highlighting
 
-antigen theme agnoster
+antigen theme jeffhertzler/zsh-themes agnoster
 
 antigen apply
 
