@@ -1,6 +1,8 @@
 [submodule "zsh/antigen"]
 	path = zsh/antigen
 	url = https://github.com/zsh-users/antigen.git
+    ignore = all
 [submodule "fonts"]
 	path = fonts
 	url = https://github.com/Lokaltog/powerline-fonts.git
+    ignore = all
