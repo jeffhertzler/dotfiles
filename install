@@ -13,3 +13,4 @@ $DIR/fonts/install.sh
 ln -sfn "$DIR/zsh/antigen" "$HOME/.antigen"
 ln -sfn "$DIR/base16-shell" "$HOME/.base16-shell"
 ln -sf "$DIR/zsh/zshrc" "$HOME/.zshrc"
+ln -sf "$DIR/vimrc" "$HOME/.vimrc"
