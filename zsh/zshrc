@@ -5,6 +5,7 @@ export PROMPT_ON_NEWLINE=true
 export ZLE_RPROMPT_INDENT=0
 
 # allow usage of C-q and C-s shortcuts other places
+stty -ixoff
 stty start undef
 stty stop undef
 
