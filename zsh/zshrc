@@ -45,3 +45,4 @@ BASE16_SHELL="$HOME/.base16-shell/base16-eighties.dark.sh"
 
 alias art='php artisan'
 alias vsync='vagrant gatling-rsync-auto local'
+alias gfs='git stash -u && git pull && git stash drop'
