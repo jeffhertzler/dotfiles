@@ -32,6 +32,7 @@ if [ $? = 0 ]
 fi
 
 
+export COMPOSER_DISABLE_XDEBUG_WARN=1
 which -s composer >> /dev/null
 if [ $? = 0 ]
     then
