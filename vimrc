@@ -8,13 +8,13 @@ call vundle#rc()
 Plugin 'gmarik/vundle'
 
 if executable('ag')
-    Plugin 'mileszs/ack.vim'
-    let g:ackprg = 'ag --nogroup --nocolor --column --smart-case'
+  Plugin 'mileszs/ack.vim'
+  let g:ackprg = 'ag --nogroup --nocolor --column --smart-case'
 elseif executable('ack-grep')
-    let g:ackprg="ack-grep -H --nocolor --nogroup --column"
-    Plugin 'mileszs/ack.vim'
+  let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+  Plugin 'mileszs/ack.vim'
 elseif executable('ack')
-    Plugin 'mileszs/ack.vim'
+  Plugin 'mileszs/ack.vim'
 endif
 
 Plugin 'Firef0x/matchit'
@@ -79,9 +79,9 @@ set iskeyword-=_                    " '_' is an end of word designator
 
 set backup                      " Backups are nice ...
 if has('persistent_undo')
-    set undofile                " So is persistent undo ...
-    set undolevels=1000         " Maximum number of changes that can be undone
-    set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
+  set undofile                " So is persistent undo ...
+  set undolevels=1000         " Maximum number of changes that can be undone
+  set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
 endif
 
 set t_Co=256
@@ -92,22 +92,22 @@ set showmode                    " Display the current mode
 set cursorline                  " Highlight current line:q
 
 if has('cmdline_info')
-    set ruler                   " Show the ruler
-    set rulerformat=%30(%=\:b%n%y%m%r%w\ %l,%c%V\ %P%) " A ruler on steroids
-    set showcmd                 " Show partial commands in status line and
-                                " Selected characters/lines in visual mode
+  set ruler                   " Show the ruler
+  set rulerformat=%30(%=\:b%n%y%m%r%w\ %l,%c%V\ %P%) " A ruler on steroids
+  set showcmd                 " Show partial commands in status line and
+                              " Selected characters/lines in visual mode
 endif
 
 if has('statusline')
-    set laststatus=2
+  set laststatus=2
 
-    " Broken down into easily includeable segments
-    set statusline=%<%f\                     " Filename
-    set statusline+=%w%h%m%r                 " Options
-    set statusline+=%{fugitive#statusline()} " Git Hotness
-    set statusline+=\ [%{&ff}/%Y]            " Filetype
-    set statusline+=\ [%{getcwd()}]          " Current dir
-    set statusline+=%=%-14.(%l,%c%V%)\ %p%%  " Right aligned file nav info
+  " Broken down into easily includeable segments
+  set statusline=%<%f\                     " Filename
+  set statusline+=%w%h%m%r                 " Options
+  set statusline+=%{fugitive#statusline()} " Git Hotness
+  set statusline+=\ [%{&ff}/%Y]            " Filetype
+  set statusline+=\ [%{getcwd()}]          " Current dir
+  set statusline+=%=%-14.(%l,%c%V%)\ %p%%  " Right aligned file nav info
 endif
 
 set backspace=indent,eol,start  " Backspace for dummies
@@ -129,10 +129,10 @@ set listchars=tab:›\ ,trail:•,extends:#,nbsp:. " Highlight problematic white
 
 set nowrap                      " Do not wrap long lines
 set autoindent                  " Indent at the same level of the previous line
-set shiftwidth=4                " Use indents of 4 spaces
+set shiftwidth=2                " Use indents of 4 spaces
 set expandtab                   " Tabs are spaces, not tabs
-set tabstop=4                   " An indentation every four columns
-set softtabstop=4               " Let backspace delete indent
+set tabstop=2                   " An indentation every four columns
+set softtabstop=2               " Let backspace delete indent
 set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
 set splitright                  " Puts new vsplit windows to the right of the current
 set splitbelow                  " Puts new split windows to the bottom of the current
@@ -214,33 +214,33 @@ let g:airline_powerline_fonts=1
 
 " Initialize directories {
 function! InitializeDirectories()
-    let parent = $HOME
-    let prefix = 'vim'
-    let dir_list = {
-                \ 'backup': 'backupdir',
-                \ 'views': 'viewdir',
-                \ 'swap': 'directory' }
+  let parent = $HOME
+  let prefix = 'vim'
+  let dir_list = {
+              \ 'backup': 'backupdir',
+              \ 'views': 'viewdir',
+              \ 'swap': 'directory' }
 
-    if has('persistent_undo')
-        let dir_list['undo'] = 'undodir'
+  if has('persistent_undo')
+    let dir_list['undo'] = 'undodir'
+  endif
+
+  let common_dir = parent . '/.' . prefix
+
+  for [dirname, settingname] in items(dir_list)
+    let directory = common_dir . dirname . '/'
+    if exists("*mkdir")
+      if !isdirectory(directory)
+        call mkdir(directory)
+      endif
     endif
-
-    let common_dir = parent . '/.' . prefix
-
-    for [dirname, settingname] in items(dir_list)
-        let directory = common_dir . dirname . '/'
-        if exists("*mkdir")
-            if !isdirectory(directory)
-                call mkdir(directory)
-            endif
-        endif
-        if !isdirectory(directory)
-            echo "Warning: Unable to create backup directory: " . directory
-            echo "Try: mkdir -p " . directory
-        else
-            let directory = substitute(directory, " ", "\\\\ ", "g")
-            exec "set " . settingname . "=" . directory
-        endif
-    endfor
+    if !isdirectory(directory)
+      echo "Warning: Unable to create backup directory: " . directory
+      echo "Try: mkdir -p " . directory
+    else
+      let directory = substitute(directory, " ", "\\\\ ", "g")
+      exec "set " . settingname . "=" . directory
+    endif
+  endfor
 endfunction
 call InitializeDirectories()
