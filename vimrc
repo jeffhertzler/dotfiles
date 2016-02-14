@@ -172,6 +172,11 @@ vnoremap ;; ;
 nmap <C-s> <esc>:w<CR>
 imap <C-s> <esc>:w<CR>
 
+augroup autosourcing
+  autocmd!
+  autocmd BufWritePost .vimrc source %
+augroup END
+
 let g:bufferline_echo = 0
 
 let g:NERDShutUp=1
