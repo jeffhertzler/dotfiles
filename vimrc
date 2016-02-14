@@ -294,5 +294,5 @@ augroup END
 " Retab on save
 augroup autoretab
   autocmd!
-  autocmd BufWrite *.py %retab
+  autocmd BufWrite * %retab
 augroup END
