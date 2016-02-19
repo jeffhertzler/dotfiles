@@ -326,7 +326,7 @@ endfunction
 " Source the vimrc file on save.
 augroup autosourcing
   autocmd!
-  autocmd BufWritePost .vimrc,.nvimrc source %
+  autocmd BufWritePost .vimrc,init.vim source %
 augroup END
 
 " Retab on save
