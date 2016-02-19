@@ -237,8 +237,9 @@ map <c-k> <c-w>k
 map <c-l> <c-w>l
 map <c-h> <c-w>h
 
-" Quick vimrc edit
+" Quick config edit
 nmap <leader>ev :tabedit $MYVIMRC<cr>
+nmap <leader>ez :tabedit $HOME/.zshrc<cr>
 
 " Easier escape
 inoremap jk <esc>
