@@ -181,7 +181,7 @@ set iskeyword-=-
 set iskeyword-=_
 
 " OSX copy/paste
-set clipboard=unnamedplus,unnamed,autoselect
+set clipboard=unnamedplus,unnamed
 
 
 
