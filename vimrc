@@ -238,8 +238,8 @@ map <c-l> <c-w>l
 map <c-h> <c-w>h
 
 " Quick config edit
-nmap <leader>ev :tabedit $MYVIMRC<cr>
-nmap <leader>ez :tabedit $HOME/.zshrc<cr>
+nmap <leader>ve :tabedit $MYVIMRC<cr>
+nmap <leader>ze :tabedit $HOME/.zshrc<cr>
 
 " Easier escape
 inoremap jk <esc>
