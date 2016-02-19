@@ -18,7 +18,6 @@ antigen bundle git
 antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
-antigen bundle zsh_reload
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 antigen theme jeffhertzler/zsh-themes agnoster
@@ -53,6 +52,10 @@ BASE16_SHELL="$HOME/.base16-shell/base16-eighties.dark.sh"
 alias art='php artisan'
 alias vsync='vagrant gatling-rsync-auto local'
 alias gfs='git stash -u && git pull && git stash drop'
+alias reload=". ~/.zshrc && echo 'ZSH config reloaded from ~/.zshrc'"
+alias ze="vim ~/.zshrc && reload"
+alias ve="vim ~/.vimrc"
+
 
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
