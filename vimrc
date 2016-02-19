@@ -244,6 +244,7 @@ nmap <leader>ze :tabedit $HOME/.zshrc<cr>
 
 " Easier escape
 inoremap jk <esc>
+" Don't forget <c-[>!!!!!!
 
 " Easier colon
 nnoremap ; :
