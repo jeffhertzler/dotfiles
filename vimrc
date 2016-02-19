@@ -265,6 +265,10 @@ inoremap <c-q> <esc>:q<cr>
 nnoremap <c-q> :q<cr>
 vnoremap <c-q> <esc>:q<cr>
 
+" Less accidental macros
+nnoremap m q
+nnoremap q <nop>
+
 
 
 
