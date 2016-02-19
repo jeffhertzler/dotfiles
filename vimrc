@@ -269,6 +269,10 @@ vnoremap <c-q> <esc>:q<cr>
 nnoremap m q
 nnoremap q <nop>
 
+" Insert line above/below
+nnoremap <c-j> o<esc>k
+nnoremap <c-k> O<esc>j
+
 
 
 
