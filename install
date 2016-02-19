@@ -9,8 +9,11 @@ cd $DIR
 git submodule update --recursive --init --quiet
 
 $DIR/fonts/install.sh
+mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
+mkdir -p ${NVIM_HOME:=$XDG_CONFIG_HOME/nvim}
 
 ln -sfn "$DIR/zsh/antigen" "$HOME/.antigen"
 ln -sfn "$DIR/base16-shell" "$HOME/.base16-shell"
 ln -sf "$DIR/zsh/zshrc" "$HOME/.zshrc"
 ln -sf "$DIR/vimrc" "$HOME/.vimrc"
+ln -sf "$DIR/vimrc" "$NVIM_HOME/init.vim"

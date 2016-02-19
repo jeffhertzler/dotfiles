@@ -1,6 +1,14 @@
 " Not vi compatible
 set nocompatible
 
+"-------------VimVsNeoVim--------------"
+
+if has('nvim')
+  let s:editor_root=expand('~/.config/nvim')
+else
+  let s:editor_root=expand('~/.vim')
+endif
+
 
 
 
@@ -8,13 +16,12 @@ set nocompatible
 "-------------Plug--------------"
 
 " Automatic Plug setup
-if empty(glob('~/.vim/autoload/plug.vim'))
-  silent !curl -fLo ~/.vim/autoload/plug.vim --create-dirs
-    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  autocmd VimEnter * PlugInstall | source $MYVIMRC
+if empty(glob(s:editor_root . '/autoload/plug.vim'))
+  silent execute '!curl -fLo ' . s:editor_root . '/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall
 endif
 
-call plug#begin('~/.vim/plugged')
+call plug#begin(s:editor_root . '/plugged')
 
   " Color Scheme
   Plug 'chriskempson/base16-vim'
@@ -35,7 +42,11 @@ call plug#begin('~/.vim/plugged')
   Plug 'editorconfig/editorconfig-vim'
 
   " Code completion
-  Plug 'Shougo/neocomplete.vim'
+  if has('nvim')
+    Plug 'Shougo/deoplete.nvim'
+  else
+    Plug 'Shougo/neocomplete.vim'
+  endif
 
   " Snippets
   Plug 'SirVer/ultisnips'
@@ -85,7 +96,6 @@ call plug#end()
 
 function! InitializeDirectories()
   let parent=$HOME
-  let prefix='vim'
   let dir_list={
     \ 'backup': 'backupdir',
     \ 'views': 'viewdir',
@@ -95,10 +105,10 @@ function! InitializeDirectories()
     let dir_list['undo']='undodir'
   endif
 
-  let common_dir=parent . '/.' . prefix
+  exec 'set viminfo+=n' . s:editor_root . '/viminfo'
 
   for [dirname, settingname] in items(dir_list)
-    let directory=common_dir . '/' . dirname . '/'
+    let directory=s:editor_root . '/' . dirname . '/'
     if exists("*mkdir")
       if !isdirectory(directory)
         call mkdir(directory)
@@ -122,7 +132,9 @@ call InitializeDirectories()
 "-------------Basics--------------"
 
 " Encoding
-set encoding=utf-8
+if !has('nvim')
+  set encoding=utf-8
+endif
 
 " Mouse
 set mouse=a
@@ -289,10 +301,17 @@ xmap ga <plug>(EasyAlign)
 nmap ga <plug>(EasyAlign)
 
 " completion
-let g:neocomplete#enable_at_startup=1
-inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
-  \ <SID>check_back_space() ? "\<tab>" :
-  \ neocomplete#start_manual_complete()
+if has('nvim')
+  let g:deoplete#enable_at_startup=1
+  inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
+    \ <SID>check_back_space() ? "\<tab>" :
+    \ deoplete#start_manual_complete()
+else
+  let g:neocomplete#enable_at_startup=1
+  inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
+    \ <SID>check_back_space() ? "\<tab>" :
+    \ neocomplete#start_manual_complete()
+endif
 function! s:check_back_space()
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
@@ -307,7 +326,7 @@ endfunction
 " Source the vimrc file on save.
 augroup autosourcing
   autocmd!
-  autocmd BufWritePost .vimrc source %
+  autocmd BufWritePost .vimrc,.nvimrc source %
 augroup END
 
 " Retab on save
