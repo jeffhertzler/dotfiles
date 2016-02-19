@@ -42,6 +42,12 @@ fi
 alias vi=vim
 export EDITOR=vim
 
+if type nvim >/dev/null 2>/dev/null; then
+  alias vi=nvim
+  alias vim=nvim
+  export EDITOR=nvim
+fi
+
 BASE16_SHELL="$HOME/.base16-shell/base16-eighties.dark.sh"
 [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
 
