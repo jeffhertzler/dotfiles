@@ -240,6 +240,10 @@ vnoremap ;; ;
 " Easier save
 inoremap <c-s> <c-o>:update<cr>
 nnoremap <c-s> :update<cr>
+vnoremap <c-s> <esc>:w<cr>gv
+inoremap <c-w> <c-o>:update<cr>
+nnoremap <c-w> :update<cr>
+vnoremap <c-w> <esc>:w<cr>gv
 
 " Easier quit
 inoremap <c-q> <esc>:q<cr>
