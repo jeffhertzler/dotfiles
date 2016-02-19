@@ -31,7 +31,6 @@ if [ $? = 0 ]
     export PATH="$(brew --prefix homebrew/php/php56)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
 
-
 export COMPOSER_DISABLE_XDEBUG_WARN=1
 which -s composer >> /dev/null
 if [ $? = 0 ]
@@ -55,7 +54,7 @@ alias art='php artisan'
 alias vsync='vagrant gatling-rsync-auto local'
 alias gfs='git stash -u && git pull && git stash drop'
 
-export FZF_DEFAULT_COMMAND='ag -g ""'
+export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
 [ -f ~/.iterm2_shell_integration.zsh ] && source ~/.iterm2_shell_integration.zsh
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
