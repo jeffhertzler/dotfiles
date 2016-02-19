@@ -27,16 +27,16 @@ antigen apply
 
 which -s brew >> /dev/null
 if [ $? = 0 ]
-    then
-        export PATH="$(brew --prefix homebrew/php/php56)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
+  then
+    export PATH="$(brew --prefix homebrew/php/php56)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
 
 
 export COMPOSER_DISABLE_XDEBUG_WARN=1
 which -s composer >> /dev/null
 if [ $? = 0 ]
-    then
-        export PATH=~/.composer/vendor/bin:$PATH
+  then
+    export PATH=~/.composer/vendor/bin:$PATH
 fi
 
 export EDITOR=vim
