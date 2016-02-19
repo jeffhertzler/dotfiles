@@ -73,6 +73,7 @@ call plug#begin(s:editor_root . '/plugged')
   " Text objects
   Plug 'tpope/vim-surround'
   Plug 'tpope/vim-repeat'
+  Plug 'tpope/vim-unimpaired'
 
   " Alignment
   Plug 'junegunn/vim-easy-align', { 'on': ['<plug>(EasyAlign)', 'EasyAlign'] }
