@@ -1,11 +1,15 @@
 # Dotfiles
 
-    ./install
-    source ~/.zshrc
+```
+./install
+source ~/.zshrc
+```
 
-+ Patched Source Code Pro
 + ZSH
     + Antigen
     + Syntax Highlighting
     + Oh My ZSH
-    + Agnoster Theme
+    + Modified Agnoster Theme
++ VIM
+    + neovim compatible
+    + vim-plug
