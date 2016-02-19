@@ -306,7 +306,7 @@ if has('nvim')
   let g:deoplete#enable_at_startup=1
   inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
     \ <SID>check_back_space() ? "\<tab>" :
-    \ deoplete#start_manual_complete()
+    \ deoplete#mappings#manual_complete()
 else
   let g:neocomplete#enable_at_startup=1
   inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
