@@ -75,6 +75,12 @@ call plug#begin('~/.vim/plugged')
   " Multiple cursors
   Plug 'terryma/vim-multiple-cursors'
 
+  " JS Syntax Highlighting
+  Plug 'othree/yajs.vim', { 'for': 'javascript' }
+
+  " HBS Syntax Highlighting
+  Plug 'joukevandermaas/vim-ember-hbs', { 'for': 'handlebars' }
+
 call plug#end()
 
 
@@ -252,16 +258,16 @@ vnoremap <C-q> <esc>:q<cr>
 "-------------Plugin Settings--------------"
 
 " Airline
-let g:airline_theme='base16'
-let g:airline_powerline_fonts=1
+let airline_theme='base16'
+let airline_powerline_fonts=1
 set laststatus=2
 
 " Better whitespace
-let g:strip_whitespace_on_save=1
+let strip_whitespace_on_save=1
 
 " Indent guides
-let g:indent_guides_enable_on_vim_startup=1
-let g:indent_guides_auto_colors=0
+let indent_guides_enable_on_vim_startup=1
+let indent_guides_auto_colors=0
 autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd   ctermbg=00
 autocmd VimEnter,Colorscheme * :hi IndentGuidesEven  ctermbg=18
 
@@ -274,10 +280,15 @@ nnoremap <silent> <expr> <Leader>h (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" 
 
 " Nerd Tree
 nnoremap <leader>kb :NERDTreeToggle<cr>
-let g:NERDTreeHijackNetrw=0
+let NERDTreeHijackNetrw=0
+let NERDTreeShowHidden=1
 
 " Multi Cursor
-let g:multi_cursor_insert_maps={ 'j':1 }
+let multi_cursor_insert_maps={ 'j':1 }
+
+" Easy Align
+xmap ga <Plug>(EasyAlign)
+nmap ga <Plug>(EasyAlign)
 
 
 
@@ -295,4 +306,10 @@ augroup END
 augroup autoretab
   autocmd!
   autocmd BufWrite * %retab
+augroup END
+
+" Autoreload externally edited file
+augroup autoreload
+  autocmd!
+  autocmd CursorHold,CursorHoldI * checktime
 augroup END
