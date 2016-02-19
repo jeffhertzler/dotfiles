@@ -105,11 +105,11 @@ function! InitializeDirectories()
       endif
     endif
     if !isdirectory(directory)
-      echo "Warning: Unable to create backup directory: " . directory
-      echo "Try: mkdir -p " . directory
+      echo 'Warning: Unable to create directory: ' . directory
+      echo 'Try: mkdir -p ' . directory
     else
-      let directory=substitute(directory, " ", "\\\\ ", "g")
-      exec "set " . settingname . "=" . directory
+      let directory=substitute(directory, ' ', '\\ ', 'g')
+      exec 'set ' . settingname . '=' . directory . '/'
     endif
   endfor
 endfunction
