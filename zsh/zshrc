@@ -1,3 +1,12 @@
+# Download antigen with git if it doesn't exist already
+if [ ! -r ~/.antigen/antigen.zsh ]; then
+  [ ! command -v git > /dev/null 2>&1 ] ||
+    (echo "Please install git to use antigen." &&
+    return;)
+  echo "Installing antigen into ~/.antigen/";
+  git clone https://github.com/zsh-users/antigen.git ~/.antigen
+fi;
+
 source $HOME/.antigen/antigen.zsh
 
 # prompt configs
@@ -56,6 +65,8 @@ alias reload=". ~/.zshrc && echo 'ZSH config reloaded from ~/.zshrc'"
 alias ze="vim ~/.zshrc && reload"
 alias ve="vim ~/.vimrc"
 
+
+function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCodeInsiders" --args $*; }
 
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
