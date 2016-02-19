@@ -47,7 +47,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'SirVer/ultisnips'
 
   " Comments
-  Plug 'tpope/vim-commentary', { 'on': '<Plug>Commentary' }
+  Plug 'tpope/vim-commentary', { 'on': '<plug>Commentary' }
 
   " Fuzzy search
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
@@ -70,7 +70,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'tpope/vim-repeat'
 
   " Alignment
-  Plug 'junegunn/vim-easy-align', { 'on': ['<Plug>(EasyAlign)', 'EasyAlign'] }
+  Plug 'junegunn/vim-easy-align', { 'on': ['<plug>(EasyAlign)', 'EasyAlign'] }
 
   " Multiple cursors
   Plug 'terryma/vim-multiple-cursors'
@@ -219,23 +219,23 @@ let mapleader="\<space>"
 let maplocalleader=','
 
 " Sane pasting
-set pastetoggle=<F12>
+set pastetoggle=<f12>
 
 " Wrapped lines go down/up to next row, rather than next line in file.
 noremap j gj
 noremap k gk
 
 " Easier moving in tabs and windows
-map <C-j> <C-w>j
-map <C-k> <C-w>k
-map <C-l> <C-w>l
-map <C-h> <C-w>h
+map <c-j> <c-w>j
+map <c-k> <c-w>k
+map <c-l> <c-w>l
+map <c-h> <c-w>h
 
 " Quick vimrc edit
 nmap <leader>ev :tabedit $MYVIMRC<cr>
 
 " Easier escape
-inoremap jk <Esc>
+inoremap jk <esc>
 
 " Easier colon
 nnoremap ; :
@@ -244,13 +244,13 @@ nnoremap ;; ;
 vnoremap ;; ;
 
 " Easier save
-inoremap <C-s> <C-o>:update<cr>
-nnoremap <C-s> :update<cr>
+inoremap <c-s> <c-o>:update<cr>
+nnoremap <c-s> :update<cr>
 
 " Easier quit
-inoremap <C-q> <esc>:q<cr>
-nnoremap <C-q> :q<cr>
-vnoremap <C-q> <esc>:q<cr>
+inoremap <c-q> <esc>:q<cr>
+nnoremap <c-q> :q<cr>
+vnoremap <c-q> <esc>:q<cr>
 
 
 
@@ -272,11 +272,11 @@ autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd   ctermbg=00
 autocmd VimEnter,Colorscheme * :hi IndentGuidesEven  ctermbg=18
 
 " FZF
-nnoremap <silent> <expr> <Leader>p (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
-nnoremap <silent> <expr> <Leader>b (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Buffers\<cr>"
-nnoremap <silent> <expr> <Leader>r (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":BTags\<cr>"
-"nnoremap <silent> <expr> <Leader>f (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Tags\<cr>"
-nnoremap <silent> <expr> <Leader>h (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":History\<cr>"
+nnoremap <silent> <expr> <leader>p (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
+nnoremap <silent> <expr> <leader>b (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Buffers\<cr>"
+nnoremap <silent> <expr> <leader>r (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":BTags\<cr>"
+"nnoremap <silent> <expr> <leader>f (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Tags\<cr>"
+nnoremap <silent> <expr> <leader>h (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":History\<cr>"
 
 " Nerd Tree
 nnoremap <leader>kb :NERDTreeToggle<cr>
@@ -287,8 +287,8 @@ let NERDTreeShowHidden=1
 let multi_cursor_insert_maps={ 'j':1 }
 
 " Easy Align
-xmap ga <Plug>(EasyAlign)
-nmap ga <Plug>(EasyAlign)
+xmap ga <plug>(EasyAlign)
+nmap ga <plug>(EasyAlign)
 
 
 
