@@ -250,15 +250,17 @@ vnoremap ; :
 nnoremap ;; ;
 vnoremap ;; ;
 
-" Easier save
+" Easier save & quit
+command! WQ wq
+command! Wq wq
+command! W w
+command! Q q
 inoremap <c-s> <c-o>:update<cr>
 nnoremap <c-s> :update<cr>
 vnoremap <c-s> <esc>:w<cr>gv
 inoremap <c-w> <c-o>:update<cr>
 nnoremap <c-w> :update<cr>
 vnoremap <c-w> <esc>:w<cr>gv
-
-" Easier quit
 inoremap <c-q> <esc>:q<cr>
 nnoremap <c-q> :q<cr>
 vnoremap <c-q> <esc>:q<cr>
