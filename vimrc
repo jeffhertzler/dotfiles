@@ -186,8 +186,8 @@ set iskeyword-=#
 set iskeyword-=-
 set iskeyword-=_
 
-" OSX copy/paste
-set clipboard=unnamedplus,unnamed
+" copy/paste
+set clipboard^=unnamed,unnamedplus
 
 
 
