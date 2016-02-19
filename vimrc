@@ -274,6 +274,11 @@ nnoremap q <nop>
 nnoremap <c-j> o<esc>k
 nnoremap <c-k> O<esc>j
 
+" Stay in visual mode when indenting
+vnoremap > >gv
+vnoremap < <gv
+
+
 
 
 
