@@ -1,4 +1,4 @@
-" Not vi compatible, must be first
+" Not vi compatible
 set nocompatible
 
 
