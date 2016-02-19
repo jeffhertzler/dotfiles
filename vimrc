@@ -35,13 +35,7 @@ call plug#begin('~/.vim/plugged')
   Plug 'editorconfig/editorconfig-vim'
 
   " Code completion
-  function! BuildYCM(info)
-    if a:info.status == 'installed' || a:info.force
-      !npm install -g tern
-      !./install.py --tern-completer
-    endif
-  endfunction
-  Plug 'Valloric/YouCompleteMe', { 'do': function('BuildYCM') }
+  Plug 'Shougo/neocomplete.vim'
 
   " Snippets
   Plug 'SirVer/ultisnips'
@@ -289,6 +283,16 @@ let multi_cursor_insert_maps={ 'j':1 }
 " Easy Align
 xmap ga <plug>(EasyAlign)
 nmap ga <plug>(EasyAlign)
+
+" completion
+let g:neocomplete#enable_at_startup=1
+inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
+  \ <SID>check_back_space() ? "\<tab>" :
+  \ neocomplete#start_manual_complete()
+function! s:check_back_space()
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~ '\s'
+endfunction
 
 
 
