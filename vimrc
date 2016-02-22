@@ -81,6 +81,9 @@ call plug#begin(s:editor_root . '/plugged')
   " Multiple cursors
   Plug 'terryma/vim-multiple-cursors'
 
+  " Emmet
+  Plug 'mattn/emmet-vim'
+
   " JS Syntax Highlighting
   Plug 'othree/yajs.vim', { 'for': 'javascript' }
 
