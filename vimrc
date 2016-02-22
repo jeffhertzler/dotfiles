@@ -232,12 +232,6 @@ set pastetoggle=<f12>
 noremap j gj
 noremap k gk
 
-" Easier moving in tabs and windows
-map <c-j> <c-w>j
-map <c-k> <c-w>k
-map <c-l> <c-w>l
-map <c-h> <c-w>h
-
 " Quick config edit
 nmap <leader>ve :tabedit $MYVIMRC<cr>
 nmap <leader>ze :tabedit $HOME/.zshrc<cr>
@@ -260,9 +254,6 @@ command! Q q
 inoremap <c-s> <c-o>:update<cr>
 nnoremap <c-s> :update<cr>
 vnoremap <c-s> <esc>:w<cr>gv
-inoremap <c-w> <c-o>:update<cr>
-nnoremap <c-w> :update<cr>
-vnoremap <c-w> <esc>:w<cr>gv
 inoremap <c-q> <esc>:q<cr>
 nnoremap <c-q> :q<cr>
 vnoremap <c-q> <esc>:q<cr>
