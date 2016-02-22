@@ -309,17 +309,28 @@ let multi_cursor_insert_maps={ 'j':1 }
 xmap ga <plug>(EasyAlign)
 nmap ga <plug>(EasyAlign)
 
-" completion
+" Completion
+let g:UltiSnipsExpandTrigger="<c-s>"
+let g:UltiSnipsJumpForwardTrigger="<c-l>"
+let g:UltiSnipsJumpBackwardTrigger="<c-h>"
 if has('nvim')
   let g:deoplete#enable_at_startup=1
-  inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
+  inoremap <silent><expr><tab> pumvisible() ? "\<c-n>" :
     \ <SID>check_back_space() ? "\<tab>" :
     \ deoplete#mappings#manual_complete()
+  inoremap <silent><expr><cr> pumvisible() ?
+    \ (len(keys(UltiSnips#SnippetsInCurrentScope())) > 0 ?
+    \ deoplete#mappings#close_popup()."\<c-c>l:call UltiSnips#ExpandSnippet()\<cr>" :
+    \ deoplete#mappings#close_popup()) : "\<cr>"
 else
   let g:neocomplete#enable_at_startup=1
-  inoremap <expr><tab>  pumvisible() ? "\<c-n>" :
+  inoremap <silent><expr><tab> pumvisible() ? "\<c-n>" :
     \ <SID>check_back_space() ? "\<tab>" :
-    \ neocomplete#start_manual_complete()
+    \ neocomplete#mappings#manual_complete()
+  inoremap <silent><expr><cr> pumvisible() ?
+    \ (len(keys(UltiSnips#SnippetsInCurrentScope())) > 0 ?
+    \ neocomplete#mappings#close_popup()."\<c-c>l:call UltiSnips#ExpandSnippet()\<cr>" :
+    \ neocomplete#mappings#close_popup()) : "\<cr>"
 endif
 function! s:check_back_space()
   let col = col('.') - 1
