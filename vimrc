@@ -78,6 +78,9 @@ call plug#begin(s:editor_root . '/plugged')
   " Alignment
   Plug 'junegunn/vim-easy-align', { 'on': ['<plug>(EasyAlign)', 'EasyAlign'] }
 
+  " Auto-close parens/braces/etc
+  Plug 'jiangmiao/auto-pairs'
+
   " Multiple cursors
   Plug 'terryma/vim-multiple-cursors'
 
