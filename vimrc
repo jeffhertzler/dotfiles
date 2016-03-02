@@ -87,11 +87,8 @@ call plug#begin(s:editor_root . '/plugged')
   " Emmet
   Plug 'mattn/emmet-vim'
 
-  " JS Syntax Highlighting
-  Plug 'othree/yajs.vim', { 'for': 'javascript' }
-
-  " HBS Syntax Highlighting
-  Plug 'joukevandermaas/vim-ember-hbs', { 'for': 'handlebars' }
+  " Syntaxes
+  Plug 'sheerun/vim-polyglot'
 
 call plug#end()
 
