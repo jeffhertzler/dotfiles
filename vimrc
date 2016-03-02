@@ -273,6 +273,10 @@ nnoremap <c-k> O<esc>j
 vnoremap > >gv
 vnoremap < <gv
 
+" Resize splits in larger chunks
+nnoremap <c-w>> :vertical resize +10<cr>
+nnoremap <c-w>< :vertical resize -10<cr>
+
 
 
 
