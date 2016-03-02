@@ -309,6 +309,7 @@ let NERDTreeShowHidden=1
 let multi_cursor_insert_maps={ 'j':1 }
 
 " Easy Align
+let g:easy_align_ignore_groups=['String']
 xmap ga <plug>(EasyAlign)
 nmap ga <plug>(EasyAlign)
 
