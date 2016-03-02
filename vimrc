@@ -52,7 +52,7 @@ call plug#begin(s:editor_root . '/plugged')
   Plug 'SirVer/ultisnips'
 
   " Comments
-  Plug 'tpope/vim-commentary', { 'on': '<plug>Commentary' }
+  Plug 'tpope/vim-commentary'
 
   " Fuzzy search
   Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
