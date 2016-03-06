@@ -318,7 +318,7 @@ xmap ga <plug>(EasyAlign)
 nmap ga <plug>(EasyAlign)
 
 " Completion
-let g:UltiSnipsExpandTrigger="<c-s>"
+let g:UltiSnipsExpandTrigger="<c-e>"
 let g:UltiSnipsJumpForwardTrigger="<c-l>"
 let g:UltiSnipsJumpBackwardTrigger="<c-h>"
 if has('nvim')
