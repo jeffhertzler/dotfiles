@@ -254,9 +254,9 @@ command! WQ wq
 command! Wq wq
 command! W w
 command! Q q
-inoremap <c-s> <c-o>:update<cr>
-nnoremap <c-s> :update<cr>
-vnoremap <c-s> <esc>:w<cr>gv
+inoremap <c-s> <esc>:up<cr>
+nnoremap <c-s> :up<cr>
+vnoremap <c-s> <esc>:up<cr>
 inoremap <c-q> <esc>:q<cr>
 nnoremap <c-q> :q<cr>
 vnoremap <c-q> <esc>:q<cr>
