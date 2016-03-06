@@ -89,6 +89,7 @@ call plug#begin(s:editor_root . '/plugged')
 
   " Syntaxes
   Plug 'sheerun/vim-polyglot'
+  Plug 'ElmCast/elm-vim'
 
 call plug#end()
 
@@ -344,6 +345,8 @@ function! s:check_back_space()
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
+
+let g:polyglot_disabled = ['elm']
 
 
 
