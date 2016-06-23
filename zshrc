@@ -94,6 +94,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCodeInsiders" --args $*; }
 else
   setxkbmap -layout us -option ctrl:nocaps
+  eval $(ssh-agent)
+  ssh-add
 fi
 
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
