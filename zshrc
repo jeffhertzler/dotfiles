@@ -18,8 +18,8 @@ fi;
 if [ ! -r ~/.iterm2_shell_integration.zsh ]; then
   curl -L https://iterm2.com/misc/zsh_startup.in >> \
   ~/.iterm2_shell_integration.zsh
+  source ~/.iterm2_shell_integration.zsh
 fi;
-
 
 source $HOME/.antigen/antigen.zsh
 
@@ -33,21 +33,30 @@ stty start undef
 stty stop undef
 
 # fix for iterm c-h issue
-infocmp $TERM | sed 's/kbs=^[hH]/kbs=\\177/' > $HOME/.terminfo/$TERM.ti
-tic $HOME/.terminfo/$TERM.ti
+# infocmp $TERM | sed 's/kbs=^[hH]/kbs=\\177/' > $HOME/.terminfo/$TERM.ti
+# tic $HOME/.terminfo/$TERM.ti
 
 antigen use oh-my-zsh
 
-antigen bundle brew
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  antigen bundle brew
+  antigen bundle osx
+fi
 antigen bundle composer
 antigen bundle extract
 antigen bundle git
 antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
+antigen bundle chruby
+antigen bundle nvm
 antigen bundle zsh-users/zsh-syntax-highlighting
 
-antigen theme jeffhertzler/zsh-themes agnoster
+if [ -n "$INSIDE_EMACS" ]; then
+  antigen theme clean
+else
+  antigen theme jeffhertzler/zsh-themes agnoster
+fi
 
 antigen apply
 
@@ -58,11 +67,6 @@ if [ $? = 0 ]
 fi
 
 export COMPOSER_DISABLE_XDEBUG_WARN=1
-which -s composer >> /dev/null
-if [ $? = 0 ]
-  then
-    export PATH=~/.composer/vendor/bin:$PATH
-fi
 
 alias vi=vim
 export EDITOR=vim
@@ -74,7 +78,10 @@ if type nvim >/dev/null 2>/dev/null; then
 fi
 
 BASE16_SHELL="$HOME/.config/base16-shell/base16-eighties.dark.sh"
-[[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+
+if [ -z "$INSIDE_EMACS" ]; then
+  [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
+fi
 
 alias art='php artisan'
 alias vsync='vagrant gatling-rsync-auto local'
@@ -83,10 +90,12 @@ alias reload=". ~/.zshrc && echo 'ZSH config reloaded from ~/.zshrc'"
 alias ze="vim ~/.zshrc && reload"
 alias ve="vim ~/.vimrc"
 
-
-function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCodeInsiders" --args $*; }
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCodeInsiders" --args $*; }
+else
+  setxkbmap -layout us -option ctrl:nocaps
+fi
 
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
-source ~/.iterm2_shell_integration.zsh
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

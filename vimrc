@@ -97,6 +97,7 @@ call plug#end()
 
 
 
+
 "-------------Vim Directories--------------"
 
 function! InitializeDirectories()
@@ -144,6 +145,9 @@ endif
 " Mouse
 set mouse=a
 set mousehide
+
+" Code folding off
+set nofoldenable
 
 " Syntax highlighting
 syntax enable
