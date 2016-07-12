@@ -63,7 +63,7 @@ antigen apply
 which -s brew >> /dev/null
 if [ $? = 0 ]
   then
-    export PATH="$(brew --prefix homebrew/php/php56)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
+    export PATH="$(brew --prefix homebrew/php/php70)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
 
 export COMPOSER_DISABLE_XDEBUG_WARN=1
@@ -91,7 +91,7 @@ alias ze="vim ~/.zshrc && reload"
 alias ve="vim ~/.vimrc"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  function code () { VSCODE_CWD="$PWD" open -n -b "com.microsoft.VSCodeInsiders" --args $*; }
+  alias code=code-insiders
 else
   setxkbmap -layout us -option ctrl:nocaps
   eval $(ssh-agent)

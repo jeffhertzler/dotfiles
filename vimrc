@@ -65,6 +65,7 @@ call plug#begin(s:editor_root . '/plugged')
 
   " File browsing
   Plug 'tpope/vim-vinegar'
+  Plug 'tpope/vim-eunuch'
   Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
 
   " Motions
@@ -90,6 +91,12 @@ call plug#begin(s:editor_root . '/plugged')
   " Syntaxes
   Plug 'sheerun/vim-polyglot'
   Plug 'ElmCast/elm-vim'
+
+  " Elixir
+  Plug 'slashmili/alchemist.vim'
+
+  " Exercism
+  Plug 'jeffhertzler/vim-exercism'
 
 call plug#end()
 
@@ -254,6 +261,10 @@ vnoremap ; :
 nnoremap ;; ;
 vnoremap ;; ;
 
+" quick eol colon
+inoremap <leader>; <c-o>m`<c-o>A;<c-o>``
+nnoremap <leader>; m`A;<esc>``
+
 " Easier save & quit
 command! WQ wq
 command! Wq wq
@@ -282,6 +293,9 @@ vnoremap < <gv
 nnoremap <c-w>> :vertical resize +10<cr>
 nnoremap <c-w>< :vertical resize -10<cr>
 
+nnoremap <leader>et :ExercismTest<cr>
+nnoremap <leader>e<leader> :ExercismToggle<cr>
+nnoremap <leader>er :ExercismReadme<cr>
 
 
 
@@ -350,19 +364,17 @@ function! s:check_back_space()
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
 
+" Polyglot
 let g:polyglot_disabled = ['elm']
+
+" Auto Pairs
+let g:AutoPairsShortcutBackInsert = '<C-b>'
 
 
 
 
 
 "-------------Auto-Commands--------------"
-
-" Source the vimrc file on save.
-augroup autosourcing
-  autocmd!
-  autocmd BufWritePost .vimrc,init.vim source %
-augroup END
 
 " Retab on save
 augroup autoretab
