@@ -7,7 +7,7 @@ if [ ! -r ~/.antigen/antigen.zsh ]; then
   git clone https://github.com/zsh-users/antigen.git ~/.antigen
 fi;
 
-if [ ! -r ~/.config/base16-shell/base16-eighties.dark.sh ]; then
+if [ ! -r ~/.config/base16-shell/scripts/base16-eighties.sh ]; then
   [ ! command -v git > /dev/null 2>&1 ] ||
     (echo "Please install git." &&
     return;)
@@ -77,7 +77,7 @@ if type nvim >/dev/null 2>/dev/null; then
   export EDITOR=nvim
 fi
 
-BASE16_SHELL="$HOME/.config/base16-shell/base16-eighties.dark.sh"
+BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-eighties.sh"
 
 if [ -z "$INSIDE_EMACS" ]; then
   [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
