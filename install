@@ -6,7 +6,10 @@ cd $DIR
 
 mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
 mkdir -p ${NVIM_HOME:=$XDG_CONFIG_HOME/nvim}
+mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
 
 ln -sf "$DIR/zshrc" "$HOME/.zshrc"
 ln -sf "$DIR/vimrc" "$HOME/.vimrc"
 ln -sf "$DIR/vimrc" "$NVIM_HOME/init.vim"
+ln -sf "$DIR/Xresources" "$HOME/.Xresources"
+ln -sf "$DIR/i3" "$I3_HOME/config"

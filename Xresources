@@ -1,0 +1,7 @@
+URxvt.font: xft:Input Mono:size=12
+URxvt.background: #2d2d2d
+
+URxvt.scrollBar: false
+
+URxvt.internalBorder: 0
+URxvt.externalBorder: 0
