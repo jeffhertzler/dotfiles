@@ -96,7 +96,7 @@ call plug#begin(s:editor_root . '/plugged')
   Plug 'slashmili/alchemist.vim'
 
   " Exercism
-  Plug 'jeffhertzler/vim-exercism'
+  " Plug 'jeffhertzler/vim-exercism'
 
 call plug#end()
 
