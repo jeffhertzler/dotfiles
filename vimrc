@@ -95,9 +95,6 @@ call plug#begin(s:editor_root . '/plugged')
   " Elixir
   Plug 'slashmili/alchemist.vim'
 
-  " Exercism
-  " Plug 'jeffhertzler/vim-exercism'
-
 call plug#end()
 
 
