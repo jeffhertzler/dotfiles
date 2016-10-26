@@ -290,9 +290,6 @@ vnoremap < <gv
 nnoremap <c-w>> :vertical resize +10<cr>
 nnoremap <c-w>< :vertical resize -10<cr>
 
-nnoremap <leader>et :ExercismTest<cr>
-nnoremap <leader>e<leader> :ExercismToggle<cr>
-nnoremap <leader>er :ExercismReadme<cr>
 
 
 
