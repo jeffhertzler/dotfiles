@@ -55,7 +55,17 @@ antigen bundle zsh-users/zsh-syntax-highlighting
 if [ -n "$INSIDE_EMACS" ]; then
   antigen theme clean
 else
-  antigen theme jeffhertzler/zsh-themes agnoster
+  POWERLEVEL9K_PROMPT_ON_NEWLINE=true
+  POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="|"
+  POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="|  "
+  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(vi_mode context dir vcs)
+  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time battery)
+  POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
+  POWERLEVEL9K_SHORTEN_DELIMITER=""
+  POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
+  POWERLEVEL9K_TIME_FORMAT="%D{%r}"
+  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="white"
+  antigen theme bhilburn/powerlevel9k powerlevel9k
 fi
 
 antigen apply
