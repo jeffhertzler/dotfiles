@@ -202,6 +202,9 @@ set iskeyword-=_
 " copy/paste
 set clipboard^=unnamed,unnamedplus
 
+" diff
+set diffopt=iwhite
+
 
 
 
