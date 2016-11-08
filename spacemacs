@@ -43,6 +43,7 @@ values."
      emacs-lisp
      javascript
      helm
+     html
      php
      themes-megapack
      vimscript
@@ -313,16 +314,6 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  (editorconfig-mode 1)
-  (setq-default line-spacing 0.3)
-  (setq-default linum-relative-format " %3s ")
-  (setq powerline-default-separator 'utf-8)
-  (setq helm-dash-browser-func 'eww)
-  (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
-  (define-key evil-normal-state-map (kbd ";") 'evil-ex)
-  (define-key evil-normal-state-map (kbd ":") 'evil-repeat-find-char)
-  (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
-  (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
   (defun keep-cursor-position (func)
     (let ((oldpos (point)))
       (funcall func)
@@ -351,6 +342,19 @@ you should place your code here."
        (beginning-of-line)
        (newline)))
     (forward-char))
+
+  (editorconfig-mode 1)
+  (setq-default create-lockfiles nil)
+  (setq-default line-spacing 0.3)
+  (setq-default linum-relative-format " %3s ")
+  (setq helm-dash-browser-func 'eww)
+  (setq powerline-default-separator 'utf-8)
+  (setq vc-follow-symlinks t)
+  (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
+  (define-key evil-normal-state-map (kbd ";") 'evil-ex)
+  (define-key evil-normal-state-map (kbd ":") 'evil-repeat-find-char)
+  (define-key evil-normal-state-map (kbd "j") 'evil-next-visual-line)
+  (define-key evil-normal-state-map (kbd "k") 'evil-previous-visual-line)
   (define-key evil-normal-state-map (kbd "C-;") 'append-semicolon)
   (define-key evil-normal-state-map (kbd "C-,") 'append-comma)
   (define-key evil-normal-state-map (kbd "C-o") 'append-newline)
