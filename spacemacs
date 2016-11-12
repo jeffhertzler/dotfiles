@@ -38,13 +38,14 @@ values."
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      auto-completion
-     dash
      elixir
      emacs-lisp
      javascript
      helm
      html
+     markdown
      php
+     restclient
      themes-megapack
      vimscript
      vinegar
@@ -343,13 +344,15 @@ you should place your code here."
        (newline)))
     (forward-char))
 
+  (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (editorconfig-mode 1)
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
   (setq-default linum-relative-format " %3s ")
-  (setq helm-dash-browser-func 'eww)
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
+  (spacemacs/toggle-camel-case-motion-globally-on)
+  (spacemacs/toggle-highlight-indentation-current-column-on)
   (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
   (define-key evil-normal-state-map (kbd ";") 'evil-ex)
   (define-key evil-normal-state-map (kbd ":") 'evil-repeat-find-char)
