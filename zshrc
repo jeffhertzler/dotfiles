@@ -44,6 +44,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   antigen bundle brew
   antigen bundle osx
 fi
+antigen bundle asdf
 antigen bundle composer
 antigen bundle docker
 antigen bundle docker-compose
@@ -53,7 +54,6 @@ antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
 antigen bundle chruby
-antigen bundle nvm
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 if [ -n "$INSIDE_EMACS" ]; then
@@ -80,6 +80,8 @@ if [ $? = 0 ]
   then
     export PATH="$(brew --prefix homebrew/php/php70)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
+
+export PATH=~/bin:$PATH
 
 export COMPOSER_DISABLE_XDEBUG_WARN=1
 
@@ -116,5 +118,3 @@ fi
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-export NVM_DIR="/Users/pete/.nvm"
