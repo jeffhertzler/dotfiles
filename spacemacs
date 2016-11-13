@@ -352,6 +352,7 @@ you should place your code here."
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
   (spacemacs/toggle-camel-case-motion-globally-on)
+  (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-highlight-indentation-current-column-on)
   (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
   (define-key evil-normal-state-map (kbd ";") 'evil-ex)
