@@ -1,3 +1,5 @@
+export TERM="xterm-256color"
+
 # Download antigen with git if it doesn't exist already
 if [ ! -r ~/.antigen/antigen.zsh ]; then
   [ ! command -v git > /dev/null 2>&1 ] ||
@@ -43,6 +45,8 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   antigen bundle osx
 fi
 antigen bundle composer
+antigen bundle docker
+antigen bundle docker-compose
 antigen bundle extract
 antigen bundle git
 antigen bundle git-extras
@@ -113,4 +117,3 @@ export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 export NVM_DIR="/Users/pete/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
