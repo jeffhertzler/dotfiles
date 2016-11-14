@@ -25,18 +25,10 @@ fi;
 
 source $HOME/.antigen/antigen.zsh
 
-# prompt configs
-export PROMPT_ON_NEWLINE=true
-export ZLE_RPROMPT_INDENT=0
-
 # allow usage of C-q and C-s shortcuts other places
 stty -ixon
 stty start undef
 stty stop undef
-
-# fix for iterm c-h issue
-# infocmp $TERM | sed 's/kbs=^[hH]/kbs=\\177/' > $HOME/.terminfo/$TERM.ti
-# tic $HOME/.terminfo/$TERM.ti
 
 antigen use oh-my-zsh
 
@@ -54,6 +46,7 @@ antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
 antigen bundle chruby
+antigen bundle nvm
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 if [ -n "$INSIDE_EMACS" ]; then
@@ -63,8 +56,8 @@ else
   POWERLEVEL9K_RPROMPT_ON_NEWLINE=true
   POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="|"
   POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="| "
-  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(vi_mode context dir vcs)
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status time battery)
+  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(battery time vi_mode context dir vcs status)
+  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
   POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
   POWERLEVEL9K_SHORTEN_DELIMITER=""
   POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
@@ -74,6 +67,8 @@ else
 fi
 
 antigen apply
+
+# bindkey -v
 
 which -s brew >> /dev/null
 if [ $? = 0 ]
@@ -118,3 +113,5 @@ fi
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+export NVM_DIR="/Users/pete/.nvm"
