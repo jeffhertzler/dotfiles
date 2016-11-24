@@ -1,3 +1,7 @@
+if test ! -e $HOME/.config/fish/functions/fisher.fish
+  curl -Lo $HOME/.config/fish/functions/fisher.fish --create-dirs git.io/fisher
+end
+
 function jh_untracked_files
   if not git_is_repo
     return 0
