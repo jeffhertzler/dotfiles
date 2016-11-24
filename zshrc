@@ -74,7 +74,8 @@ if [ $? = 0 ]
     export PATH="$(brew --prefix homebrew/php/php70)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
 fi
 
-export PATH=~/bin:$PATH
+export GOPATH=~/dev/go
+export PATH=~/bin:$GOPATH/bin:$PATH
 
 export COMPOSER_DISABLE_XDEBUG_WARN=1
 
