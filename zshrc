@@ -45,8 +45,6 @@ antigen bundle git
 antigen bundle git-extras
 antigen bundle vagrant
 antigen bundle wp-cli
-antigen bundle chruby
-antigen bundle nvm
 antigen bundle zsh-users/zsh-syntax-highlighting
 
 if [ -n "$INSIDE_EMACS" ]; then
@@ -113,5 +111,3 @@ fi
 export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-export NVM_DIR="/Users/pete/.nvm"
