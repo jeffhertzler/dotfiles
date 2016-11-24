@@ -6,11 +6,14 @@ cd $DIR
 
 mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
 mkdir -p ${NVIM_HOME:=$XDG_CONFIG_HOME/nvim}
+mkdir -p ${FISH_HOME:=$XDG_CONFIG_HOME/fish}
 mkdir -p ${SPACEMACS_HOME:=$HOME/.spacemacs.d}
 
 ln -sf "$DIR/zshrc" "$HOME/.zshrc"
 ln -sf "$DIR/vimrc" "$HOME/.vimrc"
 ln -sf "$DIR/vimrc" "$NVIM_HOME/init.vim"
+ln -sf "$DIR/config.fish" "$FISH_HOME/config.fish"
+ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
 
 if [[ ! "$OSTYPE" == "darwin"* ]]; then
