@@ -134,6 +134,8 @@ alias gl "git pull"
 alias gp "git push"
 alias gcmsg "git commit -m"
 
+alias bubu "brew update; and brew upgrade; and brew cleanup"
+
 if test ! -e $HOME/.config/base16-shell/scripts/base16-eighties.sh
   echo "Installing base16-shell";
   git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
