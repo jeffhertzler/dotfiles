@@ -39,6 +39,7 @@ values."
      ;; ----------------------------------------------------------------
      auto-completion
      elixir
+     elm
      emacs-lisp
      javascript
      go
@@ -47,7 +48,9 @@ values."
      markdown
      php
      restclient
+     shell
      shell-scripts
+     syntax-checking
      themes-megapack
      vimscript
      vinegar
@@ -352,6 +355,8 @@ you should place your code here."
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
   (setq-default linum-relative-format " %3s ")
+  (setq elm-format-on-save t)
+  (setq elm-sort-imports-on-save t)
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
   (spacemacs/toggle-camel-case-motion-globally-on)
