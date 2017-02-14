@@ -113,7 +113,7 @@ if test ! -d $HOME/bin
 end
 
 set -x GOPATH $HOME/dev/go
-set -x PATH $HOME/bin $GOPATH/bin $PATH
+set -x PATH $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
