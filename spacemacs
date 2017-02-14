@@ -317,6 +317,7 @@ executes.
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
   (setq-default mac-right-option-modifier nil)
+  (setq shell-file-name "/bin/bash")
   (setq custom-file (expand-file-name "custom.el" dotspacemacs-directory))
   (setq evil-search-module 'evil-search))
 
