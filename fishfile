@@ -3,6 +3,7 @@ nyarly/fish-bang-bang
 0rax/fish-bd
 oh-my-fish/plugin-composer
 fisherman/fzf
+fisherman/get
 fisherman/getopts
 fisherman/git_util
 fisherman/last_job_id
