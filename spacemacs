@@ -42,18 +42,24 @@ values."
      elm
      emacs-lisp
      javascript
+     git
+     github
      go
      helm
      html
      markdown
+     nginx
      php
+     react
      restclient
      shell
      shell-scripts
      syntax-checking
      themes-megapack
+     version-control
      vimscript
      vinegar
+     yaml
      ;; better-defaults
      ;; git
      ;; markdown
