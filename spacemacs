@@ -365,6 +365,7 @@ you should place your code here."
   (setq elm-sort-imports-on-save t)
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
+  (setq web-mode-comment-style 2)
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-highlight-indentation-current-column-on)
