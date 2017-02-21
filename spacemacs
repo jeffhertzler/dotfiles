@@ -47,29 +47,22 @@ values."
      go
      helm
      html
+     lua
      markdown
      nginx
      php
      react
      restclient
+     ruby
      shell
      shell-scripts
+     spell-checking
      syntax-checking
      themes-megapack
      version-control
      vimscript
      vinegar
      yaml
-     ;; better-defaults
-     ;; git
-     ;; markdown
-     ;; org
-     ;; (shell :variables
-     ;;        shell-default-height 30
-     ;;        shell-default-position 'bottom)
-     ;; spell-checking
-     ;; syntax-checking
-     ;; version-control
      osx
      )
    ;; List of additional packages that will be installed without being
@@ -79,6 +72,7 @@ values."
    dotspacemacs-additional-packages
    '(
      editorconfig
+     magithub
      )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -367,6 +361,9 @@ you should place your code here."
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
   (setq web-mode-comment-style 2)
+  (use-package magithub
+    :after magit
+    :config (magithub-feature-autoinject t))
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-highlight-indentation-current-column-on)
