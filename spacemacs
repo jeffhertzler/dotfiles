@@ -27,7 +27,6 @@ values."
    ;; If non-nil layers with lazy install support are lazy installed.
    ;; List of additional paths where to look for configuration layers.
    ;; Paths must have a trailing slash (i.e. `~/.mycontribs/')
-
    dotspacemacs-configuration-layer-path '()
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
@@ -56,7 +55,6 @@ values."
      ruby
      shell
      shell-scripts
-     spell-checking
      syntax-checking
      themes-megapack
      version-control
