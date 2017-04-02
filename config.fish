@@ -120,7 +120,7 @@ end
 source $HOME/.asdf/asdf.fish
 
 set -x GOPATH $HOME/dev/go
-set -x PATH $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
+set -x PATH $HOME/.fastlane/bin $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
