@@ -360,6 +360,8 @@ you should place your code here."
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
   (setq-default linum-relative-format " %3s ")
+  (setq-default js2-basic-offset 2)
+  (setq-default js-indent-level 2)
   (setq elm-format-on-save t)
   (setq elm-sort-imports-on-save t)
   (setq powerline-default-separator 'utf-8)
