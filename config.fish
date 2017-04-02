@@ -112,6 +112,13 @@ if test ! -d $HOME/bin
   mkdir $HOME/bin
 end
 
+if test ! -e $HOME/.asdf/asdf.fish
+  echo "Installing asdf";
+  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+end
+
+source $HOME/.asdf/asdf.fish
+
 set -x GOPATH $HOME/dev/go
 set -x PATH $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
 
@@ -151,10 +158,3 @@ end
 if status --is-interactive
   eval sh $HOME/.config/base16-shell/scripts/base16-eighties.sh
 end
-
-if test ! -e $HOME/.asdf/asdf.fish
-  echo "Installing asdf";
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.2.0
-end
-
-source $HOME/.asdf/asdf.fish
