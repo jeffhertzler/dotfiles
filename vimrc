@@ -252,8 +252,9 @@ nmap <leader>ve :tabedit $MYVIMRC<cr>
 nmap <leader>ze :tabedit $HOME/.zshrc<cr>
 
 " Easier escape
-inoremap jk <esc>
-" Don't forget <c-[>!!!!!!
+inoremap fd <esc>
+" Easier <c-[>
+noremap <c-g> <c-[>
 
 " Easier colon
 nnoremap ; :
@@ -292,6 +293,12 @@ vnoremap < <gv
 " Resize splits in larger chunks
 nnoremap <c-w>> :vertical resize +10<cr>
 nnoremap <c-w>< :vertical resize -10<cr>
+
+" Spacemacs window movement
+nnoremap <leader>wl <c-w>l
+nnoremap <leader>wk <c-w>k
+nnoremap <leader>wj <c-w>j
+nnoremap <leader>wh <c-w>h
 
 
 
