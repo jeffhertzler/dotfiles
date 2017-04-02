@@ -278,8 +278,8 @@ nnoremap <c-q> :q<cr>
 vnoremap <c-q> <esc>:q<cr>
 
 " Less accidental macros
-nnoremap m q
-nnoremap q <nop>
+" nnoremap m q
+" nnoremap q <nop>
 
 " Insert line above/below
 nnoremap <c-j> o<esc>k
