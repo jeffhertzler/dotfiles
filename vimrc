@@ -61,7 +61,7 @@ call plug#begin(s:editor_root . '/plugged')
   " Better / search
   Plug 'junegunn/vim-pseudocl'
   Plug 'junegunn/vim-oblique'
-  Plug 'rking/ag.vim'
+  " Plug 'rking/ag.vim'
 
   " File browsing
   Plug 'tpope/vim-vinegar'
@@ -314,11 +314,12 @@ autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd   ctermbg=00
 autocmd VimEnter,Colorscheme * :hi IndentGuidesEven  ctermbg=18
 
 " FZF
-nnoremap <silent> <expr> <leader>p (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
-nnoremap <silent> <expr> <leader>b (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Buffers\<cr>"
-nnoremap <silent> <expr> <leader>r (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":BTags\<cr>"
-"nnoremap <silent> <expr> <leader>f (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Tags\<cr>"
-nnoremap <silent> <expr> <leader>h (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":History\<cr>"
+nnoremap <silent> <expr> <leader>pf (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":FZF\<cr>"
+nnoremap <silent> <expr> <leader>bb (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Buffers\<cr>"
+nnoremap <silent> <expr> <leader>sp (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Ag\<cr>"
+" nnoremap <silent> <expr> <leader>r (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":BTags\<cr>"
+" nnoremap <silent> <expr> <leader>f (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":Tags\<cr>"
+" nnoremap <silent> <expr> <leader>h (expand('%') =~ 'NERD_tree' ? "\<c-w>\<c-w>" : '').":History\<cr>"
 
 " Nerd Tree
 nnoremap <leader>kb :NERDTreeToggle<cr>
