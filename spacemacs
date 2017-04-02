@@ -44,6 +44,7 @@ values."
      git
      github
      go
+     haskell
      helm
      html
      lua
