@@ -370,7 +370,6 @@ you should place your code here."
     :config (magithub-feature-autoinject t))
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
-  (spacemacs/toggle-highlight-indentation-current-column-on)
   (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
   (define-key evil-normal-state-map (kbd ";") 'evil-ex)
   (define-key evil-normal-state-map (kbd ":") 'evil-repeat-find-char)
