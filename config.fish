@@ -124,6 +124,9 @@ set -x PATH $HOME/.fastlane/bin $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
+set -x FZF_DEFAULT_COMMAND 'rg --files --no-ignore --hidden --follow --glob "!.git/*"'
+set -x FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow --glob "!.git/*"'
+
 alias vi vim
 set -x EDITOR vim
 
