@@ -70,6 +70,7 @@ values."
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
    '(
+     base16-theme
      editorconfig
      magithub
      )
@@ -145,6 +146,7 @@ values."
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
    dotspacemacs-themes '(sanityinc-tomorrow-eighties
+                         base16-eighties
                          spacemacs-dark
                          spacemacs-light)
    ;; If non nil the cursor color matches the state color in GUI Emacs.
@@ -351,6 +353,9 @@ you should place your code here."
     (forward-char))
 
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
+  (custom-theme-set-faces
+   'base16-eighties
+   `(fringe ((t (:background ,(plist-get base16-eighties-colors :base00))))))
   (editorconfig-mode 1)
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
