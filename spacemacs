@@ -364,7 +364,6 @@ you should place your code here."
     (forward-char))
 
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
-  (editorconfig-mode 1)
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
   (setq-default linum-relative-format " %3s ")
@@ -375,6 +374,11 @@ you should place your code here."
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
   (setq web-mode-comment-style 2)
+  (use-package editorconfig
+    :config
+    (progn
+      (spacemacs|diminish editorconfig-mode)
+      (editorconfig-mode 1)))
   (use-package magithub
     :after magit
     :config (magithub-feature-autoinject t))
