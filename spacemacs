@@ -51,6 +51,7 @@ values."
      markdown
      nginx
      php
+     purescript
      react
      restclient
      ruby
