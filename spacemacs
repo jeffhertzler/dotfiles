@@ -364,6 +364,7 @@ you should place your code here."
     (forward-char))
 
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
+  (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
   (setq-default line-spacing 0.3)
   (setq-default linum-relative-format " %3s ")
