@@ -115,17 +115,17 @@ set -x FZF_DEFAULT_COMMAND 'rg --files --no-ignore --hidden --follow --glob "!.g
 set -x FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow --glob "!.git/*"'
 
 alias vi vim
-set -x EDITOR vim
 
 if type nvim > /dev/null ^ /dev/null
   alias vi nvim
   alias vim nvim
-  set -x EDITOR nvim
 end
 
 function e --wraps emacs
   bash -c 'emacsclient -n -a emacs "$@" >/dev/null 2>&1 &' _ $argv
 end
+
+set -x EDITOR e
 
 alias art "php artisan"
 alias fe "e ~/.config/fish/config.fish"
