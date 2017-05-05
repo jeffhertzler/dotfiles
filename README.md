@@ -2,9 +2,18 @@
 
 ```
 ./install
-source ~/.zshrc
+source ~/.config/fish/config.fish
 ```
 
+## Current
++ FISH
+    + fisherman
+    + agnoster style prompt
+    + fzf
++ EMACS
+    + spacemacs
+
+## No longer being used
 + ZSH
     + Antigen
     + Syntax Highlighting
