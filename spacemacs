@@ -326,7 +326,8 @@ before packages are loaded. If you are unsure, you should try in setting them in
   (setq-default mac-right-option-modifier nil)
   (setq shell-file-name "/bin/bash")
   (setq custom-file (expand-file-name "custom.el" dotspacemacs-directory))
-  (setq evil-search-module 'evil-search))
+  (setq evil-search-module 'evil-search)
+  (setq vc-follow-symlinks t))
 
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
@@ -378,7 +379,6 @@ you should place your code here."
   (setq js2-mode-show-parse-errors nil)
   (setq js2-mode-show-strict-warnings nil)
   (setq powerline-default-separator 'utf-8)
-  (setq vc-follow-symlinks t)
   (setq web-mode-comment-style 2)
   (use-package editorconfig
     :config

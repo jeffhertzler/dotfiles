@@ -136,10 +136,14 @@ if type nvim >/dev/null 2>/dev/null
   set -x EDITOR nvim
 end
 
+function e --wraps emacs
+  emacsclient -n -a emacs "$argv" >/dev/null 2>&1 &
+end
+
 alias art "php artisan"
-alias fe "vim ~/.config/fish/config.fish"
-alias se "vim ~/.spacemacs.d/init.el"
-alias ze "vim ~/.zshrc"
+alias fe "e ~/.config/fish/config.fish"
+alias se "e ~/.spacemacs.d/init.el"
+alias ze "e ~/.zshrc"
 alias ve "vim ~/.vimrc"
 
 alias gco "git checkout"
