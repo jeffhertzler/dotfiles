@@ -117,7 +117,7 @@ set -x FZF_FIND_FILE_COMMAND 'rg --files --no-ignore --hidden --follow --glob "!
 alias vi vim
 set -x EDITOR vim
 
-if type nvim >/dev/null 2>/dev/null
+if type nvim > /dev/null ^ /dev/null
   alias vi nvim
   alias vim nvim
   set -x EDITOR nvim
