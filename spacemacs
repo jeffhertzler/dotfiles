@@ -52,6 +52,7 @@ values."
      nginx
      php
      purescript
+     prettier-js
      react
      restclient
      ruby
@@ -372,6 +373,8 @@ you should place your code here."
   (setq-default js-indent-level 2)
   (setq elm-format-on-save t)
   (setq elm-sort-imports-on-save t)
+  (setq js2-mode-show-parse-errors nil)
+  (setq js2-mode-show-strict-warnings nil)
   (setq powerline-default-separator 'utf-8)
   (setq vc-follow-symlinks t)
   (setq web-mode-comment-style 2)
