@@ -1,7 +1,3 @@
-if test ! -e $HOME/.config/fish/functions/fisher.fish
-  curl -Lo $HOME/.config/fish/functions/fisher.fish --create-dirs git.io/fisher
-end
-
 function jh_untracked_files
   if not git_is_repo
     return 0
@@ -108,15 +104,6 @@ end
 
 fish_vi_key_bindings
 
-if test ! -d $HOME/bin
-  mkdir $HOME/bin
-end
-
-if test ! -e $HOME/.asdf/asdf.fish
-  echo "Installing asdf";
-  git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-end
-
 source $HOME/.asdf/asdf.fish
 
 set -x GOPATH $HOME/dev/go
@@ -156,11 +143,6 @@ alias gaa "git add --all"
 alias bubu "brew update; and brew upgrade; and brew cleanup"
 
 alias cbundle "bundle _1.12.5_"
-
-if test ! -e $HOME/.config/base16-shell/scripts/base16-eighties.sh
-  echo "Installing base16-shell";
-  git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
-end
 
 if status --is-interactive
   eval sh $HOME/.config/base16-shell/scripts/base16-eighties.sh
