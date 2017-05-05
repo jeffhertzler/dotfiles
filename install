@@ -34,6 +34,9 @@ fi
 if [ ! -d $HOME/.emacs.d ]; then
    echo "Installing spacemacs";
    git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
+   cd $HOME/.emacs.d
+   git checkout develop
+   cd $DIR
 fi
 
 if [ ! -d $SPACEMACS_HOME/layers/prettier-js ]; then
