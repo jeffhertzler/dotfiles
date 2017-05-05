@@ -38,12 +38,12 @@ fi
 
 if [ ! -d $SPACEMACS_HOME/layers/prettier-js ]; then
     echo "Installing prettier-js spacemacs layer";
-    git clone https://github.com/jeffhertzler/prettier-js $SPACEMACS_HOME/layers/prettier-js
+    git clone https://github.com/jeffhertzler/prettier-js-spacemacs-layer $SPACEMACS_HOME/layers/prettier-js
 fi
 
 if [ ! -d $SPACEMACS_HOME/layers/crystal ]; then
     echo "Installing crystal spacemacs layer";
-    git clone https://github.com/juanedi/crystal-spacemacs-layer $SPACEMACS_HOME/layers/crystal
+    git clone https://github.com/jeffhertzler/crystal-spacemacs-layer $SPACEMACS_HOME/layers/crystal
 fi
 
 if [ ! -r ~/.config/base16-shell/scripts/base16-eighties.sh ]; then
