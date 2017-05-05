@@ -17,8 +17,8 @@ ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
 
 if [[ ! "$OSTYPE" == "darwin"* ]]; then
-mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
-ln -sf "$DIR/Xresources" "$HOME/.Xresources"
-ln -sf "$DIR/i3" "$I3_HOME/config"
-ln -sf "$DIR/fonts" "$HOME/.fonts"
+    mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
+    ln -sf "$DIR/Xresources" "$HOME/.Xresources"
+    ln -sf "$DIR/i3" "$I3_HOME/config"
+    ln -sf "$DIR/fonts" "$HOME/.fonts"
 fi
