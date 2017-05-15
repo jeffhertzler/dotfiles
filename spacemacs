@@ -76,7 +76,6 @@ values."
    '(
      base16-theme
      editorconfig
-     magithub
      )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
