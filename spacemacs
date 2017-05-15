@@ -38,6 +38,7 @@ values."
      ;; ----------------------------------------------------------------
      auto-completion
      crystal
+     csv
      elixir
      elm
      emacs-lisp
