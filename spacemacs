@@ -386,9 +386,6 @@ you should place your code here."
     (progn
       (spacemacs|diminish editorconfig-mode)
       (editorconfig-mode 1)))
-  (use-package magithub
-    :after magit
-    :config (magithub-feature-autoinject t))
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-display-time-on)
