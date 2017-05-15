@@ -340,15 +340,10 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  (defun keep-cursor-position (func)
-    (let ((oldpos (point)))
-      (funcall func)
-      (goto-char oldpos)))
   (defun append-string (string)
-    (keep-cursor-position
-     (lambda ()
-       (end-of-line)
-       (insert string))))
+    (save-excursion
+      (end-of-line)
+      (insert string)))
   (defun append-semicolon ()
     (interactive)
     (append-string ";"))
@@ -357,17 +352,14 @@ you should place your code here."
     (append-string ","))
   (defun append-newline ()
     (interactive)
-    (keep-cursor-position
-     (lambda ()
-       (end-of-line)
-       (newline))))
+    (save-excursion
+      (end-of-line)
+      (newline)))
   (defun prepend-newline ()
     (interactive)
-    (keep-cursor-position
-     (lambda ()
-       (beginning-of-line)
-       (newline)))
-    (forward-char))
+    (save-excursion
+      (beginning-of-line)
+      (newline)))
 
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
