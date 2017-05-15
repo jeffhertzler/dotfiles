@@ -387,7 +387,7 @@ you should place your code here."
   (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-display-time-on)
   (spacemacs/toggle-mode-line-battery-on)
-  (global-set-key (kbd "s-<return>") 'spacemacs/toggle-frame-fullscreen)
+  (global-set-key (kbd "H-<return>") 'spacemacs/toggle-frame-fullscreen)
   (define-key evil-normal-state-map (kbd ";") 'evil-ex)
   (define-key evil-visual-state-map (kbd ";") 'evil-ex)
   (define-key evil-normal-state-map (kbd ":") 'evil-repeat-find-char)
