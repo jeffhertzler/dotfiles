@@ -378,11 +378,6 @@ you should place your code here."
   (setq js2-mode-show-strict-warnings nil)
   (setq powerline-default-separator 'utf-8)
   (setq web-mode-comment-style 2)
-  (use-package editorconfig
-    :config
-    (progn
-      (spacemacs|diminish editorconfig-mode)
-      (editorconfig-mode 1)))
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
   (spacemacs/toggle-display-time-on)
