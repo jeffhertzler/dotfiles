@@ -77,7 +77,6 @@ values."
    dotspacemacs-additional-packages
    '(
      base16-theme
-     editorconfig
      )
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
