@@ -16,7 +16,7 @@ end
 
 function jh_prompt_pwd
   set pwd (prompt_pwd)
-  segment white 515151 " $pwd "
+  segment black white " $pwd "
 end
 
 function jh_prompt_mode
@@ -37,7 +37,7 @@ end
 
 function jh_prompt_time
   set time (date +%r)
-  segment_right white 515151 " $time "
+  segment_right black white " $time "
 end
 
 function jh_prompt_status
@@ -100,6 +100,13 @@ function fish_right_prompt
   jh_prompt_status
   segment_close
   tput rc
+end
+
+function dark
+  eval sh $HOME/.config/base16-shell/scripts/base16-eighties.sh
+end
+function light
+  eval sh $HOME/.config/base16-shell/scripts/base16-harmonic16-light.sh
 end
 
 fish_vi_key_bindings
