@@ -146,6 +146,7 @@ alias gl "git pull"
 alias gp "git push"
 alias gcmsg "git commit -m"
 alias gaa "git add --all"
+alias gs "git status"
 
 alias bubu "brew update; and brew upgrade; and brew cleanup"
 
