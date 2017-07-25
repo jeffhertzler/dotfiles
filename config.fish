@@ -148,6 +148,11 @@ alias gcmsg "git commit -m"
 alias gaa "git add --all"
 alias gs "git status"
 
+alias ci "composer install"
+alias cu "composer update"
+alias cgo "composer global outdated"
+alias cgu "composer global update"
+
 alias bubu "brew update; and brew upgrade; and brew cleanup"
 
 alias cbundle "bundle _1.12.5_"
