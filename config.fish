@@ -147,6 +147,8 @@ alias gp "git push"
 alias gcmsg "git commit -m"
 alias gaa "git add --all"
 alias gs "git status"
+alias glg "git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
+alias glgs "git log --show-signature"
 
 alias ci "composer install"
 alias cu "composer update"
