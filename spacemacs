@@ -44,6 +44,7 @@ values."
      elixir
      elm
      emacs-lisp
+     java
      javascript
      git
      github
