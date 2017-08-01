@@ -354,6 +354,10 @@ before packages are loaded. If you are unsure, you should try in setting them in
     (beginning-of-line)
     (newline)))
 
+(defun auto-fmt-before-save ()
+  (case major-mode
+    ('java-mode (meghanada-code-beautify-before-save))))
+
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
 This function is called at the very end of Spacemacs initialization after
@@ -361,6 +365,7 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
+  (add-hook 'before-save-hook 'auto-fmt-before-save)
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
