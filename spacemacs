@@ -332,6 +332,27 @@ before packages are loaded. If you are unsure, you should try in setting them in
   (setq evil-search-module 'evil-search)
   (setq vc-follow-symlinks t))
 
+(defun append-string (string)
+  (save-excursion
+    (end-of-line)
+    (insert string)))
+(defun append-semicolon ()
+  (interactive)
+  (append-string ";"))
+(defun append-comma ()
+  (interactive)
+  (append-string ","))
+(defun append-newline ()
+  (interactive)
+  (save-excursion
+    (end-of-line)
+    (newline)))
+(defun prepend-newline ()
+  (interactive)
+  (save-excursion
+    (beginning-of-line)
+    (newline)))
+
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
 This function is called at the very end of Spacemacs initialization after
@@ -339,27 +360,6 @@ layers configuration.
 This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
-  (defun append-string (string)
-    (save-excursion
-      (end-of-line)
-      (insert string)))
-  (defun append-semicolon ()
-    (interactive)
-    (append-string ";"))
-  (defun append-comma ()
-    (interactive)
-    (append-string ","))
-  (defun append-newline ()
-    (interactive)
-    (save-excursion
-      (end-of-line)
-      (newline)))
-  (defun prepend-newline ()
-    (interactive)
-    (save-excursion
-      (beginning-of-line)
-      (newline)))
-
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
