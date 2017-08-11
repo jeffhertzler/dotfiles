@@ -114,7 +114,9 @@ fish_vi_key_bindings
 source $HOME/.asdf/asdf.fish
 
 set -x GOPATH $HOME/dev/go
-set -x PATH $HOME/.fastlane/bin $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
+set -x ANDROID_HOME $HOME/Library/Android/sdk
+
+set -x PATH $ANDROID_HOME/tools $ANDROID_HOME/platform-tools $HOME/.fastlane/bin $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
