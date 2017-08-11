@@ -53,7 +53,7 @@ values."
      helm
      html
      lua
-     markdown
+     (markdown :variables markdown-live-preview-engine 'vmd)
      nginx
      php
      purescript
