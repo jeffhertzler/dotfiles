@@ -370,6 +370,7 @@ This is the place where most of your configurations should be done. Unless it is
 explicitly specified that a variable should be set before a package is loaded,
 you should place your code here."
   (add-hook 'before-save-hook 'auto-fmt-before-save)
+  (add-hook 'php-mode-hook (lambda () (modify-syntax-entry ?$ "_")))
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
