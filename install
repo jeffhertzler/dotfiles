@@ -16,6 +16,11 @@ ln -sf "$DIR/config.fish" "$FISH_HOME/config.fish"
 ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  mkdir -p ${KARABINER_HOME:=$XDG_CONFIG_HOME/karabiner}
+  ln -sf "$DIR/karabiner.json" "$KARABINER_HOME/karabiner.json"
+fi
+
 if [[ ! "$OSTYPE" == "darwin"* ]]; then
     mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
     ln -sf "$DIR/Xresources" "$HOME/.Xresources"
