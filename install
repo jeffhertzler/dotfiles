@@ -16,6 +16,13 @@ ln -sf "$DIR/config.fish" "$FISH_HOME/config.fish"
 ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
 
+if [[ ! "$OSTYPE" == "darwin"* ]]; then
+    mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
+    ln -sf "$DIR/Xresources" "$HOME/.Xresources"
+    ln -sf "$DIR/i3" "$I3_HOME/config"
+    ln -sf "$DIR/fonts" "$HOME/.fonts"
+fi
+
 if [ ! -d $HOME/bin ]; then
     echo "Creating bin dir"
     mkdir $HOME/bin
@@ -54,9 +61,3 @@ if [ ! -r ~/.config/base16-shell/scripts/base16-eighties.sh ]; then
     git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
 fi
 
-if [[ ! "$OSTYPE" == "darwin"* ]]; then
-    mkdir -p ${I3_HOME:=$XDG_CONFIG_HOME/i3}
-    ln -sf "$DIR/Xresources" "$HOME/.Xresources"
-    ln -sf "$DIR/i3" "$I3_HOME/config"
-    ln -sf "$DIR/fonts" "$HOME/.fonts"
-fi
