@@ -215,6 +215,7 @@ set background=dark
 set t_CO=256
 let base16colorspace=256
 silent! colorscheme base16-eighties
+set termguicolors
 
 " Line numbers
 set number
