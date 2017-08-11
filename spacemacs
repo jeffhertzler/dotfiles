@@ -380,6 +380,8 @@ you should place your code here."
   (setq js2-mode-show-parse-errors nil)
   (setq js2-mode-show-strict-warnings nil)
   (setq powerline-default-separator 'utf-8)
+  (setq sp-escape-quotes-after-insert nil)
+  (setq sp-escape-wrapped-region nil)
   (setq web-mode-comment-style 2)
   (spacemacs/toggle-camel-case-motion-globally-on)
   (spacemacs/toggle-golden-ratio-on)
