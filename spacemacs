@@ -49,14 +49,12 @@ values."
      git
      github
      go
-     haskell
      helm
      html
      lua
      (markdown :variables markdown-live-preview-engine 'vmd)
      nginx
      php
-     purescript
      prettier-js
      react
      restclient
