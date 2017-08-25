@@ -39,6 +39,7 @@ values."
      (auto-completion
       :variables
       auto-completion-enable-snippets-in-popup t)
+     colors
      crystal
      csv
      elixir
@@ -368,6 +369,7 @@ you should place your code here."
   (add-hook 'evil-visual-state-exit-hook (lambda () (setq-local global-hl-line-mode t)))
   (add-hook 'before-save-hook 'auto-fmt-before-save)
   (add-hook 'php-mode-hook (lambda () (modify-syntax-entry ?$ "_")))
+  (add-hook 'prog-mode-hook 'rainbow-mode)
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
