@@ -161,6 +161,15 @@ alias bubu "brew update; and brew upgrade; and brew cleanup"
 
 alias cbundle "bundle _1.12.5_"
 
+function pt --wraps phpunit
+  if test -e vendor/bin/phpunit
+    vendor/bin/phpunit $argv
+  else
+    phpunit $argv
+  end
+end
+alias ptf "pt --filter"
+
 if status --is-interactive
   eval sh $HOME/.config/base16-shell/scripts/base16-dracula.sh
 end
