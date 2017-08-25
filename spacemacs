@@ -74,7 +74,7 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
-  '(apropospriate-theme
+  '((apropospriate-theme :location (recipe :fetcher github :repo "jeffhertzler/apropospriate-theme"))
     (dracula-theme :location (recipe :fetcher github :repo "jeffhertzler/dracula-theme-emacs")))
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
