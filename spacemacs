@@ -325,9 +325,9 @@ executes.
 before packages are loaded. If you are unsure, you should try in setting them in
 `dotspacemacs/user-config' first."
   (setq-default mac-right-option-modifier nil)
-  (setq shell-file-name "/bin/bash")
   (setq custom-file (expand-file-name "custom.el" dotspacemacs-directory))
   (setq evil-search-module 'evil-search)
+  (setq shell-file-name "/bin/bash")
   (setq vc-follow-symlinks t))
 
 (defun append-string (string)
@@ -371,10 +371,10 @@ you should place your code here."
   (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
   (global-visual-line-mode 1)
   (setq-default create-lockfiles nil)
-  (setq-default line-spacing 0.3)
-  (setq-default linum-relative-format " %3s ")
   (setq-default js2-basic-offset 2)
   (setq-default js-indent-level 2)
+  (setq-default linum-relative-format " %3s ")
+  (setq-default line-spacing 0.3)
   (setq display-time-default-load-average nil)
   (setq display-time-mail-file t)
   (setq elm-format-on-save t)
