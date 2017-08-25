@@ -64,7 +64,6 @@ values."
      shell
      shell-scripts
      syntax-checking
-     themes-megapack
      version-control
      vimscript
      vinegar
@@ -76,9 +75,8 @@ values."
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
    dotspacemacs-additional-packages
-   '(
-     base16-theme
-     )
+  '(apropospriate-theme
+    (dracula-theme :location (recipe :fetcher github :repo "jeffhertzler/dracula-theme-emacs")))
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -150,8 +148,7 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(sanityinc-tomorrow-eighties
-                         apropospriate-light)
+   dotspacemacs-themes '(dracula apropospriate-light)
    ;; If non nil the cursor color matches the state color in GUI Emacs.
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font, or prioritized list of fonts. `powerline-scale' allows to

@@ -103,7 +103,7 @@ function fish_right_prompt
 end
 
 function dark
-  eval sh $HOME/.config/base16-shell/scripts/base16-eighties.sh
+  eval sh $HOME/.config/base16-shell/scripts/base16-dracula.sh
 end
 function light
   eval sh $HOME/.config/base16-shell/scripts/base16-harmonic16-light.sh
@@ -162,5 +162,5 @@ alias bubu "brew update; and brew upgrade; and brew cleanup"
 alias cbundle "bundle _1.12.5_"
 
 if status --is-interactive
-  eval sh $HOME/.config/base16-shell/scripts/base16-eighties.sh
+  eval sh $HOME/.config/base16-shell/scripts/base16-dracula.sh
 end

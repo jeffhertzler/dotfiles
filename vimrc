@@ -214,7 +214,7 @@ set diffopt=iwhite
 set background=dark
 set t_CO=256
 let base16colorspace=256
-silent! colorscheme base16-eighties
+silent! colorscheme base16-dracula
 set termguicolors
 
 " Line numbers
