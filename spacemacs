@@ -50,8 +50,9 @@ values."
      git
      github
      go
-     helm
+     ;; helm
      html
+     ivy
      lua
      (markdown :variables markdown-live-preview-engine 'vmd)
      nginx
@@ -387,6 +388,9 @@ you should place your code here."
         evil-normal-state-cursor  '("#8be9fd" box)
         evil-replace-state-cursor '("#ff79c6" (hbar . 2))
         evil-visual-state-cursor  '("#bd93f9" (hbar . 2)))
+  (setq ivy-initial-inputs-alist nil)
+  (setq ivy-re-builders-alist
+        '((t . ivy--regex-fuzzy)))
   (setq js2-mode-show-parse-errors nil)
   (setq js2-mode-show-strict-warnings nil)
   (setq powerline-default-separator 'utf-8)
