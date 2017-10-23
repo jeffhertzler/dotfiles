@@ -1,0 +1,94 @@
+// Place your settings in this file to overwrite the default settings
+{
+    "editor.fontFamily": "Operator Mono, Fira Code, Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 14,
+    "editor.formatOnSave": false,
+    "editor.lineNumbers": "relative",
+    "editor.minimap.enabled": false,
+    "editor.renderControlCharacters": false,
+    "editor.renderWhitespace": "all",
+    "editor.wordWrapColumn": 120,
+    "explorer.openEditors.visible": 0,
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "search.useIgnoreFilesByDefault": true,
+    "vim.disableAnnoyingNeovimMessage": true,
+    "vim.easymotion": true,
+    "vim.enableNeovim": true,
+    "vim.insertModeKeyBindings": [
+        {
+            "before": ["f","d"],
+            "after": ["<Esc>"]
+        }
+    ],
+    "vim.leader": "<space>",
+    "vim.otherModesKeyBindingsNonRecursive": [
+        {
+            "before": ["<leader>", "<leader>"],
+            "after": [],
+            "commands": [
+                {
+                    "command": "workbench.action.showCommands"
+                }
+            ]
+        },
+        {
+            "before": ["<leader>", "f", "t"],
+            "after": [],
+            "commands": [
+                {
+                    "command": "workbench.view.explorer"
+                }
+            ]
+        },
+        {
+            "before": ["<leader>", "p", "l"],
+            "after": [],
+            "commands": [
+                {
+                    "command": "workbench.action.openRecent"
+                }
+            ]
+        },
+        {
+            "before": ["<leader>", "b", "b"],
+            "after": [],
+            "commands": [
+                {
+                    "command": "workbench.action.quickOpen"
+                }
+            ]
+        },
+        {
+            "before": ["<leader>", "p", "f"],
+            "after": [],
+            "commands": [
+                {
+                    "command": "workbench.action.quickOpen"
+                }
+            ]
+        },
+        {
+            "before": ["<leader>", "s", "c"],
+            "after": [],
+            "commands": [
+                {
+                    "command": ":nohl"
+                }
+            ]
+        },
+        {
+            "before": [";"],
+            "after": [":"]
+        }
+    ],
+    "vim.statusBarColorControl": true,
+    "vim.substituteGlobalFlag": true,
+    "vim.textwidth": 120,
+    "vim.useSystemClipboard": true,
+    "workbench.colorTheme": "Dracula",
+    "workbench.editor.closeOnFileDelete": false,
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.showTabs": false
+}

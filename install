@@ -17,8 +17,16 @@ ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-  mkdir -p ${KARABINER_HOME:=$XDG_CONFIG_HOME/karabiner}
-  ln -sf "$DIR/karabiner.json" "$KARABINER_HOME/karabiner.json"
+    mkdir -p ${KARABINER_HOME:=$XDG_CONFIG_HOME/karabiner}
+    ln -sf "$DIR/karabiner.json" "$KARABINER_HOME/karabiner.json"
+    mkdir -p ${CODE_HOME:=$HOME/Library/"Application Support"/Code/User}
+    mkdir -p ${CODE_INSIDERS_HOME:=$HOME/Library/"Application Support"/"Code - Insiders"/User}
+    ln -sf "$DIR/vscode/settings.json" "$CODE_HOME/settings.json"
+    ln -sf "$DIR/vscode/keybindings.json" "$CODE_HOME/keybindings.json"
+    ln -sf "$DIR/vscode/snippets" "$CODE_HOME/snippets"
+    ln -sf "$DIR/vscode/settings.json" "$CODE_INSIDERS_HOME/settings.json"
+    ln -sf "$DIR/vscode/keybindings.json" "$CODE_INSIDERS_HOME/keybindings.json"
+    ln -sf "$DIR/vscode/snippets" "$CODE_INSIDERS_HOME/snippets"
 fi
 
 if [[ ! "$OSTYPE" == "darwin"* ]]; then

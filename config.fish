@@ -160,6 +160,7 @@ alias cgu "composer global update"
 alias bubu "brew update; and brew upgrade; and brew cleanup"
 
 alias cbundle "bundle _1.12.5_"
+alias code "code-insiders"
 
 function pt --wraps phpunit
   if test -e vendor/bin/phpunit
