@@ -173,6 +173,7 @@ abbr cdgo "cd ~/dev/Greenlight-Ops-Tooling"
 abbr cdgs "cd ~/dev/Greenlight-Server"
 
 alias bubu "brew update; and brew upgrade; and brew cleanup"
+alias bcu "brew cask brew upgrade"
 
 alias cbundle "bundle _1.12.5_"
 alias code "code-insiders"
