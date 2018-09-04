@@ -232,6 +232,10 @@ set showmatch
 " Highlight current line
 set cursorline
 
+" Show whitespace characters
+" set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
+set listchars=tab:>·
+
 
 
 
