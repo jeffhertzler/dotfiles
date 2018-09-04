@@ -109,7 +109,10 @@ function light
   eval sh $HOME/.config/base16-shell/scripts/base16-harmonic16-light.sh
 end
 
-fish_vi_key_bindings
+if test "$TERM" != "eterm-color"
+  and test "$TERM" != "dumb"
+  fish_vi_key_bindings
+end
 
 source $HOME/.asdf/asdf.fish
 
