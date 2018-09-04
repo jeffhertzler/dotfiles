@@ -178,7 +178,10 @@ end
 alias ptf "pt --filter"
 
 if status --is-interactive
-  eval sh $HOME/.config/base16-shell/scripts/base16-dracula.sh
+  if test "$TERM" != "eterm-color"
+    and test "$TERM" != "dumb"
+    eval sh $HOME/.config/base16-shell/scripts/base16-dracula.sh
+  end
   if test "$TERM_PROGRAM" = "iTerm.app"
     echo -e "\033]6;1;bg;red;brightness;40\a"
     echo -e "\033]6;1;bg;green;brightness;41\a"
