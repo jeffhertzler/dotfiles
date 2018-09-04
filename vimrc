@@ -90,6 +90,7 @@ call plug#begin(s:editor_root . '/plugged')
   " Syntaxes
   Plug 'sheerun/vim-polyglot'
   Plug 'ElmCast/elm-vim'
+  Plug 'w0rp/ale'
 
   " Elixir
   Plug 'slashmili/alchemist.vim'
@@ -203,6 +204,7 @@ set clipboard^=unnamed,unnamedplus
 
 " diff
 set diffopt=iwhite
+
 
 
 
