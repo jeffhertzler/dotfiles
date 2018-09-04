@@ -114,6 +114,9 @@ if test "$TERM" != "eterm-color"
   fish_vi_key_bindings
 end
 
+set -x EDITOR e
+set -x GIT_EDITOR nvim
+
 source $HOME/.asdf/asdf.fish
 
 set -x GOPATH $HOME/dev/go
@@ -137,7 +140,6 @@ function e --wraps emacs
   bash -c 'emacsclient -n -a emacs "$@" >/dev/null 2>&1 &' _ $argv
 end
 
-set -x EDITOR e
 
 alias art "php artisan"
 alias fe "e ~/.config/fish/config.fish"
