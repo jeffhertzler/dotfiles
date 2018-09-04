@@ -120,9 +120,9 @@ set -x GIT_EDITOR nvim
 source $HOME/.asdf/asdf.fish
 
 set -x GOPATH $HOME/dev/go
-set -x ANDROID_HOME $HOME/Library/Android/sdk
+set -x GOBIN $GOPATH/bin
 
-set -x PATH $ANDROID_HOME/tools $ANDROID_HOME/platform-tools $HOME/.fastlane/bin $HOME/bin $GOPATH/bin /usr/local/sbin $PATH
+set -x PATH $HOME/bin $GOBIN $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
