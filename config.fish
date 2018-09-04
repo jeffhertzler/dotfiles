@@ -167,6 +167,11 @@ abbr cu "composer update"
 abbr cgo "composer global outdated"
 abbr cgu "composer global update"
 
+abbr cdgc "cd ~/dev/GreenLight-Client"
+abbr cdgg "cd ~/dev/Greenlight-StyleGuide"
+abbr cdgo "cd ~/dev/Greenlight-Ops-Tooling"
+abbr cdgs "cd ~/dev/Greenlight-Server"
+
 alias bubu "brew update; and brew upgrade; and brew cleanup"
 
 alias cbundle "bundle _1.12.5_"
