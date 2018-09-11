@@ -1,8 +1,8 @@
 // Place your settings in this file to overwrite the default settings
 {
-  "editor.fontFamily": "Operator Mono, Fira Code, Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontFamily": "Operator Mono SSm Lig, Fira Code, Menlo, Monaco, 'Courier New', monospace",
   "editor.fontLigatures": true,
-  "editor.fontSize": 14,
+  "editor.fontSize": 12,
   "editor.formatOnSave": true,
   "editor.lineNumbers": "relative",
   "editor.minimap.enabled": false,
@@ -10,7 +10,7 @@
   "editor.renderWhitespace": "all",
   "editor.wordWrapColumn": 120,
   "eslint.enable": true,
-  // "explorer.openEditors.visible": 0,
+  "explorer.openEditors.visible": 0,
   "files.insertFinalNewline": false,
   "files.trimTrailingWhitespace": true,
   "gitlens.advanced.messages": {
@@ -92,6 +92,15 @@
       ]
     },
     {
+      "before": ["<leader>", "s", "p"],
+      "after": [],
+      "commands": [
+        {
+          "command": "workbench.view.search"
+        }
+      ]
+    },
+    {
       "before": [";"],
       "after": [":"]
     }
@@ -108,6 +117,12 @@
   "[handlebars]": {
     "editor.formatOnSave": false
   },
+  "gitlens.advanced.messages": {
+    "suppressShowKeyBindingsNotice": true,
+    "suppressWelcomeNotice": true
+  },
+  "gitlens.keymap": "alternate",
+  "gitlens.historyExplorer.enabled": true,
   "workbench.colorCustomizations": {
     "statusBar.background": "#005f5f",
     "statusBar.noFolderBackground": "#005f5f",
