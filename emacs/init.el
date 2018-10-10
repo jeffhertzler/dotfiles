@@ -166,6 +166,13 @@
       (general-key-dispatch 'self-insert-command
         :timeout 0.25
         "d" 'evil-normal-state))
+    (general-create-definer my-leader-def
+      :prefix "SPC")
+    (general-create-definer my-local-leader-def
+      :prefix "SPC m")
+    (my-leader-def
+      :keymaps 'normal
+      "SPC" 'execute-extended-command)
     (general-define-key
       "s-<return>" 'toggle-frame-fullscreen))
 
