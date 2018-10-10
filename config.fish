@@ -137,7 +137,7 @@ if type nvim > /dev/null ^ /dev/null
 end
 
 function e --wraps emacs
-  bash -c 'emacsclient -n -a emacs "$@" >/dev/null 2>&1 &' _ $argv
+  bash -c 'emacsclient -na emacs $@ >/dev/null 2>&1' _ $argv &
 end
 
 abbr art "php artisan"
