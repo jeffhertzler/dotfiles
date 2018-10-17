@@ -157,24 +157,39 @@
 (use-package general
   :config
   (general-evil-setup)
+
+  ;; esc from insert mode with "fd"
   (general-imap "f"
     (general-key-dispatch 'self-insert-command
       :timeout 0.25
       "d" 'evil-normal-state))
-  (general-create-definer my-leader-def
+
+  ;; setup leader key definer
+  (general-create-definer my-leader
     :prefix "SPC")
-  (general-create-definer my-local-leader-def
+
+  ;; setup local leader definer
+  (general-create-definer my-local-leader
     :prefix "SPC m")
-  (my-leader-def
-    :keymaps 'normal
-    "SPC" 'execute-extended-command)
+
+  ;; leader key bindings
+  (my-leader 'normal
+    ;; M-x
+    "SPC" 'execute-extended-command
+    ;; save file
+    "fs" 'save-buffer
+    "bs" 'save-buffer)
+
+  ;; fullscreen
   (general-define-key
     "s-<return>" 'toggle-frame-fullscreen))
 
 ;; evil mode
 (use-package evil
   :init
+  ;; disable built in evil keybindings in favor of evil-collection
   (setq evil-want-keybinding nil)
+
   :config
   (evil-mode 1))
 
@@ -189,7 +204,7 @@
   :config
   (load-theme 'dracula t))
 
-;; Which Key
+;; keybinding documentation
 (use-package which-key
   :init
   (setq which-key-separator " ")
@@ -197,12 +212,32 @@
   :config
   (which-key-mode))
 
-;; completion engine
-(use-package helm
-  :init
-  (setq helm-mode-fuzzy-match t)
-  (setq helm-completion-in-region-fuzzy-match t)
-  (setq helm-candidate-number-list 50))
+;; completion
+(use-package ivy
+  :config
+  (ivy-mode 1))
+
+;; code completion
+(use-package company
+  :config
+  (company-mode 1))
+
+;; sorting and filtering
+(use-package prescient)
+
+;; with ivy
+(use-package ivy-prescient
+  :after
+  (ivy prescient)
+  :config
+  (ivy-prescient-mode 1))
+
+;; with company
+(use-package company-prescient
+  :after
+  (company prescient)
+  :config
+  (company-prescient-mode 1))
 
 ;; projects
 (use-package projectile
