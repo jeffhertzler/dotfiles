@@ -261,8 +261,8 @@
 
 ;; code completion
 (use-package company
-  :config
-  (company-mode 1))
+  :hook
+  (prog-mode . company-mode))
 
 ;; sorting and filtering
 (use-package prescient
