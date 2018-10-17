@@ -196,12 +196,6 @@
   (general-def
     "s-<return>" 'toggle-frame-fullscreen))
 
-;; restart emacs
-(use-package restart-emacs
-  :general
-  (my:leader 'normal
-    "qr" '(restart-emacs :wk "restart emacs")))
-
 ;; evil mode
 (use-package evil
   :init
@@ -295,6 +289,12 @@
 
 ;; emacs startup profiler
 (use-package esup)
+
+;; restart emacs
+(use-package restart-emacs
+  :general
+  (my:leader 'normal
+    "qr" '(restart-emacs :wk "restart emacs")))
 
 (server-start)
 
