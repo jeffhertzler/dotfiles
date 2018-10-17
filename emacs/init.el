@@ -213,6 +213,9 @@
 ;; git ui
 (use-package magit)
 
+;; vim keybindings for magit
+(use-package evil-magit :after (evil magit))
+
 (server-start)
 
 ;; reset
