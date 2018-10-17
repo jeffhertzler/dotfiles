@@ -165,29 +165,50 @@
       "d" 'evil-normal-state))
 
   ;; setup leader key definer
-  (general-create-definer my-leader
+  (general-create-definer my:leader
     :prefix "SPC")
 
   ;; setup local leader definer
-  (general-create-definer my-local-leader
+  (general-create-definer my:local-leader
     :prefix "SPC m")
 
+  (defun my/emacs-dotfile () (interactive) (find-file "~/.emacs.d/init.el"))
+  (defun my/emacs-reload () (interactive) (load-file "~/.emacs.d/init.el"))
+
   ;; leader key bindings
-  (my-leader 'normal
+  (my:leader 'normal
     "" '(nil :wk "leader")
 
-    ;; M-x
-    "SPC" 'execute-extended-command
-
-    "f" '(:ignore t :wk "file")
-    "fs" '(save-buffer :wk "save")
+    "SPC" '(execute-extended-command :wk "M-x")
 
     "b" '(:ignore t :wk "buffer")
-    "bs" '(save-buffer :wk "save"))
+    "bs" '(save-buffer :wk "save")
+
+    "f" '(:ignore t :wk "file")
+
+    "fe" '(:ignore t :wk "emacs")
+    "fed" '(my/emacs-dotfile :wk "dotfile")
+    "fer" '(my/emacs-reload :wk "reload")
+
+    "fs" '(save-buffer :wk "save")
+
+    "q" '(:ignore t :wk "quit")
+    "qq" '(save-buffers-kill-emacs :wk "quit")
+    "qQ" '(kill-emacs :wk "force quit"))
+
+  (general-def 'motion
+    ";" 'evil-ex
+    ":" 'evil-repeat-find-char)
 
   ;; fullscreen
-  (general-define-key
+  (general-def
     "s-<return>" 'toggle-frame-fullscreen))
+
+;; restart emacs
+(use-package restart-emacs
+  :general
+  (my:leader 'normal
+    "qr" '(restart-emacs :wk "restart emacs")))
 
 ;; evil mode
 (use-package evil
@@ -200,7 +221,10 @@
 
 ;; evil keybindings for other packages
 (use-package evil-collection
-  :after evil
+  :after
+  evil
+  :init
+  (setq evil-collection-setup-minibuffer t)
   :config
   (evil-collection-init))
 
@@ -219,7 +243,18 @@
 
 ;; completion
 (use-package ivy
+  :init
+  (setq ivy-count-format "%d/%d ")
+
   :config
+  ;; set bindings if minibuffer uses evil or not
+  (general-def ivy-minibuffer-map
+    "C-j" 'ivy-next-line
+    "C-k" 'ivy-previous-line)
+  (general-def '(insert normal) ivy-minibuffer-map
+    "C-j" 'ivy-next-line
+    "C-k" 'ivy-previous-line)
+
   (ivy-mode 1))
 
 ;; code completion
@@ -228,7 +263,12 @@
   (company-mode 1))
 
 ;; sorting and filtering
-(use-package prescient)
+(use-package prescient
+  :init
+  ;; options: '(literal+initialism literal initialism regexp fuzzy)
+  (setq prescient-filter-method 'literal+initialism)
+  :config
+  (prescient-persist-mode 1))
 
 ;; with ivy
 (use-package ivy-prescient
@@ -254,7 +294,9 @@
 (use-package magit)
 
 ;; vim keybindings for magit
-(use-package evil-magit :after (evil magit))
+(use-package evil-magit
+  :after
+  (evil magit))
 
 (server-start)
 
