@@ -298,6 +298,9 @@
   :after
   (evil magit))
 
+;; emacs startup profiler
+(use-package esup)
+
 (server-start)
 
 ;; reset
