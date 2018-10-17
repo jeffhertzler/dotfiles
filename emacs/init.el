@@ -42,16 +42,6 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
-;; ensure we can install from git sources
-(use-package git)
-
-;; The following package dependencies are used throughout the rest of the configuration.
-;; They provide contemporary APIs for working with various elisp data structures.
-(use-package dash) ;; lists
-(use-package ht)   ;; hash-tables
-(use-package s)    ;; strings
-(use-package a)    ;; association lists
-
 ;; Minimal UI
 (blink-cursor-mode -1)
 (menu-bar-mode -1)
