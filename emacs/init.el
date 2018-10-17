@@ -42,18 +42,15 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
-;; make use-package is lazy by default
-(setq use-package-always-defer t)
-
 ;; ensure we can install from git sources
-(use-package git :demand)
+(use-package git)
 
 ;; The following package dependencies are used throughout the rest of the configuration.
 ;; They provide contemporary APIs for working with various elisp data structures.
-(use-package dash :demand) ;; lists
-(use-package ht :demand)   ;; hash-tables
-(use-package s :demand)    ;; strings
-(use-package a :demand)    ;; association lists
+(use-package dash) ;; lists
+(use-package ht)   ;; hash-tables
+(use-package s)    ;; strings
+(use-package a)    ;; association lists
 
 ;; Minimal UI
 (blink-cursor-mode -1)
@@ -102,13 +99,12 @@
 ;; different packages, with the net result that the ~/.emacs.d folder
 ;; is much more clean and organized.
 (use-package no-littering
-  :demand
   :config
-    (setq
-      auto-save-file-name-transforms
-        `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))
-      custom-file
-        (no-littering-expand-etc-file-name "custom.el")))
+  (setq
+    auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))
+    custom-file
+      (no-littering-expand-etc-file-name "custom.el")))
 
 ;;; Prevent Emacs-provided Org from being loaded
 
@@ -159,70 +155,63 @@
 
 ;; key bindings package
 (use-package general
-  :demand
   :config
-    (general-evil-setup)
-    (general-imap "f"
-      (general-key-dispatch 'self-insert-command
-        :timeout 0.25
-        "d" 'evil-normal-state))
-    (general-create-definer my-leader-def
-      :prefix "SPC")
-    (general-create-definer my-local-leader-def
-      :prefix "SPC m")
-    (my-leader-def
-      :keymaps 'normal
-      "SPC" 'execute-extended-command)
-    (general-define-key
-      "s-<return>" 'toggle-frame-fullscreen))
+  (general-evil-setup)
+  (general-imap "f"
+    (general-key-dispatch 'self-insert-command
+      :timeout 0.25
+      "d" 'evil-normal-state))
+  (general-create-definer my-leader-def
+    :prefix "SPC")
+  (general-create-definer my-local-leader-def
+    :prefix "SPC m")
+  (my-leader-def
+    :keymaps 'normal
+    "SPC" 'execute-extended-command)
+  (general-define-key
+    "s-<return>" 'toggle-frame-fullscreen))
 
 ;; evil mode
 (use-package evil
-  :demand
   :init
-    (setq evil-want-keybinding nil)
+  (setq evil-want-keybinding nil)
   :config
-    (evil-mode 1))
+  (evil-mode 1))
 
 ;; evil keybindings for other packages
 (use-package evil-collection
-  :demand
   :after evil
   :config
-    (evil-collection-init))
+  (evil-collection-init))
 
 ;; theme
 (use-package dracula-theme
-  :demand
   :config
-    (load-theme 'dracula t))
+  (load-theme 'dracula t))
 
 ;; Which Key
 (use-package which-key
-  :demand
   :init
-    (setq which-key-separator " ")
-    (setq which-key-prefix-prefix "+")
+  (setq which-key-separator " ")
+  (setq which-key-prefix-prefix "+")
   :config
-    (which-key-mode))
+  (which-key-mode))
 
 ;; completion engine
 (use-package helm
-  :demand
   :init
-    (setq helm-mode-fuzzy-match t)
-    (setq helm-completion-in-region-fuzzy-match t)
-    (setq helm-candidate-number-list 50))
+  (setq helm-mode-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
+  (setq helm-candidate-number-list 50))
 
 ;; projects
 (use-package projectile
-  :demand
   :config
-    (setq projectile-enable-caching t)
-    (projectile-mode t))
+  (setq projectile-enable-caching t)
+  (projectile-mode t))
 
 ;; git ui
-(use-package magit :demand)
+(use-package magit)
 
 (server-start)
 
