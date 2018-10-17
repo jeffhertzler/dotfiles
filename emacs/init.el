@@ -174,11 +174,16 @@
 
   ;; leader key bindings
   (my-leader 'normal
+    "" '(nil :wk "leader")
+
     ;; M-x
     "SPC" 'execute-extended-command
-    ;; save file
-    "fs" 'save-buffer
-    "bs" 'save-buffer)
+
+    "f" '(:ignore t :wk "file")
+    "fs" '(save-buffer :wk "save")
+
+    "b" '(:ignore t :wk "buffer")
+    "bs" '(save-buffer :wk "save"))
 
   ;; fullscreen
   (general-define-key
