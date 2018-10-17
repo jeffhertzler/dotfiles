@@ -192,6 +192,8 @@
 
     "fs" '(save-buffer :wk "save")
 
+    "g" '(:ignore t :wk "git")
+
     "q" '(:ignore t :wk "quit")
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "force quit"))
@@ -291,7 +293,10 @@
   (projectile-mode t))
 
 ;; git ui
-(use-package magit)
+(use-package magit
+  :general
+  (my:leader 'normal
+    "gs" '(magit-status :wk "status")))
 
 ;; vim keybindings for magit
 (use-package evil-magit
