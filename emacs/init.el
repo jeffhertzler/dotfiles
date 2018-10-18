@@ -96,6 +96,10 @@
     custom-file
       (no-littering-expand-etc-file-name "custom.el")))
 
+;; Package `git' is a library providing convenience functions for
+;; running Git.
+(use-package git :defer t)
+
 ;;; Prevent Emacs-provided Org from being loaded
 
 ;; The following is a temporary hack until straight.el supports
