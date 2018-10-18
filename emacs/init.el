@@ -230,6 +230,13 @@
   :config
   (evil-collection-init))
 
+;; code commenting
+(use-package evil-commentary
+  :after
+  evil
+  :hook
+  (prog-mode . evil-commentary-mode))
+
 ;; theme
 (use-package dracula-theme
   :config
