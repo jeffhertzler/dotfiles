@@ -232,6 +232,7 @@
 
 ;; code commenting
 (use-package evil-commentary
+  :blackout
   :after
   evil
   :hook
@@ -267,6 +268,7 @@
 
 ;; ivy specific versions of emacs commands
 (use-package counsel
+  :blackout
   :after
   ivy
   :config
