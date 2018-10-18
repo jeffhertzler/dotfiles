@@ -207,14 +207,13 @@
 
     "q" '(:ignore t :wk "quit")
     "qq" '(save-buffers-kill-emacs :wk "quit")
-    "qQ" '(kill-emacs :wk "force quit"))
+    "qQ" '(kill-emacs :wk "quit!"))
 
   (general-def
     :states '(normal motion visual)
     ";" 'evil-ex
     ":" 'evil-repeat-find-char)
 
-  ;; fullscreen
   (general-def
     "s-P" 'execute-extended-command
     "s-p" 'find-file
