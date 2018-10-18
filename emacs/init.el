@@ -192,6 +192,7 @@
 
     "b" '(:ignore t :wk "buffer")
     "bb" '(switch-to-buffer :wk "buffers")
+    "bd" '(kill-this-buffer :wk "delete")
     "bs" '(save-buffer :wk "save")
 
     "f" '(:ignore t :wk "file")
