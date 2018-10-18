@@ -263,6 +263,9 @@
   :init
   (setq ivy-count-format "%d/%d ")
 
+  :general
+  (my:leader "/" '(swiper :wk "search"))
+
   :config
   ;; set bindings if minibuffer uses evil or not
   (general-def ivy-minibuffer-map
