@@ -185,6 +185,7 @@
     "SPC" '(execute-extended-command :wk "M-x")
 
     "b" '(:ignore t :wk "buffer")
+    "bb" '(ivy-switch-buffer :wk "buffers")
     "bs" '(save-buffer :wk "save")
 
     "f" '(:ignore t :wk "file")
