@@ -197,6 +197,7 @@
     "f" '(:ignore t :wk "file")
 
     "fe" '(:ignore t :wk "emacs")
+    "ff" '(find-file :wk "find")
     "fed" '(my/emacs-dotfile :wk "dotfile")
     "fer" '(my/emacs-reload :wk "reload")
 
@@ -208,12 +209,15 @@
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "force quit"))
 
-  (general-def 'normal
+  (general-def
+    :states '(normal motion visual)
     ";" 'evil-ex
     ":" 'evil-repeat-find-char)
 
   ;; fullscreen
   (general-def
+    "s-P" 'execute-extended-command
+    "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
 ;; evil mode
