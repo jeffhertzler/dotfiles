@@ -71,7 +71,6 @@
 (fset #'yes-or-no-p #'y-or-n-p)
 
 (setq-default
-  display-line-numbers 'relative
   fill-column 120
   indent-tabs-mode nil
   inhibit-startup-message t
@@ -81,6 +80,11 @@
   vc-follow-symlinks t
   visible-bell nil
 )
+
+(add-hook 'prog-mode-hook
+  (lambda () (setq display-line-numbers 'relative)))
+(add-hook 'text-mode-hook
+  (lambda () (setq display-line-numbers 'relative)))
 
 ;; set font
 (set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
