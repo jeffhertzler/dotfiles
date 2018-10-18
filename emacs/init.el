@@ -79,6 +79,7 @@
   sentence-end-double-space nil
   vc-follow-symlinks t
   visible-bell nil
+  save-interprogram-paste-before-kill t
 )
 
 (add-hook 'prog-mode-hook
