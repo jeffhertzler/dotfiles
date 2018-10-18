@@ -189,7 +189,7 @@
     "SPC" '(execute-extended-command :wk "M-x")
 
     "b" '(:ignore t :wk "buffer")
-    "bb" '(ivy-switch-buffer :wk "buffers")
+    "bb" '(switch-to-buffer :wk "buffers")
     "bs" '(save-buffer :wk "save")
 
     "f" '(:ignore t :wk "file")
@@ -255,6 +255,13 @@
     "C-k" 'ivy-previous-line)
 
   (ivy-mode 1))
+
+;; ivy specific versions of emacs commands
+(use-package counsel
+  :after
+  ivy
+  :config
+  (counsel-mode 1))
 
 ;; code completion
 (use-package company
