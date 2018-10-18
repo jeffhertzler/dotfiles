@@ -237,6 +237,7 @@
 
 ;; keybinding documentation
 (use-package which-key
+  :blackout
   :init
   (setq which-key-separator " ")
   (setq which-key-prefix-prefix "+")
@@ -245,6 +246,7 @@
 
 ;; completion
 (use-package ivy
+  :blackout
   :init
   (setq ivy-count-format "%d/%d ")
 
@@ -265,6 +267,7 @@
 
 ;; code completion
 (use-package company
+  :blackout
   :hook
   (prog-mode . company-mode))
 
@@ -292,12 +295,14 @@
 
 ;; projects
 (use-package projectile
+  :blackout
   :config
   (setq projectile-enable-caching t)
   (projectile-mode t))
 
 ;; git ui
 (use-package magit
+  :blackout
   :general
   (my:leader "gs" '(magit-status :wk "status")))
 
