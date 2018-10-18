@@ -251,6 +251,7 @@
 
 ;; keybinding documentation
 (use-package which-key
+  :defer 1
   :blackout
   :init
   (setq which-key-separator " ")
@@ -260,6 +261,7 @@
 
 ;; completion
 (use-package ivy
+  :defer 1
   :blackout
   :init
   (setq ivy-count-format "%d/%d ")
