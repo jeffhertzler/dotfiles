@@ -169,17 +169,21 @@
 
   ;; setup leader key definer
   (general-create-definer my:leader
-    :prefix "SPC")
+    :states '(normal motion visual insert emacs)
+    :prefix "SPC"
+    :non-normal-prefix "C-SPC")
 
   ;; setup local leader definer
   (general-create-definer my:local-leader
-    :prefix "SPC m")
+    :states '(normal motion visual insert emacs)
+    :prefix "SPC m"
+    :non-normal-prefix "C-SPC m")
 
   (defun my/emacs-dotfile () (interactive) (find-file "~/.emacs.d/init.el"))
   (defun my/emacs-reload () (interactive) (load-file "~/.emacs.d/init.el"))
 
   ;; leader key bindings
-  (my:leader 'normal
+  (my:leader
     "" '(nil :wk "leader")
 
     "SPC" '(execute-extended-command :wk "M-x")
@@ -288,8 +292,7 @@
 ;; git ui
 (use-package magit
   :general
-  (my:leader 'normal
-    "gs" '(magit-status :wk "status")))
+  (my:leader "gs" '(magit-status :wk "status")))
 
 ;; vim keybindings for magit
 (use-package evil-magit
@@ -302,8 +305,7 @@
 ;; restart emacs
 (use-package restart-emacs
   :general
-  (my:leader 'normal
-    "qr" '(restart-emacs :wk "restart emacs")))
+  (my:leader "qr" '(restart-emacs :wk "restart emacs")))
 
 (server-start)
 
