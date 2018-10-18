@@ -85,6 +85,10 @@
 ;; set font
 (set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
 
+;; mode lighters
+(use-package blackout
+  :straight (:host github :repo "raxod502/blackout"))
+
 ;; Package `no-littering' changes the default paths for lots of
 ;; different packages, with the net result that the ~/.emacs.d folder
 ;; is much more clean and organized.
