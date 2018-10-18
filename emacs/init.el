@@ -192,7 +192,7 @@
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "force quit"))
 
-  (general-def 'motion
+  (general-def 'normal
     ";" 'evil-ex
     ":" 'evil-repeat-find-char)
 
