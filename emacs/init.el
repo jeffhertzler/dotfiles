@@ -217,8 +217,6 @@
 (use-package evil-collection
   :after
   evil
-  :init
-  (setq evil-collection-setup-minibuffer t)
   :config
   (evil-collection-init))
 
@@ -243,9 +241,6 @@
   :config
   ;; set bindings if minibuffer uses evil or not
   (general-def ivy-minibuffer-map
-    "C-j" 'ivy-next-line
-    "C-k" 'ivy-previous-line)
-  (general-def '(insert normal) ivy-minibuffer-map
     "C-j" 'ivy-next-line
     "C-k" 'ivy-previous-line)
 
