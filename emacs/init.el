@@ -70,6 +70,7 @@
 ;; y/n instead of yes/no
 (fset #'yes-or-no-p #'y-or-n-p)
 
+;; defaults
 (setq-default
   fill-column 120
   indent-tabs-mode nil
@@ -82,6 +83,7 @@
   save-interprogram-paste-before-kill t
 )
 
+;; line numbers in prog and text mode
 (add-hook 'prog-mode-hook
   (lambda () (setq display-line-numbers 'relative)))
 (add-hook 'text-mode-hook
