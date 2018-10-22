@@ -212,7 +212,9 @@
 
     "q" '(:ignore t :wk "quit")
     "qq" '(save-buffers-kill-emacs :wk "quit")
-    "qQ" '(kill-emacs :wk "quit!"))
+    "qQ" '(kill-emacs :wk "quit!")
+
+    "t" '(:ignore t :wk "toggle"))
 
   (general-def
     :states '(normal motion visual)
@@ -334,6 +336,13 @@
   :blackout
   :config
   (global-undo-tree-mode +1))
+
+(use-package subword
+  :blackout " sw"
+  :general
+  (my:leader "ts" '(subword-mode :wk "subword mode"))
+  :hook
+  (prog-mode . subword-mode))
 
 (use-package flycheck
   :blackout
