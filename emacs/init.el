@@ -341,6 +341,11 @@
   :config
   (counsel-projectile-mode))
 
+(use-package rainbow-delimiters
+  :blackout
+  :hook
+  (prog-mode . rainbow-delimiters-mode))
+
 ;; better undo
 (use-package undo-tree
   :blackout
