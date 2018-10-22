@@ -228,6 +228,10 @@
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
+(use-package exec-path-from-shell
+  :config
+  (exec-path-from-shell-initialize))
+
 ;; evil mode
 (use-package evil
   :init
