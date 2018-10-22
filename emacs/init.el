@@ -320,6 +320,10 @@
   (setq projectile-enable-caching t)
   (projectile-mode t))
 
+;; projects via counsel
+(use-package counsel-projectile
+  :after
+  '(counsel projectile))
 (use-package flycheck
   :hook
   (prog-mode . flycheck-mode))
