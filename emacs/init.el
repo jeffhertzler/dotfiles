@@ -344,6 +344,15 @@
   :hook
   (prog-mode . subword-mode))
 
+(use-package yasnippet
+  :defer 1
+  :init
+  ;; don't give me init message
+  (setq yas-verbosity 1)        
+  :config
+  (yas-global-mode)
+  (blackout 'yas-minor-mode))
+
 (use-package flycheck
   :blackout
   :hook
