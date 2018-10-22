@@ -54,7 +54,7 @@
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (setq
   frame-title-format nil
-  ns-use-proxy-icon  nil
+  ns-use-proxy-icon nil
   ns-use-native-fullscreen nil)
 
 ;; UTF-8 as the default coding system
