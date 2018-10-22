@@ -324,6 +324,9 @@
   :hook
   (prog-mode . flycheck-mode))
 
+;; disable built in git support
+(setq vc-handled-backends nil)
+
 ;; git ui
 (use-package magit
   :blackout
