@@ -324,6 +324,13 @@
 (use-package counsel-projectile
   :after
   '(counsel projectile))
+
+;; better undo
+(use-package undo-tree
+  :blackout
+  :config
+  (global-undo-tree-mode +1))
+
 (use-package flycheck
   :hook
   (prog-mode . flycheck-mode))
