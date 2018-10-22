@@ -344,6 +344,16 @@
   :hook
   (prog-mode . subword-mode))
 
+(use-package powerline
+  :init
+  (setq powerline-default-separator 'utf-8))
+
+(use-package powerline-evil
+  :after
+  powerline
+  :config
+  (powerline-evil-vim-color-theme))
+
 (use-package yasnippet
   :defer 1
   :init
