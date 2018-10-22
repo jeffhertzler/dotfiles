@@ -94,7 +94,11 @@
 
 ;; mode lighters
 (use-package blackout
-  :straight (:host github :repo "raxod502/blackout"))
+  :straight (:host github :repo "raxod502/blackout")
+  :config
+  (blackout 'emacs-lisp-mode "elisp")
+  (blackout 'lisp-interaction-mode "elisp")
+  (blackout 'eldoc-mode))
 
 ;; Package `no-littering' changes the default paths for lots of
 ;; different packages, with the net result that the ~/.emacs.d folder
@@ -332,6 +336,7 @@
   (global-undo-tree-mode +1))
 
 (use-package flycheck
+  :blackout
   :hook
   (prog-mode . flycheck-mode))
 
