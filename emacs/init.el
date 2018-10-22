@@ -320,6 +320,10 @@
   (setq projectile-enable-caching t)
   (projectile-mode t))
 
+(use-package flycheck
+  :hook
+  (prog-mode . flycheck-mode))
+
 ;; git ui
 (use-package magit
   :blackout
@@ -358,3 +362,7 @@
   gcs-done))
 
 (add-hook 'emacs-startup-hook #'my|finalize)
+
+;; Local Variables:
+;; flycheck-disabled-checkers: (emacs-lisp emacs-lisp-checkdoc)
+;; End:
