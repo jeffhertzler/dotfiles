@@ -327,8 +327,10 @@
 (use-package projectile
   :blackout
   :general
+  (my:leader "pb" '(projectile-switch-to-buffer :wk "buffer"))
   (my:leader "pf" '(projectile-find-file :wk "file"))
   (my:leader "pl" '(projectile-switch-project :wk "list"))
+  (my:leader "ps" '(projectile-ripgrep :wk "search"))
   :config
   (projectile-mode +1)
   (setq projectile-enable-caching t))
