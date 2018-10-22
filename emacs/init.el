@@ -210,6 +210,8 @@
 
     "g" '(:ignore t :wk "git")
 
+    "p" '(:ignore t :wk "project")
+
     "q" '(:ignore t :wk "quit")
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "quit!")
@@ -286,8 +288,6 @@
 ;; ivy specific versions of emacs commands
 (use-package counsel
   :blackout
-  :after
-  ivy
   :config
   (counsel-mode 1))
 
@@ -322,14 +322,18 @@
 ;; projects
 (use-package projectile
   :blackout
+  :general
+  (my:leader "pf" '(projectile-find-file :wk "file"))
+  (my:leader "pl" '(projectile-switch-project :wk "list"))
   :config
-  (setq projectile-enable-caching t)
-  (projectile-mode t))
+  (projectile-mode +1)
+  (setq projectile-enable-caching t))
 
 ;; projects via counsel
 (use-package counsel-projectile
-  :after
-  '(counsel projectile))
+  :blackout
+  :config
+  (counsel-projectile-mode))
 
 ;; better undo
 (use-package undo-tree
