@@ -216,7 +216,13 @@
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "quit!")
 
-    "t" '(:ignore t :wk "toggle"))
+    "t" '(:ignore t :wk "toggle")
+
+    "w" '(:ignore t :wk "window")
+    "wl" '(windmove-right :wk "move right")
+    "wh" '(windmove-left :wk "move left")
+    "wk" '(windmove-up :wk "move up")
+    "wj" '(windmove-down :wk "move down"))
 
   (general-def
     :states '(normal motion visual)
@@ -322,6 +328,11 @@
   (company prescient)
   :config
   (company-prescient-mode 1))
+
+(use-package ace-window
+  :blackout " aw"
+  :general
+  (my:leader "ww" '(ace-window :wk "ace window")))
 
 ;; projects
 (use-package projectile
