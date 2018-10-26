@@ -219,10 +219,10 @@
     "t" '(:ignore t :wk "toggle")
 
     "w" '(:ignore t :wk "window")
-    "wl" '(windmove-right :wk "move right")
-    "wh" '(windmove-left :wk "move left")
-    "wk" '(windmove-up :wk "move up")
-    "wj" '(windmove-down :wk "move down"))
+    "wl" '(windmove-right :wk "right")
+    "wh" '(windmove-left :wk "left")
+    "wk" '(windmove-up :wk "up")
+    "wj" '(windmove-down :wk "down"))
 
   (general-def
     :states '(normal motion visual)
