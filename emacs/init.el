@@ -249,16 +249,14 @@
 
 ;; evil keybindings for other packages
 (use-package evil-collection
-  :after
-  evil
+  :after evil
   :config
   (evil-collection-init))
 
 ;; code commenting
 (use-package evil-commentary
   :blackout
-  :after
-  evil
+  :after evil
   :hook
   (prog-mode . evil-commentary-mode))
 
@@ -317,15 +315,13 @@
 
 ;; with ivy
 (use-package ivy-prescient
-  :after
-  (ivy prescient)
+  :after ivy prescient
   :config
   (ivy-prescient-mode 1))
 
 ;; with company
 (use-package company-prescient
-  :after
-  (company prescient)
+  :after company prescient
   :config
   (company-prescient-mode 1))
 
@@ -375,8 +371,7 @@
   (setq powerline-default-separator 'utf-8))
 
 (use-package powerline-evil
-  :after
-  powerline
+  :after powerline
   :config
   (powerline-evil-vim-color-theme))
 
@@ -405,8 +400,7 @@
 
 ;; vim keybindings for magit
 (use-package evil-magit
-  :after
-  (evil magit))
+  :after evil magit)
 
 ;; emacs startup profiler
 (use-package esup)
