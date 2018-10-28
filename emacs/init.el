@@ -330,6 +330,16 @@
   :general
   (my:leader "ww" '(ace-window :wk "ace window")))
 
+(use-package treemacs
+  :general
+  (my:leader "ft" '(treemacs :wk "tree")))
+
+(use-package treemacs-evil
+  :after treemacs evil)
+
+(use-package treemacs-projectile
+  :after treemacs projectile)
+
 ;; projects
 (use-package projectile
   :blackout
