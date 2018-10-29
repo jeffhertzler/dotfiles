@@ -436,8 +436,6 @@
   :general
   (my:leader "qr" '(restart-emacs :wk "restart emacs")))
 
-(server-start)
-
 ;; reset
 (defun my|finalize ()
   "Reset `gc-cons-threshold', `gc-cons-percentage' and `file-name-handler-alist'."
@@ -446,7 +444,12 @@
     (setq
       gc-cons-threshold 16777216
       gc-cons-percentage 0.1
-      file-name-handler-alist my--file-name-handler-alist))
+      file-name-handler-alist my--file-name-handler-alist)
+
+    (when (display-graphic-p)
+      (require 'server)
+      (unless (server-running-p)
+        (server-start))))
 
   (message "Emacs ready in %s with %d garbage collections."
     (format "%.2f seconds"
