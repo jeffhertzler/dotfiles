@@ -23,6 +23,7 @@
     file-name-handler-alist nil))
 
 ;; Install straight.el package manager
+(setq straight-check-for-modifications 'live)
 (defvar bootstrap-version)
 (let
   (
