@@ -240,7 +240,11 @@
 
 (use-package exec-path-from-shell
   :config
-  (exec-path-from-shell-initialize))
+  (exec-path-from-shell-initialize)
+  (let ((gls (executable-find "gls")))
+    (when gls
+      (setq insert-directory-program gls
+            dired-listing-switches "-aBhl --group-directories-first"))))
 
 ;; evil mode
 (use-package evil
