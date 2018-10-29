@@ -225,8 +225,10 @@
     "wk" '(windmove-up :wk "up")
     "wj" '(windmove-down :wk "down"))
 
-  (general-def
-    :states '(normal motion visual)
+  (general-create-definer my:normal
+    :states '(normal motion visual))
+
+  (my:normal
     "-" 'dired-jump
     ";" 'evil-ex
     ":" 'evil-repeat-find-char)
