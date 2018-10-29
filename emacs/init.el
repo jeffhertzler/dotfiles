@@ -338,14 +338,6 @@
   :general
   (my:leader "ww" '(ace-window :wk "ace window")))
 
-(use-package dired+
-  :init
-  (setq
-    diredp-hide-details-initially-flag t
-    diredp-hide-details-propagate-flag t)
-  :config
-  (toggle-diredp-find-file-reuse-dir 1))
-
 (use-package treemacs
   :general
   (my:leader "ft" '(treemacs :wk "tree")))
