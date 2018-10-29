@@ -50,6 +50,9 @@
 (tool-bar-mode -1)
 (tooltip-mode -1)
 
+;; set font
+(set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
+
 ;; MacOS tweaks
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
@@ -89,9 +92,6 @@
   (lambda () (setq display-line-numbers 'relative)))
 (add-hook 'text-mode-hook
   (lambda () (setq display-line-numbers 'relative)))
-
-;; set font
-(set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
 
 ;; mode lighters
 (use-package blackout
