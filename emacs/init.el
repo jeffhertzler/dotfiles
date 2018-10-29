@@ -283,6 +283,12 @@
   :config
   (which-key-mode))
 
+(defun my--ignore-dired-buffers (str)
+  "Return non-nil if STR names a Dired buffer.
+This function is intended for use with `ivy-ignore-buffers'."
+  (let ((buf (get-buffer str)))
+    (and buf (eq (buffer-local-value 'major-mode buf) 'dired-mode))))
+
 ;; completion
 (use-package ivy
   :defer 1
@@ -298,6 +304,8 @@
   (general-def ivy-minibuffer-map
     "C-j" 'ivy-next-line
     "C-k" 'ivy-previous-line)
+
+  (add-to-list 'ivy-ignore-buffers #'my--ignore-dired-buffers)
 
   (ivy-mode 1))
 
