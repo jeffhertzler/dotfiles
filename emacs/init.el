@@ -393,11 +393,12 @@
   (prog-mode . subword-mode))
 
 (use-package powerline
+  :defer 1
   :init
   (setq powerline-default-separator 'utf-8))
 
 (use-package powerline-evil
-  :after powerline
+  :after powerline evil
   :config
   (powerline-evil-vim-color-theme))
 
