@@ -444,6 +444,18 @@ This function is intended for use with `ivy-ignore-buffers'."
   js-indent-level 2
   tab-width 2)
 
+(use-package lsp-mode
+  :hook
+  (lsp-after-open . lsp-enable-imenu))
+
+(use-package lsp-ui
+  :hook lsp-mode)
+
+(use-package company-lsp
+  :after company lsp-mode
+  :config
+  (push 'company-lsp company-backends))
+
 ;; js
 (use-package js2-mode
   :blackout "js"
@@ -453,6 +465,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   (setq
     js2-mode-show-parse-errors nil
     js2-mode-show-strict-warnings nil))
+
+(use-package lsp-javascript
+  :after lsp-mode)
 
 (use-package json-mode
   :mode "\\.json\\'")
