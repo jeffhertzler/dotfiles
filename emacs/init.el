@@ -437,6 +437,44 @@ This function is intended for use with `ivy-ignore-buffers'."
   :general
   (my:leader "qr" '(restart-emacs :wk "restart emacs")))
 
+;; indentation
+(setq-default
+  c-basic-offset 2
+  css-indent-offset 2
+  js-indent-level 2
+  tab-width 2)
+
+;; js
+(use-package js2-mode
+  :blackout "js"
+  :mode "\\.js\\'"
+  :interpreter "node"
+  :config
+  (setq
+    js2-mode-show-parse-errors nil
+    js2-mode-show-strict-warnings nil))
+
+(use-package json-mode
+  :mode "\\.json\\'")
+
+(use-package web-mode
+  :mode "\\.jsx\\'"
+  :mode "\\.hbs\\'")
+
+(use-package add-node-modules-path
+  :hook
+  (js-mode . add-node-modules-path)
+  (js2-mode . add-node-modules-path)
+  (json-mode . add-node-modules-path)
+  (web-mode . add-node-modules-path))
+
+;; formatting
+(use-package prettier-js
+  :hook
+  (js-mode . prettier-js-mode)
+  (js2-mode . prettier-js-mode)
+  (json-mode . prettier-js-mode))
+
 ;; reset
 (defun my|finalize ()
   "Reset `gc-cons-threshold', `gc-cons-percentage' and `file-name-handler-alist'."
