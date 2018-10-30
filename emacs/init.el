@@ -412,7 +412,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (blackout 'yas-minor-mode))
 
 (use-package flycheck
-  :blackout
+  :blackout " s"
   :hook
   (prog-mode . flycheck-mode))
 
