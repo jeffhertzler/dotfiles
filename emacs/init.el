@@ -445,11 +445,21 @@ This function is intended for use with `ivy-ignore-buffers'."
   tab-width 2)
 
 (use-package lsp-mode
+  :config
+  (lsp-define-stdio-client
+    lsp-javascript-typescript
+    "javascript"
+    #'projectile-project-root
+    '("typescript-language-server" "--stdio"))
+    ;; '("javascript-typescript-stdio"))
+  (setq lsp-ui-sideline-show-code-actions nil)
   :hook
-  (lsp-after-open . lsp-enable-imenu))
+  (lsp-after-open . lsp-enable-imenu)
+  (js2-mode . lsp-javascript-typescript-enable))
 
 (use-package lsp-ui
-  :hook lsp-mode)
+  :hook
+  (lsp-mode . lsp-ui-mode))
 
 (use-package company-lsp
   :after company lsp-mode
@@ -466,9 +476,6 @@ This function is intended for use with `ivy-ignore-buffers'."
     js2-mode-show-parse-errors nil
     js2-mode-show-strict-warnings nil))
 
-(use-package lsp-javascript
-  :after lsp-mode)
-
 (use-package json-mode
   :mode "\\.json\\'")
 
@@ -478,7 +485,6 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package add-node-modules-path
   :hook
-  (js-mode . add-node-modules-path)
   (js2-mode . add-node-modules-path)
   (json-mode . add-node-modules-path)
   (web-mode . add-node-modules-path))
@@ -486,7 +492,6 @@ This function is intended for use with `ivy-ignore-buffers'."
 ;; formatting
 (use-package prettier-js
   :hook
-  (js-mode . prettier-js-mode)
   (js2-mode . prettier-js-mode)
   (json-mode . prettier-js-mode))
 
