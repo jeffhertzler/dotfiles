@@ -398,6 +398,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package doom-modeline
   :config
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
+  (defun anzu--reset-status () )
   :hook (after-init . doom-modeline-init))
 
 (use-package all-the-icons)
