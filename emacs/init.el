@@ -218,6 +218,7 @@
     "qQ" '(kill-emacs :wk "quit!")
 
     "t" '(:ignore t :wk "toggle")
+    "tw" '(whitespace-mode :wk "whitespace")
 
     "w" '(:ignore t :wk "window")
     "wl" '(windmove-right :wk "right")
