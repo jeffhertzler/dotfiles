@@ -269,9 +269,10 @@
   (prog-mode . evil-commentary-mode))
 
 ;; theme
-(use-package dracula-theme
+(use-package doom-themes
   :config
-  (load-theme 'dracula t))
+  (load-theme 'doom-dracula t)
+  (doom-themes-treemacs-config))
 
 ;; keybinding documentation
 (use-package which-key
@@ -393,15 +394,12 @@ This function is intended for use with `ivy-ignore-buffers'."
   :hook
   (prog-mode . subword-mode))
 
-(use-package powerline
-  :defer 1
-  :init
-  (setq powerline-default-separator 'utf-8))
-
-(use-package powerline-evil
-  :after powerline evil
+(use-package doom-modeline
   :config
-  (powerline-evil-vim-color-theme))
+  (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
+  :hook (after-init . doom-modeline-init))
+
+(use-package all-the-icons)
 
 (use-package yasnippet
   :defer 1
