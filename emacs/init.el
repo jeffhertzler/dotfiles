@@ -19,22 +19,20 @@
   ;; so we up its memory threshold, temporarily. It is reset later in
   ;; `my|finalize'.
   (setq gc-cons-threshold 402653184
-    gc-cons-percentage 0.6
-    file-name-handler-alist nil))
+        gc-cons-percentage 0.6
+        file-name-handler-alist nil))
 
 ;; Install straight.el package manager
 (setq straight-check-for-modifications 'live)
 (defvar bootstrap-version)
-(let
-  (
-    (bootstrap-file
-      (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-    (bootstrap-version 5))
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-      (url-retrieve-synchronously
-        "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-        'silent 'inhibit-cookies)
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -57,9 +55,9 @@
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (setq
-  frame-title-format nil
-  ns-use-proxy-icon nil
-  ns-use-native-fullscreen nil)
+ frame-title-format nil
+ ns-use-proxy-icon nil
+ ns-use-native-fullscreen nil)
 
 ;; UTF-8 as the default coding system
 (when (fboundp 'set-charset-priority)
@@ -76,22 +74,21 @@
 
 ;; defaults
 (setq-default
-  fill-column 120
-  indent-tabs-mode nil
-  inhibit-startup-message t
-  initial-scratch-message nil
-  ring-bell-function #'ignore
-  sentence-end-double-space nil
-  vc-follow-symlinks t
-  visible-bell nil
-  save-interprogram-paste-before-kill t
-)
+ fill-column 120
+ indent-tabs-mode nil
+ inhibit-startup-message t
+ initial-scratch-message nil
+ ring-bell-function #'ignore
+ sentence-end-double-space nil
+ vc-follow-symlinks t
+ visible-bell nil
+ save-interprogram-paste-before-kill t)
 
 ;; line numbers in prog and text mode
 (add-hook 'prog-mode-hook
-  (lambda () (setq display-line-numbers 'relative)))
+          (lambda () (setq display-line-numbers 'relative)))
 (add-hook 'text-mode-hook
-  (lambda () (setq display-line-numbers 'relative)))
+          (lambda () (setq display-line-numbers 'relative)))
 
 ;; mode lighters
 (use-package blackout
@@ -107,10 +104,10 @@
 (use-package no-littering
   :config
   (setq
-    auto-save-file-name-transforms
-      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))
-    custom-file
-      (no-littering-expand-etc-file-name "custom.el")))
+   auto-save-file-name-transforms
+   `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))
+   custom-file
+   (no-littering-expand-etc-file-name "custom.el")))
 
 ;; Package `git' is a library providing convenience functions for
 ;; running Git.
@@ -408,7 +405,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   :defer 1
   :init
   ;; don't give me init message
-  (setq yas-verbosity 1)        
+  (setq yas-verbosity 1)
   :config
   (yas-global-mode)
   (blackout 'yas-minor-mode))
@@ -438,20 +435,20 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; indentation
 (setq-default
-  c-basic-offset 2
-  css-indent-offset 2
-  js-indent-level 2
-  tab-width 2)
+ c-basic-offset 2
+ css-indent-offset 2
+ js-indent-level 2
+ tab-width 2)
 
 (use-package lsp-mode
   :blackout "lsp"
   :config
   (lsp-define-stdio-client
-    lsp-javascript-typescript
-    "javascript"
-    #'projectile-project-root
-    '("typescript-language-server" "--stdio"))
-    ;; '("javascript-typescript-stdio"))
+   lsp-javascript-typescript
+   "javascript"
+   #'projectile-project-root
+   '("typescript-language-server" "--stdio"))
+  ;; '("javascript-typescript-stdio"))
   :hook
   (lsp-after-open . lsp-enable-imenu)
   (js2-mode . lsp-javascript-typescript-enable))
@@ -475,8 +472,8 @@ This function is intended for use with `ivy-ignore-buffers'."
   :interpreter "node"
   :config
   (setq
-    js2-mode-show-parse-errors nil
-    js2-mode-show-strict-warnings nil))
+   js2-mode-show-parse-errors nil
+   js2-mode-show-strict-warnings nil))
 
 (use-package json-mode
   :mode "\\.json\\'")
@@ -506,9 +503,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   (unless (or (not after-init-time) noninteractive)
     ;; If you forget to reset this, you'll get stuttering and random freezes!
     (setq
-      gc-cons-threshold 16777216
-      gc-cons-percentage 0.1
-      file-name-handler-alist my--file-name-handler-alist)
+     gc-cons-threshold 16777216
+     gc-cons-percentage 0.1
+     file-name-handler-alist my--file-name-handler-alist)
 
     (when (display-graphic-p)
       (require 'server)
@@ -516,10 +513,10 @@ This function is intended for use with `ivy-ignore-buffers'."
         (server-start))))
 
   (message "Emacs ready in %s with %d garbage collections."
-    (format "%.2f seconds"
-      (float-time
-        (time-subtract after-init-time before-init-time)))
-  gcs-done))
+           (format "%.2f seconds"
+                   (float-time
+                    (time-subtract after-init-time before-init-time)))
+           gcs-done))
 
 (add-hook 'emacs-startup-hook #'my|finalize)
 
