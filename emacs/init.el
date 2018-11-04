@@ -342,7 +342,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (company-prescient-mode 1))
 
 (use-package ace-window
-  :blackout " aw"
+  :blackout "aw"
   :general
   (my:leader "ww" '(ace-window :wk "ace window")))
 
@@ -386,7 +386,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (global-undo-tree-mode +1))
 
 (use-package subword
-  :blackout " sw"
+  :blackout "sw"
   :general
   (my:leader "ts" '(subword-mode :wk "subword mode"))
   :hook
@@ -412,7 +412,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (blackout 'yas-minor-mode))
 
 (use-package flycheck
-  :blackout " s"
+  :blackout "flycheck"
   :hook
   (prog-mode . flycheck-mode))
 
@@ -445,6 +445,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   tab-width 2)
 
 (use-package lsp-mode
+  :blackout "lsp"
   :config
   (lsp-define-stdio-client
     lsp-javascript-typescript
@@ -493,6 +494,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; formatting
 (use-package prettier-js
+  :blackout "prettier"
   :hook
   (js2-mode . prettier-js-mode)
   (json-mode . prettier-js-mode))
