@@ -253,6 +253,11 @@
   :config
   (evil-mode 1))
 
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode 1))
+
 ;; evil keybindings for other packages
 (use-package evil-collection
   :after evil
