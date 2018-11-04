@@ -492,11 +492,13 @@ This function is intended for use with `ivy-ignore-buffers'."
   (web-mode . add-node-modules-path))
 
 ;; formatting
-(use-package prettier-js
-  :blackout "prettier"
+(use-package format-all
+  :blackout "format"
   :hook
-  (js2-mode . prettier-js-mode)
-  (json-mode . prettier-js-mode))
+  (emacs-lisp-mode . format-all-mode)
+  (lisp-interaction-mode . format-all-mode)
+  (js2-mode . format-all-mode)
+  (json-mode . format-all-mode))
 
 ;; reset
 (defun my|finalize ()
