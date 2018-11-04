@@ -452,12 +452,14 @@ This function is intended for use with `ivy-ignore-buffers'."
     #'projectile-project-root
     '("typescript-language-server" "--stdio"))
     ;; '("javascript-typescript-stdio"))
-  (setq lsp-ui-sideline-show-code-actions nil)
   :hook
   (lsp-after-open . lsp-enable-imenu)
   (js2-mode . lsp-javascript-typescript-enable))
 
 (use-package lsp-ui
+  :init
+  (setq lsp-ui-flycheck-enable nil)
+  (setq lsp-ui-sideline-show-code-actions nil)
   :hook
   (lsp-mode . lsp-ui-mode))
 
