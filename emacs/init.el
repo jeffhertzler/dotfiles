@@ -273,7 +273,8 @@
 (use-package doom-themes
   :config
   (load-theme 'doom-dracula t)
-  (doom-themes-treemacs-config))
+  (doom-themes-treemacs-config)
+  (doom-themes-org-config))
 
 ;; keybinding documentation
 (use-package which-key
