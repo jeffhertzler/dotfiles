@@ -445,6 +445,11 @@ This function is intended for use with `ivy-ignore-buffers'."
  js-indent-level 2
  tab-width 2)
 
+(use-package editorconfig
+  :defer 1
+  :config
+  (editorconfig-mode 1))
+
 (use-package lsp-mode
   :blackout "lsp"
   :config
@@ -489,7 +494,11 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package web-mode
   :mode "\\.jsx\\'"
-  :mode "\\.hbs\\'")
+  :mode "\\.hbs\\'"
+  :init
+  (setq web-mode-enable-current-element-highlight t)
+  (add-hook 'editorconfig-after-apply-functions
+            (lambda (hash) (setq web-mode-block-padding 0))))
 
 (use-package add-node-modules-path
   :hook
