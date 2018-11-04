@@ -297,6 +297,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (setq ivy-count-format "%d/%d ")
 
   :general
+  (my:normal "/" '(swiper :wk "search"))
   (my:leader "/" '(swiper :wk "search"))
 
   :config
