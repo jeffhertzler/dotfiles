@@ -475,6 +475,10 @@ This function is intended for use with `ivy-ignore-buffers'."
    js2-mode-show-parse-errors nil
    js2-mode-show-strict-warnings nil))
 
+(use-package js2-refactor
+  :hook
+  (js2-mode . js2-refactor-mode))
+
 (use-package json-mode
   :mode "\\.json\\'")
 
