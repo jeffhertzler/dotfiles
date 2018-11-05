@@ -496,7 +496,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   :mode "\\.jsx\\'"
   :mode "\\.hbs\\'"
   :init
-  (setq web-mode-enable-current-element-highlight t)
+  (setq
+   web-mode-comment-style 2
+   web-mode-enable-current-element-highlight t)
   (add-hook 'editorconfig-after-apply-functions
             (lambda (hash) (setq web-mode-block-padding 0))))
 
