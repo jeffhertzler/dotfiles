@@ -500,7 +500,10 @@ This function is intended for use with `ivy-ignore-buffers'."
    web-mode-comment-style 2
    web-mode-enable-current-element-highlight t)
   (add-hook 'editorconfig-after-apply-functions
-            (lambda (hash) (setq web-mode-block-padding 0))))
+            (lambda (hash)
+              (let* ((indent_size (gethash 'indent_size hash "2"))
+                     (indent (string-to-number indent_size)))
+                (setq web-mode-block-padding (- indent 2))))))
 
 (use-package add-node-modules-path
   :hook
