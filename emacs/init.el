@@ -177,12 +177,6 @@
     :prefix "SPC"
     :non-normal-prefix "C-SPC")
 
-  ;; setup local leader definer
-  (general-create-definer my:local-leader
-    :states '(normal motion visual insert emacs)
-    :prefix "SPC m"
-    :non-normal-prefix "C-SPC m")
-
   (defun my/emacs-dotfile () (interactive) (find-file "~/.emacs.d/init.el"))
   (defun my/emacs-reload () (interactive) (load-file "~/.emacs.d/init.el"))
 
@@ -207,6 +201,8 @@
     "fs" '(save-buffer :wk "save")
 
     "g" '(:ignore t :wk "git")
+
+    "m" '(:ignore t :wk "major")
 
     "p" '(:ignore t :wk "project")
 
@@ -526,7 +522,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   (emacs-lisp-mode . format-all-mode)
   (lisp-interaction-mode . format-all-mode)
   (js2-mode . format-all-mode)
-  (json-mode . format-all-mode))
+  (json-mode . format-all-mode)
+  :config
+  (my:leader "mf" '(format-all-buffer :wk "format")))
 
 ;; reset
 (defun my|finalize ()
