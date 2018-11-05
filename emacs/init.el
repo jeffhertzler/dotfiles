@@ -214,6 +214,8 @@
     "qq" '(save-buffers-kill-emacs :wk "quit")
     "qQ" '(kill-emacs :wk "quit!")
 
+    "r" '(:ignore t :wk "resume")
+
     "t" '(:ignore t :wk "toggle")
     "tw" '(whitespace-mode :wk "whitespace")
 
@@ -303,7 +305,9 @@ This function is intended for use with `ivy-ignore-buffers'."
 
   :general
   (my:normal "/" '(swiper :wk "search"))
-  (my:leader "/" '(swiper :wk "search"))
+  (my:leader
+    "/" '(swiper :wk "search")
+    "rl" '(ivy-resume :wk "last"))
 
   :config
   ;; set bindings if minibuffer uses evil or not
