@@ -223,7 +223,11 @@
     "wl" '(windmove-right :wk "right")
     "wh" '(windmove-left :wk "left")
     "wk" '(windmove-up :wk "up")
-    "wj" '(windmove-down :wk "down"))
+    "wj" '(windmove-down :wk "down")
+
+    "x" '(:ignore t :wk "text")
+    "xl" '(:ignore t :wk "line")
+    "xls" '(sort-lines :wk "sort"))
 
   (general-create-definer my:normal
     :states '(normal motion visual))
