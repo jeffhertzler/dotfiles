@@ -241,9 +241,13 @@
 ;; real one is registered.
 (use-package org
   :init
-  (setq org-log-done 'time)
+  (setq
+   org-log-done 'time
+   org-agenda-files '("~/todo.org")
+   org-todo-keywords '((sequence "TODO(t)" "DONE(d)")))
   :config
   (my:leader
+    "oa" '(org-agenda-list :wk "agenda")
     "oc" '(org-capture :wk "capture")
     "ol" '(org-store-link :wk "link"))
   (my:leader org-mode-map
@@ -253,6 +257,15 @@
     "mis" '(org-insert-subheading: :wk "subheading")
     "ml" '(org-open-at-point :wk "link")
     "mt" '(org-todo :wk "todo")))
+
+;; (use-package evil-org
+;;   :after org
+;;   :hook
+;;   (org-mode . evil-org-mode)
+;;   (evil-org-mode . (lambda () (evil-org-set-key-theme)))
+;;   :config
+;;   (require 'evil-org-agenda)
+;;   (evil-org-agenda-set-keys))
 
 (use-package exec-path-from-shell
   :config
@@ -543,14 +556,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (my:leader
     "bf" '(format-all-buffer :wk "format")))
 
-(use-package evil-org
-  :after org
-  :hook
-  (org-mode . evil-org-mode)
-  (evil-org-mode . (lambda () (evil-org-set-key-theme)))
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
+(find-file "~/todo.org")
 
 ;; reset
 (defun my|finalize ()
