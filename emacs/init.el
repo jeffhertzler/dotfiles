@@ -239,7 +239,21 @@
 ;; depend on Org, they will not accidentally cause the Emacs-provided
 ;; (outdated and duplicated) version of Org to be loaded before the
 ;; real one is registered.
-(use-package org)
+(use-package org
+  :init
+  (setq org-log-done 'time)
+  :config
+  (my:leader
+    "oc" '(org-capture :wk "capture")
+    "ol" '(org-store-link :wk "link"))
+  (my:leader org-mode-map
+    "mi" '(:ignore t :wk "insert")
+    "mih" '(org-insert-heading: :wk "heading")
+    "mil" '(org-insert-link :wk "link")
+    "mis" '(org-insert-subheading: :wk "subheading")
+    "ml" '(org-open-at-point :wk "link")
+    "mt" '(org-todo :wk "todo")))
+
 (use-package exec-path-from-shell
   :config
   (exec-path-from-shell-initialize)
@@ -528,6 +542,15 @@ This function is intended for use with `ivy-ignore-buffers'."
   :config
   (my:leader
     "bf" '(format-all-buffer :wk "format")))
+
+(use-package evil-org
+  :after org
+  :hook
+  (org-mode . evil-org-mode)
+  (evil-org-mode . (lambda () (evil-org-set-key-theme)))
+  :config
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys))
 
 ;; reset
 (defun my|finalize ()
