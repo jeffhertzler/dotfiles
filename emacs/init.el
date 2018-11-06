@@ -168,6 +168,8 @@
 
     "r" '(:ignore t :wk "resume")
 
+    "s" '(:ignore t :wk "search")
+
     "t" '(:ignore t :wk "toggle")
     "tw" '(whitespace-mode :wk "whitespace")
 
@@ -336,7 +338,8 @@ This function is intended for use with `ivy-ignore-buffers'."
   (my:normal "/" '(swiper :wk "search"))
   (my:leader
     "/" '(swiper :wk "search")
-    "rl" '(ivy-resume :wk "last"))
+    "rl" '(ivy-resume :wk "last")
+    "sf" '(swiper :wk "file"))
 
   :config
   ;; set bindings if minibuffer uses evil or not
@@ -403,6 +406,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (my:leader "pf" '(projectile-find-file :wk "file"))
   (my:leader "pl" '(projectile-switch-project :wk "list"))
   (my:leader "ps" '(projectile-ripgrep :wk "search"))
+  (my:leader "sp" '(projectile-ripgrep :wk "project"))
   :config
   (projectile-mode +1)
   (setq projectile-enable-caching t))
