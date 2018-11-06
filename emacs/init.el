@@ -158,6 +158,8 @@
 
     "m" '(:ignore t :wk "major")
 
+    "o" '(:ignore t :wk "org")
+
     "p" '(:ignore t :wk "project")
 
     "q" '(:ignore t :wk "quit")
@@ -524,7 +526,8 @@ This function is intended for use with `ivy-ignore-buffers'."
   (js2-mode . format-all-mode)
   (json-mode . format-all-mode)
   :config
-  (my:leader "mf" '(format-all-buffer :wk "format")))
+  (my:leader
+    "bf" '(format-all-buffer :wk "format")))
 
 ;; reset
 (defun my|finalize ()
