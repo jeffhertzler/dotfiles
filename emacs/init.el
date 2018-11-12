@@ -220,10 +220,19 @@
   :ensure t
   :init
   ;; disable built in evil keybindings in favor of evil-collection
-  (setq evil-want-keybinding nil)
+  (setq
+   evil-want-keybinding nil
+   evil-want-Y-yank-to-eol t
+   evil-want-C-u-scroll t)
 
   :config
   (evil-mode 1))
+
+(use-package evil-better-visual-line
+  :ensure t
+  :after evil
+  :config
+  (evil-better-visual-line-on))
 
 (use-package evil-surround
   :ensure t
