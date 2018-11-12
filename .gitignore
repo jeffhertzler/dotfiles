@@ -1,3 +1,5 @@
 .DS_Store
+/emacs/elpa
+/emacs/etc/custom.el
 /emacs/straight
 /emacs/var

@@ -22,24 +22,16 @@
         gc-cons-percentage 0.6
         file-name-handler-alist nil))
 
-;; Install straight.el package manager
-(setq straight-check-for-modifications 'live)
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 5))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+(require 'package)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/"))
+(package-initialize)
 
-;; Setup straight.el with use-package
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;; Minimal UI
 (blink-cursor-mode -1)
@@ -90,18 +82,11 @@
 (add-hook 'text-mode-hook
           (lambda () (setq display-line-numbers 'relative)))
 
-;; mode lighters
-(use-package blackout
-  :straight (:host github :repo "raxod502/blackout")
-  :config
-  (blackout 'emacs-lisp-mode "elisp")
-  (blackout 'lisp-interaction-mode "elisp")
-  (blackout 'eldoc-mode))
-
 ;; Package `no-littering' changes the default paths for lots of
 ;; different packages, with the net result that the ~/.emacs.d folder
 ;; is much more clean and organized.
 (use-package no-littering
+  :ensure t
   :config
   (setq
    auto-save-file-name-transforms
@@ -109,13 +94,9 @@
    custom-file
    (no-littering-expand-etc-file-name "custom.el")))
 
-;; Package `git' is a library providing convenience functions for
-;; running Git.
-(use-package git :defer t)
-
-
 ;; key bindings package
 (use-package general
+  :ensure t
   :config
   (general-evil-setup)
 
@@ -196,52 +177,8 @@
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
-;;; Prevent Emacs-provided Org from being loaded
-
-;; The following is a temporary hack until straight.el supports
-;; building Org, see:
-;;
-;; * https://github.com/raxod502/straight.el/issues/211
-;; * https://github.com/raxod502/radian/issues/410
-;;
-;; There are three things missing from our version of Org: the
-;; functions `org-git-version' and `org-release', and the feature
-;; `org-version'. We provide all three of those ourself, therefore.
-
-(defun org-git-version ()
-  "The Git version of org-mode.
-  Inserted by installing org-mode or when a release is made."
-  (require 'git)
-  (let ((git-repo (expand-file-name
-                   "straight/repos/org/" user-emacs-directory)))
-    (string-trim
-     (git-run "describe"
-              "--match=release\*"
-              "--abbrev=6"
-              "HEAD"))))
-
-(defun org-release ()
-  "The release version of org-mode.
-  Inserted by installing org-mode or when a release is made."
-  (require 'git)
-  (let ((git-repo (expand-file-name
-                   "straight/repos/org/" user-emacs-directory)))
-    (string-trim
-     (string-remove-prefix
-      "release_"
-      (git-run "describe"
-               "--match=release\*"
-               "--abbrev=0"
-               "HEAD")))))
-
-(provide 'org-version)
-
-;; Our real configuration for Org comes much later. Doing this now
-;; means that if any packages that are installed in the meantime
-;; depend on Org, they will not accidentally cause the Emacs-provided
-;; (outdated and duplicated) version of Org to be loaded before the
-;; real one is registered.
 (use-package org
+  :ensure org-plus-contrib
   :init
   (setq
    org-log-done 'time
@@ -270,6 +207,7 @@
 ;;   (evil-org-agenda-set-keys))
 
 (use-package exec-path-from-shell
+  :ensure t
   :config
   (exec-path-from-shell-initialize)
   (let ((gls (executable-find "gls")))
@@ -279,6 +217,7 @@
 
 ;; evil mode
 (use-package evil
+  :ensure t
   :init
   ;; disable built in evil keybindings in favor of evil-collection
   (setq evil-want-keybinding nil)
@@ -287,25 +226,28 @@
   (evil-mode 1))
 
 (use-package evil-surround
+  :ensure t
   :after evil
   :config
   (global-evil-surround-mode 1))
 
 ;; evil keybindings for other packages
 (use-package evil-collection
+  :ensure t
   :after evil
   :config
   (evil-collection-init))
 
 ;; code commenting
 (use-package evil-commentary
-  :blackout
+  :ensure t
   :after evil
   :hook
   (prog-mode . evil-commentary-mode))
 
 ;; theme
 (use-package doom-themes
+  :ensure t
   :config
   (load-theme 'doom-dracula t)
   (doom-themes-treemacs-config)
@@ -313,8 +255,8 @@
 
 ;; keybinding documentation
 (use-package which-key
+  :ensure t
   :defer 1
-  :blackout
   :init
   (setq which-key-separator " ")
   (setq which-key-prefix-prefix "+")
@@ -329,8 +271,8 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; completion
 (use-package ivy
+  :ensure t
   :defer 1
-  :blackout
   :init
   (setq ivy-count-format "%d/%d ")
 
@@ -353,18 +295,19 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; ivy specific versions of emacs commands
 (use-package counsel
-  :blackout
+  :ensure t
   :config
   (counsel-mode 1))
 
 ;; code completion
 (use-package company
-  :blackout
+  :ensure t
   :hook
   (prog-mode . company-mode))
 
 ;; sorting and filtering
 (use-package prescient
+  :ensure t
   :init
   ;; options: '(literal+initialism literal initialism regexp fuzzy)
   (setq prescient-filter-method 'literal+initialism)
@@ -373,34 +316,39 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; with ivy
 (use-package ivy-prescient
+  :ensure t
   :after ivy prescient
   :config
   (ivy-prescient-mode 1))
 
 ;; with company
 (use-package company-prescient
+  :ensure t
   :after company prescient
   :config
   (company-prescient-mode 1))
 
 (use-package ace-window
-  :blackout "aw"
+  :ensure t
   :general
   (my:leader "ww" '(ace-window :wk "ace window")))
 
 (use-package treemacs
+  :ensure t
   :general
   (my:leader "ft" '(treemacs :wk "tree")))
 
 (use-package treemacs-evil
+  :ensure t
   :after treemacs evil)
 
 (use-package treemacs-projectile
+  :ensure t
   :after treemacs projectile)
 
 ;; projects
 (use-package projectile
-  :blackout
+  :ensure t
   :general
   (my:leader "pb" '(projectile-switch-to-buffer :wk "buffer"))
   (my:leader "pf" '(projectile-find-file :wk "file"))
@@ -413,65 +361,70 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; projects via counsel
 (use-package counsel-projectile
-  :blackout
+  :ensure t
   :config
   (counsel-projectile-mode))
 
 (use-package rainbow-delimiters
-  :blackout
+  :ensure t
   :hook
   (prog-mode . rainbow-delimiters-mode))
 
 ;; better undo
 (use-package undo-tree
-  :blackout
+  :ensure t
   :config
   (global-undo-tree-mode +1))
 
 (use-package subword
-  :blackout "sw"
+  :ensure t
   :general
   (my:leader "ts" '(subword-mode :wk "subword mode"))
   :hook
   (prog-mode . subword-mode))
 
 (use-package doom-modeline
+  :ensure t
   :config
   (setq doom-modeline-buffer-file-name-style 'truncate-upto-root)
   (defun anzu--reset-status () )
   :hook (after-init . doom-modeline-init))
 
-(use-package all-the-icons)
+(use-package all-the-icons
+  :ensure t)
 
 (use-package yasnippet
+  :ensure t
   :defer 1
   :init
   ;; don't give me init message
   (setq yas-verbosity 1)
   :config
-  (yas-global-mode)
-  (blackout 'yas-minor-mode))
+  (yas-global-mode))
 
 (use-package flycheck
-  :blackout "flycheck"
+  :ensure t
   :hook
   (prog-mode . flycheck-mode))
 
 ;; git ui
 (use-package magit
-  :blackout
+  :ensure t
   :general
   (my:leader "gs" '(magit-status :wk "status")))
 
 ;; vim keybindings for magit
 (use-package evil-magit
+  :ensure t
   :after evil magit)
 
 ;; emacs startup profiler
-(use-package esup)
+(use-package esup
+  :ensure t)
 
 ;; restart emacs
 (use-package restart-emacs
+  :ensure t
   :general
   (my:leader "qr" '(restart-emacs :wk "restart emacs")))
 
@@ -483,12 +436,13 @@ This function is intended for use with `ivy-ignore-buffers'."
  tab-width 2)
 
 (use-package editorconfig
+  :ensure t
   :defer 1
   :config
   (editorconfig-mode 1))
 
 (use-package lsp-mode
-  :blackout "lsp"
+  :ensure t
   :config
   (lsp-define-stdio-client
    lsp-javascript-typescript
@@ -501,6 +455,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (js2-mode . lsp-javascript-typescript-enable))
 
 (use-package lsp-ui
+  :ensure t
   :init
   (setq lsp-ui-flycheck-enable nil)
   (setq lsp-ui-sideline-show-code-actions nil)
@@ -508,13 +463,14 @@ This function is intended for use with `ivy-ignore-buffers'."
   (lsp-mode . lsp-ui-mode))
 
 (use-package company-lsp
+  :ensure t
   :after company lsp-mode
   :config
   (push 'company-lsp company-backends))
 
 ;; js
 (use-package js2-mode
-  :blackout "js"
+  :ensure t
   :mode "\\.js\\'"
   :interpreter "node"
   :config
@@ -523,13 +479,16 @@ This function is intended for use with `ivy-ignore-buffers'."
    js2-mode-show-strict-warnings nil))
 
 (use-package js2-refactor
+  :ensure t
   :hook
   (js2-mode . js2-refactor-mode))
 
 (use-package json-mode
+  :ensure t
   :mode "\\.json\\'")
 
 (use-package web-mode
+  :ensure t
   :mode "\\.jsx\\'"
   :mode "\\.hbs\\'"
   :init
@@ -543,6 +502,7 @@ This function is intended for use with `ivy-ignore-buffers'."
                 (setq web-mode-block-padding (- indent 2))))))
 
 (use-package add-node-modules-path
+  :ensure t
   :hook
   (js2-mode . add-node-modules-path)
   (json-mode . add-node-modules-path)
@@ -550,7 +510,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 ;; formatting
 (use-package format-all
-  :blackout "format"
+  :ensure t
   :hook
   (emacs-lisp-mode . format-all-mode)
   (lisp-interaction-mode . format-all-mode)
@@ -559,8 +519,6 @@ This function is intended for use with `ivy-ignore-buffers'."
   :config
   (my:leader
     "bf" '(format-all-buffer :wk "format")))
-
-(find-file "~/todo.org")
 
 ;; reset
 (defun my|finalize ()
