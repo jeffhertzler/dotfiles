@@ -177,6 +177,15 @@
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
+(use-package auto-package-update
+  :ensure t
+  :config
+  (setq auto-package-update-delete-old-versions t
+        auto-package-update-hide-results t
+        auto-package-update-last-update-day-path (no-littering-expand-var-file-name ".last-package-update-day"))
+  (my:leader
+    "feu" '(auto-package-update-now :wk "update")))
+
 (use-package org
   :ensure org-plus-contrib
   :init
