@@ -109,6 +109,7 @@
   ;; setup leader key definer
   (general-create-definer my:leader
     :states '(normal motion visual insert emacs)
+    :keymaps 'override
     :prefix "SPC"
     :non-normal-prefix "C-SPC")
 
