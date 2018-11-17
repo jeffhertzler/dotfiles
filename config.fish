@@ -119,10 +119,27 @@ set -x GIT_EDITOR nvim
 
 source $HOME/.asdf/asdf.fish
 
+function asdf --wrap asdf
+  command asdf $argv
+  set passed $status
+  if test $passed -eq 0
+   set longver (command asdf current java 2>&1)
+   set ver (string replace -r " *\(set by.*\)" "" $longver)
+   if test "$ver" != "$longver"
+    set -U JAVA_HOME (command asdf where java $ver)
+   else
+    set -U JAVA_HOME
+   end
+   true
+  else
+   false
+  end
+end
+
 set -x GOPATH $HOME/dev/go
 set -x GOBIN $GOPATH/bin
 
-set -x PATH $HOME/bin $GOBIN $PATH
+set -x PATH $JAVA_HOME/Contents/Home/bin $HOME/bin $GOBIN $PATH
 
 set -x COMPOSER_DISABLE_XDEBUG_WARN 1
 
