@@ -90,7 +90,6 @@
   :config
   (setq
    auto-save-file-name-transforms `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))
-   backup-directory-alist `((".*" ,(no-littering-expand-var-file-name "backup/")))
    custom-file (no-littering-expand-etc-file-name "custom.el")))
 
 ;; key bindings package
