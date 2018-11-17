@@ -66,6 +66,7 @@
 
 ;; defaults
 (setq-default
+ create-lockfiles nil
  fill-column 120
  indent-tabs-mode nil
  inhibit-startup-message t
