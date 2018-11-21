@@ -137,6 +137,8 @@
 
     "g" '(:ignore t :wk "git")
 
+    "h" '(help-command :wk "help")
+
     "m" '(:ignore t :wk "major")
 
     "o" '(:ignore t :wk "org")
