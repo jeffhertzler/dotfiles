@@ -320,7 +320,7 @@ This function is intended for use with `ivy-ignore-buffers'."
    ivy-count-format "%d/%d ")
 
   :general
-  (my:normal "/" '(swiper :wk "search"))
+  ;; (my:normal "/" '(swiper :wk "search"))
   (my:leader
     "/" '(swiper :wk "search")
     "rl" '(ivy-resume :wk "last")
