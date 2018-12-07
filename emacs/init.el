@@ -315,7 +315,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :defer 1
   :init
-  (setq ivy-count-format "%d/%d ")
+  (setq
+   ivy-re-builders-alist '((counsel-ag . ivy--regex))
+   ivy-count-format "%d/%d ")
 
   :general
   (my:normal "/" '(swiper :wk "search"))
