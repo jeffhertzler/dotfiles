@@ -59,6 +59,8 @@
 (tool-bar-mode -1)
 (tooltip-mode -1)
 
+;; (require 'dired)
+
 ;; set font
 (set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
 
@@ -341,6 +343,36 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :config
   (counsel-mode 1))
+
+;; completion
+;; (use-package helm
+;;   :defer 1
+;;   :config
+;;   (helm-mode 1)
+;;   (general-def helm-map
+;;     "C-j" 'helm-next-line
+;;     "C-k" 'helm-previous-line)
+;;   (general-def
+;;     [remap find-file] 'helm-find-files
+;;     [remap execute-extended-command] 'helm-M-x))
+
+;; (use-package helm-rg
+;;   :after helm
+;;   :config
+;;   (my:leader
+;;     "sd" '(helm-rg :wk "directory")))
+
+;;   (use-package helm-projectile
+;;     :after helm
+;;     :config
+;;     (helm-projectile-on))
+
+;;   (use-package helm-swoop
+;;     :after helm
+;;     :config
+;;     (my:leader
+;;       "/" '(helm-swoop :wk "search")
+;;       "sf" '(helm-swoop :wk "file")))
 
 ;; code completion
 (use-package company
