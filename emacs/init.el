@@ -553,6 +553,10 @@ This function is intended for use with `ivy-ignore-buffers'."
   :hook
   (js2-mode . js2-refactor-mode))
 
+(use-package graphql-mode
+  ;; :ensure t
+  :mode "\\.graphql\\'")
+
 (use-package json-mode
   ;; :ensure t
   :mode "\\.json\\'")
