@@ -424,8 +424,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (my:leader "ps" '(projectile-ripgrep :wk "search"))
   (my:leader "sp" '(projectile-ripgrep :wk "project"))
   :config
-  (projectile-mode +1)
-  (setq projectile-enable-caching t))
+  (projectile-mode +1))
 
 ;; projects via counsel
 (use-package counsel-projectile
