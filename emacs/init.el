@@ -514,29 +514,19 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package lsp-mode
   ;; :ensure t
   :config
-  (lsp-define-stdio-client
-   lsp-javascript-typescript
-   "javascript"
-   #'projectile-project-root
-   ;; '("typescript-language-server" "--stdio"))
-   '("javascript-typescript-stdio"))
-  :hook
-  (lsp-after-open . lsp-enable-imenu)
-  (js2-mode . lsp-javascript-typescript-enable))
+  (require 'lsp-clients)
+  (setq lsp-prefer-flymake nil)
+  :hook (js2-mode . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
+  :after flycheck lsp-mode
   :init
-  (setq lsp-ui-flycheck-enable nil)
-  ;; (setq lsp-ui-sideline-show-code-actions nil)
-  :hook
-  (lsp-mode . lsp-ui-mode))
+  (setq lsp-ui-flycheck-enable nil))
 
 (use-package company-lsp
   ;; :ensure t
-  :after company lsp-mode
-  :config
-  (push 'company-lsp company-backends))
+  :after company lsp-mode)
 
 ;; js
 (use-package js2-mode
