@@ -396,13 +396,6 @@ This function is intended for use with `ivy-ignore-buffers'."
   :config
   (ivy-prescient-mode 1))
 
-;; with company
-(use-package company-prescient
-  ;; :ensure t
-  :after company prescient
-  :config
-  (company-prescient-mode 1))
-
 (use-package ace-window
   ;; :ensure t
   :general
