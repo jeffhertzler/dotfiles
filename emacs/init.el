@@ -61,6 +61,8 @@
 
 ;; (require 'dired)
 
+(global-auto-revert-mode 1)
+
 ;; set font
 (set-face-attribute 'default nil :family "Operator Mono Ssm Lig")
 
