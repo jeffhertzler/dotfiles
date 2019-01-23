@@ -112,6 +112,8 @@ end
 if test "$TERM" != "eterm-color"
   and test "$TERM" != "dumb"
   fish_vi_key_bindings
+  bind -M insert \cj down-or-search
+  bind -M insert \ck up-or-search
 end
 
 set -x EDITOR e
