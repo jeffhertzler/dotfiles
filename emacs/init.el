@@ -609,6 +609,11 @@ This function is intended for use with `ivy-ignore-buffers'."
   (my:leader
     "bf" '(format-all-buffer :wk "format")))
 
+(use-package bool-flip
+  :config
+  (my:leader
+    "tb" '(bool-flip-do-flip :wk "boolean")))
+
 ;; reset
 (defun my|finalize ()
   "Reset `gc-cons-threshold', `gc-cons-percentage' and `file-name-handler-alist'."
