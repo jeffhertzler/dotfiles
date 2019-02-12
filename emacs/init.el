@@ -538,20 +538,31 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package lsp-mode
   ;; :ensure t
+  :commands lsp
+  ;; :init
+  ;; (setq
+  ;;  lsp-prefer-flymake nil
+  ;;  lsp-response-timeout 100)
   :config
-  (require 'lsp-clients)
-  (setq lsp-prefer-flymake nil)
+  (my:leader
+    "mf" '(:ignore :wk "find")
+    "mfd" '(lsp-find-definition :wk "definition")
+    "mfD" '(lsp-find-declaration :wk "declaration")
+    "mfi" '(lsp-find-implementation :wk "implementation")
+    "mfr" '(lsp-find-references :wk "references")
+    "mft" '(lsp-find-type-definition :wk "type def"))
   :hook (js2-mode . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
-  :after flycheck lsp-mode
+  :commands lsp-ui-mode
   :init
   (setq lsp-ui-flycheck-enable nil))
 
 (use-package company-lsp
   ;; :ensure t
-  :after company lsp-mode)
+  :init
+  (setq company-lsp-cache-candidates t))
 
 ;; js
 (use-package js2-mode
