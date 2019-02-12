@@ -356,9 +356,17 @@ This function is intended for use with `ivy-ignore-buffers'."
 
   (ivy-mode 1))
 
+(use-package avy
+  ;; :ensure t
+  :defer 1
+  :general
+  (my:leader
+    "fw" '(avy-goto-word-1 :wk "word")))
+
 ;; ivy specific versions of emacs commands
 (use-package counsel
   ;; :ensure t
+  :defer 1
   :config
   (counsel-mode 1))
 
