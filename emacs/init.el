@@ -75,7 +75,10 @@
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (setq
+ mac-option-modifier 'meta
+ mac-command-modifier 'super
  frame-title-format nil
+ mac-use-title-bar nil
  ns-use-proxy-icon nil
  ns-use-native-fullscreen nil)
 
@@ -185,6 +188,7 @@
     "tw" '(whitespace-mode :wk "whitespace")
 
     "w" '(:ignore t :wk "window")
+    "wF" '(make-frame :wk "new frame")
     "wl" '(windmove-right :wk "right")
     "wh" '(windmove-left :wk "left")
     "wk" '(windmove-up :wk "up")
@@ -205,6 +209,13 @@
     ":" 'evil-repeat-find-char)
 
   (general-def
+    "s-n" 'make-frame
+    "s-w" 'delete-frame
+    "s-s" 'save-buffer
+    "s-c" 'kill-ring-save
+    "s-x" 'kill-region
+    "s-v" 'yank
+    "s-q" 'save-buffers-kill-emacs
     "s-P" 'execute-extended-command
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
