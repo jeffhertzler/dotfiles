@@ -53,11 +53,16 @@
 (setq straight-use-package-by-default t)
 
 ;; Minimal UI
-(blink-cursor-mode -1)
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(tooltip-mode -1)
+(when blink-cursor-mode
+  (blink-cursor-mode -1))
+(when menu-bar-mode
+  (menu-bar-mode -1))
+(when scroll-bar-mode
+  (scroll-bar-mode -1))
+(when tool-bar-mode
+  (tool-bar-mode -1))
+(when tooltip-mode
+  (tooltip-mode -1))
 
 ;; (require 'dired)
 
