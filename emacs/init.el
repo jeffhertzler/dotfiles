@@ -370,6 +370,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   :config
   (counsel-mode 1))
 
+(use-package wgrep
+  :defer 1)
+
 ;; completion
 ;; (use-package helm
 ;;   :defer 1
