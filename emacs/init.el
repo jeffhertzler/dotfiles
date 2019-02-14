@@ -554,6 +554,7 @@ This function is intended for use with `ivy-ignore-buffers'."
     "mfi" '(lsp-find-implementation :wk "implementation")
     "mfr" '(lsp-find-references :wk "references")
     "mft" '(lsp-find-type-definition :wk "type def"))
+  (setq lsp-prefer-flymake nil)
   :hook
   ((js2-mode typescript-mode) . lsp))
 
