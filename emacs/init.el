@@ -554,7 +554,8 @@ This function is intended for use with `ivy-ignore-buffers'."
     "mfi" '(lsp-find-implementation :wk "implementation")
     "mfr" '(lsp-find-references :wk "references")
     "mft" '(lsp-find-type-definition :wk "type def"))
-  :hook (js2-mode . lsp))
+  :hook
+  ((js2-mode typescript-mode) . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
@@ -566,6 +567,11 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :init
   (setq company-lsp-cache-candidates t))
+
+;; ts
+(use-package typescript-mode
+  ;; :ensure t
+  :mode "\\.ts\\'")
 
 ;; js
 (use-package js2-mode
@@ -609,6 +615,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   :hook
   (js2-mode . add-node-modules-path)
   (json-mode . add-node-modules-path)
+  (typescript-mode . add-node-modules-path)
   (web-mode . add-node-modules-path))
 
 ;; formatting
@@ -619,6 +626,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   (lisp-interaction-mode . format-all-mode)
   (js2-mode . format-all-mode)
   (json-mode . format-all-mode)
+  (typescript-mode . format-all-mode)
   :config
   (my:leader
     "bf" '(format-all-buffer :wk "format")))
