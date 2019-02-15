@@ -36,6 +36,7 @@
     }
   ],
   "vim.leader": "<space>",
+  "vim.neovimPath": "/usr/local/bin/nvim"
   "vim.otherModesKeyBindingsNonRecursive": [
     {
       "before": ["<leader>", "<leader>"],
