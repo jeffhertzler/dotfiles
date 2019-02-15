@@ -407,7 +407,10 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package company
   ;; :ensure t
   :hook
-  (prog-mode . company-mode))
+  (prog-mode . company-mode)
+  :general
+  (general-def
+    "C-<return>" 'company-complete))
 
 ;; sorting and filtering
 (use-package prescient
