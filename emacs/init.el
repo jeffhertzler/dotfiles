@@ -621,6 +621,11 @@ This function is intended for use with `ivy-ignore-buffers'."
                      (indent (string-to-number indent_size)))
                 (setq web-mode-block-padding (- indent 2))))))
 
+(use-package fish-mode
+  ;; :ensure t
+  :mode "\\.fish\\'"
+  )
+
 (use-package add-node-modules-path
   ;; :ensure t
   :hook
