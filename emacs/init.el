@@ -510,6 +510,13 @@ This function is intended for use with `ivy-ignore-buffers'."
   :general
   (my:leader "gs" '(magit-status :wk "status")))
 
+(use-package magithub
+  ;; :ensure t
+  :after magit
+  :config
+  (magithub-feature-autoinject t)
+  (setq magithub-clone-default-directory "~/dev"))
+
 ;; vim keybindings for magit
 (use-package evil-magit
   ;; :ensure t
