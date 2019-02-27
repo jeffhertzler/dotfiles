@@ -66,6 +66,8 @@ abbr se "e ~/.spacemacs.d/init.el"
 # abbr ze "e ~/.zshrc"
 abbr ve "vim ~/.vimrc"
 
+abbr . "source ~/.config/fish/config.fish"
+
 abbr gco "git checkout"
 abbr gcm "git checkout master"
 abbr gcd "git checkout develop"
