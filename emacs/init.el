@@ -515,6 +515,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package magithub
   ;; :ensure t
+  :straight (:host github :repo "mgcyung/magithub" :branch "transient")
   :after magit
   :config
   (magithub-feature-autoinject t)
