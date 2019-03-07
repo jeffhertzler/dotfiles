@@ -542,6 +542,7 @@ This function is intended for use with `ivy-ignore-buffers'."
  c-basic-offset 2
  css-indent-offset 2
  js-indent-level 2
+ sh-basic-offset 2
  tab-width 2)
 
 (use-package editorconfig
@@ -626,6 +627,12 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :mode "\\.fish\\'"
   )
+
+(use-package sh-script
+  :straight nil
+  :init
+  (add-hook 'sh-mode-hook
+            (lambda () (setq evil-shift-width sh-basic-offset))))
 
 (use-package add-node-modules-path
   ;; :ensure t
