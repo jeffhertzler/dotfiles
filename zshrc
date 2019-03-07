@@ -78,7 +78,7 @@ abbrev-alias -c cdsg="cd ~/dev/greenlight/style-guide"
 abbrev-alias -c cdgg="cd ~/dev/greenlight/gg"
 abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 
-alias bubu="brew update; and brew upgrade; and brew cleanup"
+abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
 
 alias code="code-insiders"
 
