@@ -70,8 +70,8 @@ abbrev-alias -c gb="git branch"
 abbrev-alias -c gbd="git branch -D"
 abbrev-alias -c gmd="git merge develop"
 
-alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
-alias glgs="git log --show-signature"
+abbrev-alias -c glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
+abbrev-alias -c glgs="git log --show-signature"
 
 abbrev-alias -c cdgc="cd ~/dev/greenlight/client"
 abbrev-alias -c cdsg="cd ~/dev/greenlight/style-guide"
@@ -80,7 +80,7 @@ abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 
 abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
 
-alias code="code-insiders"
+abbrev-alias -c code="code-insiders"
 
 export EDITOR=vim
 export GIT_EDITOR=vim
