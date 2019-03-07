@@ -81,8 +81,8 @@ alias bubu="brew update; and brew upgrade; and brew cleanup"
 
 alias code="code-insiders"
 
-export EDITOR=e
-export GIT_EDITOR=e
+export EDITOR=vim
+export GIT_EDITOR=vim
 
 # export COMPOSER_DISABLE_XDEBUG_WARN=1
 
