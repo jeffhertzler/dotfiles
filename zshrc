@@ -1,114 +1,97 @@
-export TERM="xterm-256color"
+#!/usr/bin/env zsh
 
-# Download antigen with git if it doesn't exist already
-if [ ! -r ~/.antigen/antigen.zsh ]; then
-  [ ! command -v git > /dev/null 2>&1 ] ||
-    (echo "Please install git." &&
-    return;)
-  echo "Installing antigen into ~/.antigen/";
-  git clone https://github.com/zsh-users/antigen.git ~/.antigen
+if [ ! -r ~/.zplug/init.zsh ]; then
+  echo "Installing zplug to ~/.zplug";
+  git clone https://github.com/chriskjaer/zplug ~/.zplug
 fi;
+source ~/.zplug/init.zsh
 
-if [ ! -r ~/.config/base16-shell/scripts/base16-eighties.sh ]; then
-  [ ! command -v git > /dev/null 2>&1 ] ||
-    (echo "Please install git." &&
-    return;)
-  echo "Installing base16-shell into ~/.config/base16-shell";
-  git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
-fi;
+zplug "zplug/zplug", hook-build:"zplug --self-manage"
+zplug "chriskempson/base16-shell"
+zplug "denysdovhan/spaceship-prompt", as:theme
+zplug "momo-lab/zsh-abbrev-alias"
+zplug "peterhurford/up.zsh"
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-autosuggestions"
+zplug "zsh-users/zsh-syntax-highlighting", defer:2
+zplug "zsh-users/zsh-history-substring-search", defer:2
 
-if [ ! -r ~/.iterm2_shell_integration.zsh ]; then
-  curl -L https://iterm2.com/misc/zsh_startup.in >> \
-  ~/.iterm2_shell_integration.zsh
-  source ~/.iterm2_shell_integration.zsh
-fi;
-
-source $HOME/.antigen/antigen.zsh
-
-# allow usage of C-q and C-s shortcuts other places
-stty -ixon
-stty start undef
-stty stop undef
-
-antigen use oh-my-zsh
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  antigen bundle brew
-  antigen bundle osx
-fi
-antigen bundle asdf
-antigen bundle composer
-antigen bundle docker
-antigen bundle docker-compose
-antigen bundle extract
-antigen bundle git
-antigen bundle git-extras
-antigen bundle vagrant
-antigen bundle wp-cli
-antigen bundle zsh-users/zsh-syntax-highlighting
-
-if [ -n "$INSIDE_EMACS" ]; then
-  antigen theme clean
-else
-  POWERLEVEL9K_PROMPT_ON_NEWLINE=true
-  POWERLEVEL9K_RPROMPT_ON_NEWLINE=true
-  POWERLEVEL9K_MULTILINE_FIRST_PROMPT_PREFIX="|"
-  POWERLEVEL9K_MULTILINE_SECOND_PROMPT_PREFIX="| "
-  POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(battery time vi_mode context dir vcs status)
-  POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=()
-  POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
-  POWERLEVEL9K_SHORTEN_DELIMITER=""
-  POWERLEVEL9K_SHORTEN_STRATEGY="truncate_from_right"
-  POWERLEVEL9K_TIME_FORMAT="%D{%r}"
-  POWERLEVEL9K_CONTEXT_DEFAULT_FOREGROUND="white"
-  antigen theme bhilburn/powerlevel9k powerlevel9k
+# Install plugins if there are plugins that have not been installed
+if ! zplug check; then
+  zplug install
 fi
 
-antigen apply
+zplug load
 
 # bindkey -v
+spaceship_vi_mode_enable
 
-which -s brew >> /dev/null
-if [ $? = 0 ]
-  then
-    export PATH="$(brew --prefix homebrew/php/php70)"/bin:/usr/local/sbin:/usr/local/bin:$PATH
-fi
+dark() {
+  base16_dracula
+}
+light() {
+  base16_harmonic-light
+}
 
-export GOPATH=~/dev/go
-export PATH=~/bin:$GOPATH/bin:$PATH
+e() {
+  emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
+}
 
-export COMPOSER_DISABLE_XDEBUG_WARN=1
+bindkey '^[[A' history-substring-search-up
+bindkey '^[[B' history-substring-search-down
+bindkey -M vicmd 'k' history-substring-search-up
+bindkey -M vicmd 'j' history-substring-search-down
 
-alias vi=vim
-export EDITOR=vim
+bindkey '^F' autosuggest-accept
+bindkey -M vicmd '^F' autosuggest-accept
 
-if type nvim >/dev/null 2>/dev/null; then
+bindkey -M viins " " __abbrev_alias::magic_abbrev_expand
+
+if type nvim >/dev/null 2>&1; then
   alias vi=nvim
   alias vim=nvim
-  export EDITOR=nvim
 fi
 
-BASE16_SHELL="$HOME/.config/base16-shell/scripts/base16-eighties.sh"
+abbrev-alias -c ve="vim ~/.vimrc"
+abbrev-alias -c ze="e ~/.zshrc"
 
-if [ -z "$INSIDE_EMACS" ]; then
-  [[ -s $BASE16_SHELL ]] && source $BASE16_SHELL
-fi
+abbrev-alias -c gco="git checkout"
+abbrev-alias -c gcm="git checkout master"
+abbrev-alias -c gcd="git checkout develop"
+abbrev-alias -c gcl="git checkout 2019.1.0"
+abbrev-alias -c gl="git pull"
+abbrev-alias -c gp="git push"
+abbrev-alias -c gpf="git push --force"
+abbrev-alias -c gcmsg="git commit -m"
+abbrev-alias -c gaa="git add --all"
+abbrev-alias -c gs="git status"
+abbrev-alias -c gb="git branch"
+abbrev-alias -c gbd="git branch -D"
+abbrev-alias -c gmd="git merge develop"
 
-alias art='php artisan'
-alias vsync='vagrant gatling-rsync-auto local'
-alias gfs='git stash -u && git pull && git stash drop'
-alias reload=". ~/.zshrc && echo 'ZSH config reloaded from ~/.zshrc'"
-alias ze="vim ~/.zshrc && reload"
-alias ve="vim ~/.vimrc"
+alias glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
+alias glgs="git log --show-signature"
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  alias code=code-insiders
-else
-  setxkbmap -layout us -option ctrl:nocaps
-  eval $(ssh-agent)
-  ssh-add
-fi
+abbrev-alias -c cdgc="cd ~/dev/greenlight/client"
+abbrev-alias -c cdsg="cd ~/dev/greenlight/style-guide"
+abbrev-alias -c cdgg="cd ~/dev/greenlight/gg"
+abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 
-export FZF_DEFAULT_COMMAND='(git ls-files && git ls-files -o --exclude-standard || ag -g "") 2> /dev/null'
+alias bubu="brew update; and brew upgrade; and brew cleanup"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+alias code="code-insiders"
+
+export EDITOR=e
+export GIT_EDITOR=e
+
+# export COMPOSER_DISABLE_XDEBUG_WARN=1
+
+# abbrev-alias -c ci="composer install"
+# abbrev-alias -c cu="composer update"
+# abbrev-alias -c cgo="composer global outdated"
+# abbrev-alias -c cgu="composer global update"
+
+# # allow usage of C-q and C-s shortcuts other places
+# stty -ixon
+# stty start undef
+# stty stop undef
