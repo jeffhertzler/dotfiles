@@ -1,5 +1,11 @@
 #!/usr/bin/env zsh
 
+# export COMPOSER_DISABLE_XDEBUG_WARN=1
+export NVM_LAZY_LOAD=true
+
+export EDITOR=vim
+export GIT_EDITOR=vim
+
 if [ ! -r ~/.zplug/init.zsh ]; then
   echo "Installing zplug to ~/.zplug";
   git clone https://github.com/chriskjaer/zplug ~/.zplug
@@ -81,11 +87,6 @@ abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
 
 abbrev-alias -c code="code-insiders"
-
-export EDITOR=vim
-export GIT_EDITOR=vim
-
-# export COMPOSER_DISABLE_XDEBUG_WARN=1
 
 # abbrev-alias -c ci="composer install"
 # abbrev-alias -c cu="composer update"
