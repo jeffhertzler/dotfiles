@@ -7,6 +7,7 @@ fi;
 source ~/.zplug/init.zsh
 
 zplug "zplug/zplug", hook-build:"zplug --self-manage"
+zplug "lukechilds/zsh-nvm"
 zplug "chriskempson/base16-shell"
 zplug "denysdovhan/spaceship-prompt", as:theme
 zplug "momo-lab/zsh-abbrev-alias"
