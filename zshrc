@@ -41,6 +41,8 @@ light() {
   base16_harmonic-light
 }
 
+dark
+
 e() {
   emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
 }
