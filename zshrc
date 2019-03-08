@@ -22,6 +22,7 @@ zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 zplug "zsh-users/zsh-history-substring-search", defer:2
+zplug "plugins/asdf", from:oh-my-zsh, defer:2
 
 # Install plugins if there are plugins that have not been installed
 if ! zplug check; then
@@ -87,6 +88,24 @@ abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
 
 abbrev-alias -c code="code-insiders"
+
+set_java_version() {
+  if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
+    export JAVA_HOME="$(\asdf where java ${match[1]})/Contents/Home"
+  else
+    export JAVA_HOME=''
+  fi
+}
+
+set_java_version
+
+asdf_java_wrapper() {
+  if \asdf "$@"; then
+    set_java_version
+  fi
+}
+
+alias asdf='asdf_java_wrapper'
 
 # abbrev-alias -c ci="composer install"
 # abbrev-alias -c cu="composer update"
