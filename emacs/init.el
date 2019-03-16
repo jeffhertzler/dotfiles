@@ -621,17 +621,15 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package web-mode
   ;; :ensure t
+  :straight (:host github :repo "fxbois/web-mode" :fork (:host github :repo "jeffhertzler/web-mode"))
   :mode "\\.jsx\\'"
   :mode "\\.hbs\\'"
   :init
   (setq
    web-mode-comment-style 2
-   web-mode-enable-current-element-highlight t)
-  (add-hook 'editorconfig-after-apply-functions
-            (lambda (hash)
-              (let* ((indent_size (gethash 'indent_size hash "2"))
-                     (indent (string-to-number indent_size)))
-                (setq web-mode-block-padding (- indent 2))))))
+   web-mode-enable-current-element-highlight t))
+
+
 
 (use-package fish-mode
   ;; :ensure t
