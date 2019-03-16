@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 # export COMPOSER_DISABLE_XDEBUG_WARN=1
-export NVM_LAZY_LOAD=true
+# export NVM_LAZY_LOAD=true
 
 export EDITOR=vim
 export GIT_EDITOR=vim
