@@ -146,6 +146,13 @@
   (defun my/emacs-dotfile () (interactive) (find-file "~/.emacs.d/init.el"))
   (defun my/emacs-reload () (interactive) (load-file "~/.emacs.d/init.el"))
 
+  (defun my/kill-other-buffers ()
+    "Kill all other buffers."
+    (interactive)
+    (seq-each
+     #'kill-buffer
+     (delete (current-buffer) (seq-filter #'buffer-file-name (buffer-list)))))
+
   ;; leader key bindings
   (my:leader
     "" '(nil :wk "leader")
@@ -155,6 +162,7 @@
     "b" '(:ignore t :wk "buffer")
     "bb" '(switch-to-buffer :wk "buffers")
     "bd" '(kill-this-buffer :wk "delete")
+    "bD" '(my/kill-other-buffers :wk "delete others")
     "bs" '(save-buffer :wk "save")
 
     "f" '(:ignore t :wk "file")
@@ -260,6 +268,8 @@
 
 (use-package exec-path-from-shell
   ;; :ensure t
+  :init
+  (setq exec-path-from-shell-check-startup-files nil)
   :config
   (exec-path-from-shell-initialize)
   (let ((gls (executable-find "gls")))
