@@ -143,6 +143,12 @@
     :prefix "SPC"
     :non-normal-prefix "C-SPC")
 
+  (general-create-definer my:normal
+    :states '(normal motion visual))
+
+  (general-create-definer my:visual
+    :states '(visual))
+
   (defun my/emacs-dotfile () (interactive) (find-file "~/.emacs.d/init.el"))
   (defun my/emacs-reload () (interactive) (load-file "~/.emacs.d/init.el"))
 
@@ -205,9 +211,6 @@
     "x" '(:ignore t :wk "text")
     "xl" '(:ignore t :wk "line")
     "xls" '(sort-lines :wk "sort"))
-
-  (general-create-definer my:normal
-    :states '(normal motion visual))
 
   (my:normal
     "j" 'evil-next-visual-line
