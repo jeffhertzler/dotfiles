@@ -302,6 +302,7 @@
   :init
   ;; disable built in evil keybindings in favor of evil-collection
   (setq
+   evil-kill-on-visual-paste nil
    evil-want-keybinding nil
    evil-want-Y-yank-to-eol t
    evil-want-C-u-scroll t)
