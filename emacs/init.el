@@ -159,6 +159,18 @@
      #'kill-buffer
      (delete (current-buffer) (seq-filter #'buffer-file-name (buffer-list)))))
 
+  (defun my/visual-shift-left ()
+    (interactive)
+    (call-interactively 'evil-shift-left)
+    (evil-normal-state)
+    (evil-visual-restore))
+
+  (defun my/visual-shift-right ()
+    (interactive)
+    (call-interactively 'evil-shift-right)
+    (evil-normal-state)
+    (evil-visual-restore))
+
   ;; leader key bindings
   (my:leader
     "" '(nil :wk "leader")
@@ -218,6 +230,10 @@
     "-" 'dired-jump
     ";" 'evil-ex
     ":" 'evil-repeat-find-char)
+
+  (my:visual
+    ">" 'my/visual-shift-right
+    "<" 'my/visual-shift-left)
 
   (general-def
     "s-n" 'make-frame
