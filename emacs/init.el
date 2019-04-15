@@ -603,7 +603,11 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :commands lsp-ui-mode
   :init
-  (setq lsp-ui-flycheck-enable nil))
+  (setq
+   lsp-ui-imenu-enable nil
+   lsp-ui-flycheck-enable t)
+  :config
+  (flycheck-add-next-checker 'lsp-ui 'javascript-eslint))
 
 (use-package company-lsp
   ;; :ensure t
