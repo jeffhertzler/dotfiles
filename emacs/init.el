@@ -625,12 +625,17 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;;  lsp-response-timeout 100)
   :config
   (my:leader
-    "mf" '(:ignore :wk "find")
-    "mfd" '(lsp-find-definition :wk "definition")
-    "mfD" '(lsp-find-declaration :wk "declaration")
-    "mfi" '(lsp-find-implementation :wk "implementation")
-    "mfr" '(lsp-find-references :wk "references")
-    "mft" '(lsp-find-type-definition :wk "type def"))
+    :keymaps 'lsp-mode-map
+    "ml" '(:ignore t :wk "lsp")
+    "mla" '(lsp-execute-code-action :wk "action")
+    "mlR" '(lsp-restart-workspace :wk "restart")
+    "mlf" '(:ignore t :wk "find")
+    "mlfD" '(lsp-find-declaration :wk "declaration")
+    "mlfd" '(lsp-find-definition :wk "definition")
+    "mlfi" '(lsp-find-implementation :wk "implementation")
+    "mlfr" '(lsp-find-references :wk "references")
+    "mlft" '(lsp-find-type-definition :wk "type def")
+    "mlr" '(lsp-rename :wk "rename"))
   (setq lsp-prefer-flymake nil)
   :hook
   ((js2-mode css-mode scss-mode typescript-mode) . lsp))
