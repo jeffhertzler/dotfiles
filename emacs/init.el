@@ -638,7 +638,7 @@ This function is intended for use with `ivy-ignore-buffers'."
     "mlr" '(lsp-rename :wk "rename"))
   (setq lsp-prefer-flymake nil)
   :hook
-  ((js2-mode css-mode scss-mode typescript-mode) . lsp))
+  ((css-mode scss-mode) . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
@@ -646,9 +646,7 @@ This function is intended for use with `ivy-ignore-buffers'."
   :init
   (setq
    lsp-ui-imenu-enable nil
-   lsp-ui-flycheck-enable t)
-  :config
-  (flycheck-add-next-checker 'lsp-ui 'javascript-eslint))
+   lsp-ui-flycheck-enable t))
 
 (use-package company-lsp
   ;; :ensure t
@@ -658,7 +656,37 @@ This function is intended for use with `ivy-ignore-buffers'."
 ;; ts
 (use-package typescript-mode
   ;; :ensure t
-  :mode "\\.ts\\'")
+  :mode "\\.ts\\'"
+  :config
+  (flycheck-add-mode 'javascript-eslint 'typescript-mode))
+
+
+(use-package tide
+  ;; :ensure t
+  :after (company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (js2-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (js2-mode . tide-hl-identifier-mode))
+  :config
+  (flycheck-add-next-checker 'javascript-eslint 'javascript-tide 'append)
+  (flycheck-add-next-checker 'typescript-tide 'javascript-eslint 'append)
+  (my:leader
+    :keymaps 'tide-mode-map
+    "mt" '(:ignore t :wk "tide")
+    "mtd" '(tide-documentation-at-point :wk "documentation")
+    "mta" '(:ignore t :wk "actions")
+    "mtaf" '(tide-fix :wk "fix")
+    "mtar" '(tide-refactor :wk "refactor")
+    "mtf" '(:ignore t :wk "find")
+    "mtfd" '(tide-jump-to-definition :wk "definition")
+    "mtfi" '(tide-jump-to-implementation :wk "implementation")
+    "mtft" '((lambda () (interactive) (tide-jump-to-definition t)) :wk "type def")
+    "mtfr" '(tide-references :wk "references")
+    "mtr" '(:ignore t :wk "rename")
+    "mtrf" '(tide-rename-file :wk "file")
+    "mtrs" '(tide-rename-symbol :wk "symbol")
+    "mtR" '(tide-restart-server :wk "restart")))
 
 ;; js
 (use-package js2-mode
