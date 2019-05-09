@@ -673,7 +673,21 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package js2-refactor
   ;; :ensure t
   :hook
-  (js2-mode . js2-refactor-mode))
+  (js2-mode . js2-refactor-mode)
+  :config
+  (my:leader
+    :keymaps 'js2-refactor-mode-map
+    "mr" '(:ignore t :wk "refactor")
+    "mre" '(:ignore t :wk "extract")
+    "mrec" '(js2r-extract-const :wk "const")
+    "mref" '(js2r-extract-function :wk "function")
+    "mrel" '(js2r-extract-let :wk "let")
+    "mrem" '(js2r-extract-method :wk "method")
+    "mrev" '(js2r-extract-var :wk "var")
+    "mri" '(js2r-inline-var :wk "inline")
+    "mrr" '(js2r-rename-var :wk "rename")
+    "mrE" '(js2r-expand-node-at-point :wk "expand")
+    "mrC" '(js2r-contract-node-at-point :wk "contract")))
 
 (use-package graphql-mode
   ;; :ensure t
