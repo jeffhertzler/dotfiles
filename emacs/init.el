@@ -183,6 +183,8 @@
     "bD" '(my/kill-other-buffers :wk "delete others")
     "bs" '(save-buffer :wk "save")
 
+    "e" '(:ignore t :wk "error")
+
     "f" '(:ignore t :wk "file")
 
     "fe" '(:ignore t :wk "emacs")
@@ -403,6 +405,31 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package wgrep
   :defer 1)
 
+(defvar my--counsel-flycheck-history nil
+  "History for `counsel-flycheck'")
+
+(defun my/counsel-flycheck ()
+  (interactive)
+  (if (not (bound-and-true-p flycheck-mode))
+      (message "Flycheck mode is not available or enabled")
+    (ivy-read "Error: "
+              (let ((source-buffer (current-buffer)))
+                (with-current-buffer (or (get-buffer flycheck-error-list-buffer)
+                                         (progn
+                                           (with-current-buffer
+                                               (get-buffer-create flycheck-error-list-buffer)
+                                             (flycheck-error-list-mode)
+                                             (current-buffer))))
+                  (flycheck-error-list-set-source source-buffer)
+                  (flycheck-error-list-reset-filter)
+                  (revert-buffer t t t)
+                  (split-string (buffer-string) "\n" t " *")))
+              :action (lambda (s &rest _)
+                        (-when-let* ( (error (get-text-property 0 'tabulated-list-id s))
+                                      (pos (flycheck-error-pos error)) )
+                          (goto-char (flycheck-error-pos error))))
+              :history 'my--counsel-flycheck-history)))
+
 ;; completion
 ;; (use-package helm
 ;;   :defer 1
@@ -535,7 +562,13 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package flycheck
   ;; :ensure t
   :hook
-  (prog-mode . flycheck-mode))
+  (prog-mode . flycheck-mode)
+  :config
+  (my:leader
+    ;; "el" '(flycheck-list-errors :wk "list")
+    "el" '(my/counsel-flycheck :wk "list")
+    "en" '(flycheck-next-error :wk "next")
+    "ep" '(flycheck-previous-error :wk "previous")))
 
 ;; git ui
 (use-package magit
