@@ -376,9 +376,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   :general
   ;; (my:normal "/" '(swiper :wk "search"))
   (my:leader
-    "/" '(swiper :wk "search")
+    "/" '(swiper-isearch :wk "search")
     "rl" '(ivy-resume :wk "last")
-    "sf" '(swiper :wk "file"))
+    "sf" '(swiper-isearch :wk "file"))
 
   :config
   ;; set bindings if minibuffer uses evil or not
