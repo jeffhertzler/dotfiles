@@ -215,6 +215,8 @@
     "t" '(:ignore t :wk "toggle")
     "tw" '(whitespace-mode :wk "whitespace")
 
+    "u" '(universal-argument :wk "universal")
+
     "w" '(:ignore t :wk "window")
     "wF" '(make-frame :wk "new frame")
     "wl" '(windmove-right :wk "right")
