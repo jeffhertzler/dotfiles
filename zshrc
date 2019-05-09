@@ -31,6 +31,8 @@ fi
 
 zplug load
 
+export SPACESHIP_TIME_SHOW=true
+
 # bindkey -v
 spaceship_vi_mode_enable
 
