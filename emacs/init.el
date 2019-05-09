@@ -782,6 +782,8 @@ This function is intended for use with `ivy-ignore-buffers'."
   (setq org-jira-done-states '("Closed" "Resolved" "Done" "Ready For Deploy"))
   (setq org-jira-default-jql "status in (Approved, Backlog, \"In Code Review\", \"In Process\", \"In Progress\", Open, \"Ready for Deploy\", Reopened, \"Selected for Development\", \"User Story Mapping\") AND assignee in (currentUser()) ORDER BY status ASC, updated DESC"))
 
+(use-package elcord)
+
 ;; reset
 (defun my|finalize ()
   "Reset `gc-cons-threshold', `gc-cons-percentage' and `file-name-handler-alist'."
