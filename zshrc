@@ -13,7 +13,7 @@ fi;
 source ~/.zplug/init.zsh
 
 zplug "zplug/zplug", hook-build:"zplug --self-manage"
-zplug "lukechilds/zsh-nvm"
+# zplug "lukechilds/zsh-nvm"
 zplug "chriskempson/base16-shell"
 zplug "denysdovhan/spaceship-prompt", as:theme
 zplug "momo-lab/zsh-abbrev-alias"
@@ -42,8 +42,6 @@ dark() {
 light() {
   base16_harmonic-light
 }
-
-dark
 
 e() {
   emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
@@ -120,3 +118,6 @@ alias asdf='asdf_java_wrapper'
 # stty -ixon
 # stty start undef
 # stty stop undef
+
+# fnm
+eval "$(fnm env --multi --shel=zsh --use-on-cd)"
