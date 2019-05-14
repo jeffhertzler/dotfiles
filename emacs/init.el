@@ -648,6 +648,9 @@ This function is intended for use with `ivy-ignore-buffers'."
   :commands lsp-ui-mode
   :init
   (setq
+   lsp-ui-doc-max-height 10
+   lsp-ui-doc-max-width 80
+   lsp-ui-doc-position 'top
    lsp-ui-imenu-enable nil
    lsp-ui-flycheck-enable t))
 
