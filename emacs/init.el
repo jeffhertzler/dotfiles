@@ -618,7 +618,8 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package lsp-mode
   ;; :ensure t
   :commands lsp
-  ;; :init
+  :init
+  (add-to-list 'exec-path "~/dev/elixir-ls/release")
   ;; (setq
   ;;  lsp-prefer-flymake nil
   ;;  lsp-response-timeout 100)
@@ -636,8 +637,11 @@ This function is intended for use with `ivy-ignore-buffers'."
     "mlft" '(lsp-find-type-definition :wk "type def")
     "mlr" '(lsp-rename :wk "rename"))
   (setq lsp-prefer-flymake nil)
+  (add-hook 'elixir-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook 'lsp-format-buffer nil t)))
   :hook
-  ((css-mode scss-mode) . lsp))
+  ((css-mode elixir-mode scss-mode) . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
@@ -724,6 +728,14 @@ This function is intended for use with `ivy-ignore-buffers'."
   ;; :ensure t
   :mode "\\.json\\'")
 
+(use-package elixir-mode
+  ;; :ensure t
+  :mode ("\\.ex\\'" "\\.exs\\'" "mix\\.lock\\'"))
+
+(use-package exunit
+  ;; :ensure t
+  )
+
 (use-package web-mode
   ;; :ensure t
   :straight (:host github :repo "fxbois/web-mode" :fork (:host github :repo "jeffhertzler/web-mode"))
@@ -733,8 +745,6 @@ This function is intended for use with `ivy-ignore-buffers'."
   (setq
    web-mode-comment-style 2
    web-mode-enable-current-element-highlight t))
-
-
 
 (use-package fish-mode
   ;; :ensure t
