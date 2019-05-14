@@ -131,10 +131,12 @@
   (general-evil-setup)
 
   ;; esc from insert mode with "fd"
-  (general-imap "f"
+  (general-imap "k"
     (general-key-dispatch 'self-insert-command
       :timeout 0.25
-      "d" 'evil-normal-state))
+      "j" 'evil-normal-state))
+
+  (general-imap "C-g" 'evil-normal-state)
 
   ;; setup leader key definer
   (general-create-definer my:leader
