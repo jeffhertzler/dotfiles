@@ -520,6 +520,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 ;; projects via counsel
 (use-package counsel-projectile
   ;; :ensure t
+  :after counsel
   :config
   (counsel-projectile-mode))
 
@@ -656,6 +657,7 @@ This function is intended for use with `ivy-ignore-buffers'."
 
 (use-package company-lsp
   ;; :ensure t
+  :after company lsp-mode
   :init
   (setq company-lsp-cache-candidates t))
 
