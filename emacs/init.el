@@ -646,7 +646,7 @@ This function is intended for use with `ivy-ignore-buffers'."
             (lambda ()
               (add-hook 'before-save-hook 'lsp-format-buffer nil t)))
   :hook
-  ((css-mode elixir-mode scss-mode) . lsp))
+  ((css-mode elixir-mode php-mode scss-mode) . lsp))
 
 (use-package lsp-ui
   ;; :ensure t
@@ -736,6 +736,10 @@ This function is intended for use with `ivy-ignore-buffers'."
 (use-package json-mode
   ;; :ensure t
   :mode "\\.json\\'")
+
+(use-package php-mode
+  ;; :ensure t
+  :mode "\\.php\\'")
 
 (use-package elixir-mode
   ;; :ensure t
