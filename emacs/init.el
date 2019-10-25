@@ -177,7 +177,7 @@
   (my:leader
     "" '(nil :wk "leader")
 
-    "SPC" '(execute-extended-command :wk "M-x")
+    "SPC" '(counsel-M-x :wk "M-x")
 
     "b" '(:ignore t :wk "buffer")
     "bb" '(switch-to-buffer :wk "buffers")
@@ -249,7 +249,7 @@
     "s-x" 'kill-region
     "s-v" 'yank
     "s-q" 'save-buffers-kill-emacs
-    "s-P" 'execute-extended-command
+    "s-P" 'counsel-M-x
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
