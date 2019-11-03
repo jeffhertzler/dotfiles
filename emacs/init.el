@@ -177,7 +177,7 @@
   (my:leader
     "" '(nil :wk "leader")
 
-    "SPC" '(counsel-M-x :wk "M-x")
+    "SPC" '(execute-extended-command :wk "M-x")
 
     "b" '(:ignore t :wk "buffer")
     "bb" '(switch-to-buffer :wk "buffers")
@@ -249,7 +249,7 @@
     "s-x" 'kill-region
     "s-v" 'yank
     "s-q" 'save-buffers-kill-emacs
-    "s-P" 'counsel-M-x
+    "s-P" 'execute-extended-command
     "s-p" 'find-file
     "s-<return>" 'toggle-frame-fullscreen))
 
@@ -404,7 +404,6 @@ This function is intended for use with `ivy-ignore-buffers'."
 ;; ivy specific versions of emacs commands
 (use-package counsel
   ;; :ensure t
-  :defer 1
   :config
   (counsel-mode 1))
 
