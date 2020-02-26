@@ -65,6 +65,7 @@ abbrev-alias -c ve="vim ~/.vimrc"
 abbrev-alias -c ze="e ~/.zshrc"
 
 abbrev-alias -c gco="git checkout"
+abbrev-alias -c gcob="git checkout -b"
 abbrev-alias -c gcm="git checkout master"
 abbrev-alias -c gcd="git checkout develop"
 abbrev-alias -c gcl="git checkout 2019.2.0"
@@ -81,7 +82,27 @@ abbrev-alias -c gmd="git merge develop"
 abbrev-alias -c glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
 abbrev-alias -c glgs="git log --show-signature"
 
+abbrev-alias -c gwta="git worktree add"
+abbrev-alias -c gwtab="git worktree add -b"
+abbrev-alias -c gwtl="git worktree list"
+abbrev-alias -c gwtp="git worktree prune"
+abbrev-alias -c gwtr="git worktree remove"
+abbrev-alias -c gwtrf="git worktree remove --force"
+
+CLIENT_DIR="$HOME/dev/greenlight/client"
+SERVER_DIR="$HOME/dev/greenlight/server"
+SERVER_OPTIONS=(-Dgreenlight.application.properties=conf/application-dev.properties -Dlogback.configurationFile=logback.xml -classpath "target/*:target/lib/*")
+
+ggbuild() { (cd "$SERVER_DIR" && mvn clean install -Dmaven.test.skip=true --batch-mode) }
+ggrepo() { (cd "$SERVER_DIR/RepoSvc" && java "${SERVER_OPTIONS[@]}" -Dderby.stream.error.file=RepositoryRoot/log/derby.log -Dfile.encoding=UTF-8 -Xdebug -Xrunjdwp:transport=dt_socket,address=27271,server=y,suspend=n com.greenlight.camel.CamelMain) }
+ggah() { (cd "$SERVER_DIR/ActivityHistory" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27272,server=y,suspend=n com.greenlight.camel.CamelMain) }
+ggauth() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27273,server=y,suspend=n com.greenlight.idm.CamelMain) }
+gglytics() { (cd "$SERVER_DIR/Analytics/target" && java -jar greenlight-analytics-service.jar -Xdebug -Xrunjdwp:transport=dt_socket,address=27274,server=y,suspend=n); }
+ggimpact() { (cd $SERVER_DIR/Impact && java -jar target/greenlight-impact-service.jar -Xdebug -Xrunjdwp:transport=dt_socket,address=27275,server=y,suspend=n); }
+restack(){ (cd "$CLIENT_DIR" && npm run destroyLocalstack && npm run startLocalstack && npm run buildServerlessComponents) }
+
 abbrev-alias -c cdgc="cd ~/dev/greenlight/client"
+abbrev-alias -c cdgce="cd ~/dev/greenlight/client/src/greenlight"
 abbrev-alias -c cdsg="cd ~/dev/greenlight/style-guide"
 abbrev-alias -c cdgg="cd ~/dev/greenlight/gg"
 abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
