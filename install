@@ -7,14 +7,15 @@ cd $DIR
 mkdir -p ${XDG_CONFIG_HOME:=$HOME/.config}
 mkdir -p ${NVIM_HOME:=$XDG_CONFIG_HOME/nvim}
 mkdir -p ${FISH_HOME:=$XDG_CONFIG_HOME/fish}
-mkdir -p ${SPACEMACS_HOME:=$HOME/.spacemacs.d}
+# mkdir -p ${SPACEMACS_HOME:=$HOME/.spacemacs.d}
 
 ln -sf "$DIR/zshrc" "$HOME/.zshrc"
 ln -sf "$DIR/vimrc" "$HOME/.vimrc"
 ln -sf "$DIR/vimrc" "$NVIM_HOME/init.vim"
 ln -sf "$DIR/config.fish" "$FISH_HOME/config.fish"
 ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
-ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
+# ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
+ln -sf "$DIR/emacs" "$HOME/.emacs.d"
 ln -sf "$DIR/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -50,24 +51,6 @@ fi
 if [ ! -d $HOME/.asdf ]; then
    echo "Installing asdf";
    git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-fi
-
-if [ ! -d $HOME/.emacs.d ]; then
-   echo "Installing spacemacs";
-   git clone https://github.com/syl20bnr/spacemacs ~/.emacs.d
-   cd $HOME/.emacs.d
-   git checkout develop
-   cd $DIR
-fi
-
-if [ ! -d $SPACEMACS_HOME/layers/prettier-js ]; then
-    echo "Installing prettier-js spacemacs layer";
-    git clone https://github.com/jeffhertzler/prettier-js-spacemacs-layer $SPACEMACS_HOME/layers/prettier-js
-fi
-
-if [ ! -d $SPACEMACS_HOME/layers/crystal ]; then
-    echo "Installing crystal spacemacs layer";
-    git clone https://github.com/jeffhertzler/crystal-spacemacs-layer $SPACEMACS_HOME/layers/crystal
 fi
 
 if [ ! -r ~/.config/base16-shell/scripts/base16-dracula.sh ]; then
