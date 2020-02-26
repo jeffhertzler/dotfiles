@@ -1,13 +1,41 @@
 // Place your settings in this file to overwrite the default settings
 {
+  "[handlebars]": {
+    "editor.defaultFormatter": "mfeckies.handlebars-formatter"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[elixir]": {
+    "editor.formatOnSave": true,
+  },
+  "breadcrumbs.enabled": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": false
+  },
   "editor.fontFamily": "Operator Mono SSm Lig, Fira Code, Menlo, Monaco, 'Courier New', monospace",
   "editor.fontLigatures": true,
   "editor.fontSize": 12,
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "editor.lineNumbers": "relative",
   "editor.minimap.enabled": false,
   "editor.renderControlCharacters": false,
   "editor.renderWhitespace": "all",
+  "editor.suggestSelection": "first",
   "editor.wordWrapColumn": 120,
   "eslint.enable": true,
   "eslint.validate": [
@@ -17,39 +45,59 @@
     "typescriptreact"
   ],
   "explorer.openEditors.visible": 0,
+  "files.exclude": {
+    "**/.classpath": true,
+    "**/.project": true,
+    "**/.settings": true,
+    "**/.factorypath": true
+  },
   "files.insertFinalNewline": false,
   "files.trimTrailingWhitespace": true,
-  "gitlens.advanced.messages": {
-    "suppressCommitHasNoPreviousCommitWarning": false,
-    "suppressCommitNotFoundWarning": false,
-    "suppressFileNotUnderSourceControlWarning": false,
-    "suppressGitVersionWarning": false,
-    "suppressLineUncommittedWarning": false,
-    "suppressNoRepositoryWarning": false,
-    "suppressResultsExplorerNotice": false,
-    "suppressShowKeyBindingsNotice": true,
-    "suppressUpdateNotice": false,
-    "suppressWelcomeNotice": true
-  },
-  "gitlens.keymap": "chorded",
-  "search.location": "panel",
+  "git.autofetch": true,
+  "gitlens.currentLine.scrollable": false,
+  "gitlens.codeLens.scopes": ["document", "containers", "blocks"],
+  "gitlens.menus": false,
+  "gitlens.views.repositories.location": "gitlens",
+  "gitlens.views.fileHistory.location": "gitlens",
+  "gitlens.views.lineHistory.location": "gitlens",
+  "gitlens.views.compare.location": "gitlens",
+  "gitlens.views.search.location": "gitlens",
+  "html.mirrorCursorOnMatchingTag": false,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "vim.camelCaseMotion.enable": true,
   "vim.easymotion": true,
   "vim.enableNeovim": true,
+  "vim.gdefault": true,
+  "vim.hlsearch": true,
+  "vim.leader": "<space>",
+  "vim.neovimPath": "/usr/local/bin/nvim",
+  "vim.replaceWithRegister": true,
+  "vim.statusBarColorControl": true,
+  "vim.textwidth": 120,
+  "vim.useSystemClipboard": true,
   "vim.insertModeKeyBindings": [
     {
       "before": ["f", "d"],
       "after": ["<Esc>"]
     }
   ],
-  "vim.leader": "<space>",
-  "vim.neovimPath": "/usr/local/bin/nvim",
-  "vim.otherModesKeyBindingsNonRecursive": [
+  "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": ["<leader>", "<leader>"],
       "after": [],
       "commands": [
         {
           "command": "workbench.action.showCommands"
+        }
+      ]
+    },
+    {
+      "before": ["<leader>", "f", "s"],
+      "after": [],
+      "commands": [
+        {
+          "command": "workbench.action.files.save"
         }
       ]
     },
@@ -63,16 +111,7 @@
       ]
     },
     {
-      "before": ["<leader>", "p", "l"],
-      "after": [],
-      "commands": [
-        {
-          "command": "workbench.action.openRecent"
-        }
-      ]
-    },
-    {
-      "before": ["<leader>", "b", "b"],
+      "before": ["<leader>", "p", "b"],
       "after": [],
       "commands": [
         {
@@ -86,6 +125,15 @@
       "commands": [
         {
           "command": "workbench.action.quickOpen"
+        }
+      ]
+    },
+    {
+      "before": ["<leader>", "p", "l"],
+      "after": [],
+      "commands": [
+        {
+          "command": "workbench.action.openRecent"
         }
       ]
     },
@@ -112,39 +160,15 @@
       "after": [":"]
     }
   ],
-  "vim.statusBarColorControl": true,
-  "vim.substituteGlobalFlag": true,
-  "vim.textwidth": 120,
-  "vim.useSystemClipboard": true,
-  "workbench.colorTheme": "Dracula",
-  "workbench.editor.closeOnFileDelete": false,
-  "workbench.editor.enablePreview": false,
-  "workbench.editor.showTabs": true,
-  "workbench.startupEditor": "newUntitledFile",
-  "[handlebars]": {
-    "editor.formatOnSave": false
-  },
-  "gitlens.advanced.messages": {
-    "suppressShowKeyBindingsNotice": true,
-    "suppressWelcomeNotice": true
-  },
-  "gitlens.keymap": "alternate",
-  "gitlens.historyExplorer.enabled": true,
   "workbench.colorCustomizations": {
     "statusBar.background": "#005f5f",
     "statusBar.noFolderBackground": "#005f5f",
     "statusBar.debuggingBackground": "#005f5f"
   },
-  "gitlens.views.fileHistory.enabled": true,
-  "gitlens.views.lineHistory.enabled": true,
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  "workbench.colorTheme": "Dracula",
+  "workbench.editor.closeOnFileDelete": false,
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.showTabs": true,
+  "workbench.startupEditor": "newUntitledFile",
+  "window.zoomLevel": 0
 }
