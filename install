@@ -15,6 +15,7 @@ ln -sf "$DIR/vimrc" "$NVIM_HOME/init.vim"
 ln -sf "$DIR/config.fish" "$FISH_HOME/config.fish"
 ln -sf "$DIR/fishfile" "$FISH_HOME/fishfile"
 ln -sf "$DIR/spacemacs" "$SPACEMACS_HOME/init.el"
+ln -sf "$DIR/starship.toml" "$XDG_CONFIG_HOME/starship.toml"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     mkdir -p ${KARABINER_HOME:=$XDG_CONFIG_HOME/karabiner}

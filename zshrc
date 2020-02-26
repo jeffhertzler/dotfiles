@@ -15,7 +15,7 @@ source ~/.zplug/init.zsh
 zplug "zplug/zplug", hook-build:"zplug --self-manage"
 # zplug "lukechilds/zsh-nvm"
 zplug "chriskempson/base16-shell"
-zplug "denysdovhan/spaceship-prompt", as:theme
+# zplug "denysdovhan/spaceship-prompt", as:theme
 zplug "momo-lab/zsh-abbrev-alias"
 zplug "peterhurford/up.zsh"
 zplug "zsh-users/zsh-completions"
@@ -31,10 +31,7 @@ fi
 
 zplug load
 
-export SPACESHIP_TIME_SHOW=true
-
-# bindkey -v
-spaceship_vi_mode_enable
+bindkey -v
 
 dark() {
   base16_dracula
@@ -47,15 +44,17 @@ e() {
   emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
 }
 
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-bindkey -M vicmd 'k' history-substring-search-up
-bindkey -M vicmd 'j' history-substring-search-down
+# bindkey -v
 
-bindkey '^F' autosuggest-accept
-bindkey -M vicmd '^F' autosuggest-accept
+# bindkey '^[[A' history-substring-search-up
+# bindkey '^[[B' history-substring-search-down
+# bindkey -M vicmd 'k' history-substring-search-up
+# bindkey -M vicmd 'j' history-substring-search-down
 
-bindkey -M viins " " __abbrev_alias::magic_abbrev_expand
+# bindkey '^F' autosuggest-accept
+# bindkey -M vicmd '^F' autosuggest-accept
+
+# bindkey -M viins " " __abbrev_alias::magic_abbrev_expand
 
 if type nvim >/dev/null 2>&1; then
   alias vi=nvim
@@ -108,6 +107,8 @@ asdf_java_wrapper() {
 }
 
 alias asdf='asdf_java_wrapper'
+export PATH=/Users/jeffhertzler/.cargo/bin:$PATH
+
 
 # abbrev-alias -c ci="composer install"
 # abbrev-alias -c cu="composer update"
@@ -121,3 +122,6 @@ alias asdf='asdf_java_wrapper'
 
 # fnm
 eval "$(fnm env --multi --shel=zsh --use-on-cd)"
+
+# prompt
+eval "$(starship init zsh)"
