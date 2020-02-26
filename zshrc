@@ -90,23 +90,27 @@ abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
 
 abbrev-alias -c code="code-insiders"
 
-set_java_version() {
-  if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
-    export JAVA_HOME="$(\asdf where java ${match[1]})/Contents/Home"
-  else
-    export JAVA_HOME=''
-  fi
-}
+# set_java_version() {
+#   if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
+#     export JAVA_HOME="$(\asdf where java ${match[1]})/Contents/Home"
+#   else
+#     export JAVA_HOME=''
+#   fi
+# }
 
-set_java_version
+# set_java_version
 
-asdf_java_wrapper() {
-  if \asdf "$@"; then
-    set_java_version
-  fi
-}
+# asdf_java_wrapper() {
+#   if \asdf "$@"; then
+#     set_java_version
+#   fi
+# }
 
-alias asdf='asdf_java_wrapper'
+# alias asdf='asdf_java_wrapper'
+# export JAVA_HOME="$(/usr/libexec/java_home -v)"
+export JAVA_HOME="$(/usr/libexec/java_home)"
+
+
 export PATH=/Users/jeffhertzler/.cargo/bin:$PATH
 
 
