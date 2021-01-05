@@ -1,7 +1,0 @@
-{
-  "coc.preferences.formatOnSaveFiletypes": ["json", "javascript", "typescript"],
-  "Lua.diagnostics.globals": ["vim"],
-  "Lua.runtime.version": "Lua 5.1",
-  "snippets.extends": { "typescript": ["javascript"] },
-  "suggest.noselect": false
-}
