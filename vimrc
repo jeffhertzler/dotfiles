@@ -9,6 +9,15 @@ else
   let s:editor_root=expand('~/.vim')
 endif
 
+" Polyglot
+let g:polyglot_disabled = ['elm']
+
+" Node
+if executable('volta')
+  let g:node_host_prog = trim(system("volta which neovim-node-host"))
+endif
+
+
 
 
 
@@ -374,9 +383,6 @@ function! s:check_back_space()
   let col = col('.') - 1
   return !col || getline('.')[col - 1]  =~ '\s'
 endfunction
-
-" Polyglot
-let g:polyglot_disabled = ['elm']
 
 " Auto Pairs
 let g:AutoPairsShortcutBackInsert = '<C-b>'
