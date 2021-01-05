@@ -1,0 +1,16 @@
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+[user]
+	name = Jeff Hertzler
+	email = jeffhertzler@gmail.com
+[github]
+	user = jeffhertzler
+[credential]
+	helper = store
+[pull]
+	rebase = false
+[init]
+	defaultBranch = main

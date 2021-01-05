@@ -1,0 +1,12 @@
+#!/usr/bin/env zsh
+
+eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
+
+export VOLTA_HOME="$HOME/.volta"
+
+PATH="$VOLTA_HOME/bin:$PATH"
+PATH="$HOME/.cargo/bin:$PATH"
+PATH="$HOME/.local/bin:$PATH"
+PATH="$HOME/bin:$PATH"
+
+export PATH

@@ -1,0 +1,19 @@
+customCommands:
+  - key: 'e'
+    command: 'nvr -l {{.SelectedFile.Name}} --nostart'
+    context: 'files'
+    description: 'edit'
+  - key: 'o'
+    command: 'nvim {{.SelectedFile.Name}}'
+    context: 'files'
+    subprocess: true
+    description: 'open'
+  - key: 'e'
+    command: 'nvr -l {{.SelectedCommitFile.Name}} --nostart'
+    context: 'commitFiles'
+    description: 'edit'
+  - key: 'o'
+    command: 'nvim {{.SelectedCommitFile.Name}}'
+    context: 'commitFiles'
+    subprocess: true
+    description: 'open'
