@@ -1,10 +1,13 @@
 #!/usr/bin/env zsh
 
-# export COMPOSER_DISABLE_XDEBUG_WARN=1
-# export NVM_LAZY_LOAD=true
+bindkey -v
 
-export EDITOR=vim
-export GIT_EDITOR=vim
+export VISUAL=nvim
+export EDITOR=nvim
+export GIT_EDITOR=nvim
+
+alias vi=nvim
+alias vim=nvim
 
 if [ ! -r ~/.zplug/init.zsh ]; then
   echo "Installing zplug to ~/.zplug";
@@ -13,11 +16,10 @@ fi;
 source ~/.zplug/init.zsh
 
 zplug "zplug/zplug", hook-build:"zplug --self-manage"
-# zplug "lukechilds/zsh-nvm"
 zplug "chriskempson/base16-shell"
-# zplug "denysdovhan/spaceship-prompt", as:theme
 zplug "momo-lab/zsh-abbrev-alias"
 zplug "peterhurford/up.zsh"
+# zplug "jeffreytse/zsh-vi-mode"
 zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
@@ -31,8 +33,6 @@ fi
 
 zplug load
 
-bindkey -v
-
 dark() {
   base16_dracula
 }
@@ -40,9 +40,9 @@ light() {
   base16_harmonic-light
 }
 
-e() {
-  emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
-}
+# e() {
+#   emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
+# }
 
 # bindkey -v
 
@@ -56,13 +56,13 @@ e() {
 
 # bindkey -M viins " " __abbrev_alias::magic_abbrev_expand
 
-if type nvim >/dev/null 2>&1; then
-  alias vi=nvim
-  alias vim=nvim
-fi
+abbrev-alias -c te="nvim ~/.config/tmux/tmux.conf"
+abbrev-alias -c ve="nvim ~/.config/nvim/init.lua"
+abbrev-alias -c xe="nvim ~/.config/xmonad/xmonad.hs"
+abbrev-alias -c ze="nvim ~/.zshrc"
 
-abbrev-alias -c ve="vim ~/.vimrc"
-abbrev-alias -c ze="e ~/.zshrc"
+# abbrev-alias -c tls="tmux ls"
+# abbrev-alias -c t="tmux new -t"
 
 abbrev-alias -c gco="git checkout"
 abbrev-alias -c gcob="git checkout -b"
@@ -79,6 +79,8 @@ abbrev-alias -c gb="git branch"
 abbrev-alias -c gbd="git branch -D"
 abbrev-alias -c gmd="git merge develop"
 
+abbrev-alias -c gcp="git cherry-pick"
+
 abbrev-alias -c glg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset %C(cyan)[%G?]%Creset' --abbrev-commit"
 abbrev-alias -c glgs="git log --show-signature"
 
@@ -89,27 +91,47 @@ abbrev-alias -c gwtp="git worktree prune"
 abbrev-alias -c gwtr="git worktree remove"
 abbrev-alias -c gwtrf="git worktree remove --force"
 
+abbrev-alias -c v="nvim ."
+abbrev-alias -c lg="lazygit"
+
 CLIENT_DIR="$HOME/dev/greenlight/client"
 SERVER_DIR="$HOME/dev/greenlight/server"
+GG_DIR="$HOME/dev/greenlight/gg"
+MICRO_DIR="$HOME/dev/greenlight/micro"
 SERVER_OPTIONS=(-Dgreenlight.application.properties=conf/application-dev.properties -Dlogback.configurationFile=logback.xml -classpath "target/*:target/lib/*")
+
+JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
 
 ggbuild() { (cd "$SERVER_DIR" && mvn clean install -Dmaven.test.skip=true --batch-mode) }
 ggrepo() { (cd "$SERVER_DIR/RepoSvc" && java "${SERVER_OPTIONS[@]}" -Dderby.stream.error.file=RepositoryRoot/log/derby.log -Dfile.encoding=UTF-8 -Xdebug -Xrunjdwp:transport=dt_socket,address=27271,server=y,suspend=n com.greenlight.camel.CamelMain) }
 ggah() { (cd "$SERVER_DIR/ActivityHistory" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27272,server=y,suspend=n com.greenlight.camel.CamelMain) }
 ggauth() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27273,server=y,suspend=n com.greenlight.idm.CamelMain) }
-gglytics() { (cd "$SERVER_DIR/Analytics/target" && java -jar greenlight-analytics-service.jar -Xdebug -Xrunjdwp:transport=dt_socket,address=27274,server=y,suspend=n); }
-ggimpact() { (cd $SERVER_DIR/Impact && java -jar target/greenlight-impact-service.jar -Xdebug -Xrunjdwp:transport=dt_socket,address=27275,server=y,suspend=n); }
-restack(){ (cd "$CLIENT_DIR" && npm run destroyLocalstack && npm run startLocalstack && npm run buildServerlessComponents) }
+ggauthn() { (cd "$MICRO_DIR/authentication-service/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
+gg() { (cd "$GG_DIR/local/docker" && ./gg.sh) }
+ggpull() { (cd "$GG_DIR/local/docker" && git pull) }
+
+java11() { $JAVA11 $@ }
 
 abbrev-alias -c cdgc="cd ~/dev/greenlight/client"
 abbrev-alias -c cdgce="cd ~/dev/greenlight/client/src/greenlight"
 abbrev-alias -c cdsg="cd ~/dev/greenlight/style-guide"
 abbrev-alias -c cdgg="cd ~/dev/greenlight/gg"
+abbrev-alias -c cdgm="cd ~/dev/greenlight/micro"
 abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 
-abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
+export MAC_REMOTE="xxx@xxx.xxx.xxx.xxx";
 
-abbrev-alias -c code="code-insiders"
+abbrev-alias sshm="ssh $MAC_REMOTE"
+scpm() { scp $1 "$MAC_REMOTE:$2" "${@:3}" }
+
+abbrev-alias -c bubu="brew update && brew upgrade && brew cleanup"
+#
+# abbrev-alias -c code="code-insiders"
+
+abbrev-alias -c reload="source ~/.zshrc"
+
+abbrev-alias -c ls="exa"
+abbrev-alias -c la="exa -lag"
 
 # set_java_version() {
 #   if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
@@ -129,10 +151,11 @@ abbrev-alias -c code="code-insiders"
 
 # alias asdf='asdf_java_wrapper'
 # export JAVA_HOME="$(/usr/libexec/java_home -v)"
-export JAVA_HOME="$(/usr/libexec/java_home)"
+# export JAVA_HOME="$(/usr/libexec/java_home)"
 
-
-export PATH=/Users/jeffhertzler/.cargo/bin:$PATH
+# export JAVA_HOME=`type -p javac|awk '{ print $3 }'|xargs readlink -f|xargs dirname|xargs dirname`
+export JAVA_HOME="$(jabba which default)"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 
 # abbrev-alias -c ci="composer install"
@@ -146,7 +169,9 @@ export PATH=/Users/jeffhertzler/.cargo/bin:$PATH
 # stty stop undef
 
 # fnm
-eval "$(fnm env --multi --shel=zsh --use-on-cd)"
+# eval "$(fnm env --multi --shel=zsh --use-on-cd)"
 
 # prompt
+
 eval "$(starship init zsh)"
+eval "$(zoxide init zsh)"
