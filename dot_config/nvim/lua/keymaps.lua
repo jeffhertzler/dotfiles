@@ -131,6 +131,11 @@ local leader = {
         action = [[:w<cr>]],
         opts = { noremap = true },
       },
+      t = {
+        name = 'tree',
+        action = [[:NvimTreeToggle<cr>]],
+        opts = { noremap = true },
+      },
     },
   },
   g = {

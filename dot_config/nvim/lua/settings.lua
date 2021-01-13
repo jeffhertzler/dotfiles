@@ -17,6 +17,15 @@ vim.g.close_buffers_bwipeout_command = 'CBwipeout'
 vim.g.vim_svelte_plugin_use_typescript = 1
 vim.g.vim_svelte_plugin_use_sass = 1
 
+vim.g.nvim_tree_width_allow_resize = 1
+vim.g.nvim_tree_width = 50
+vim.g.nvim_tree_side = 'right'
+vim.g.nvim_tree_show_icons = {
+  git = 0,
+  folders = 0,
+  files = 0,
+}
+
 -- airline
 -- vim.g.airline_statusline_ontop = 1
 vim.g.airline_powerline_fonts = 1

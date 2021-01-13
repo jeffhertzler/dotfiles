@@ -44,6 +44,11 @@ return packer.startup {
       	-- {'nvim-telescope/telescope-fzf-writer.nvim'},
       }
     }
+    use {'kyazdani42/nvim-tree.lua',
+      requires = {
+        -- {'kyazdani42/nvim-web-devicons', opt = true},
+      }
+    }
 
     -- git
     use {'rhysd/git-messenger.vim'}
