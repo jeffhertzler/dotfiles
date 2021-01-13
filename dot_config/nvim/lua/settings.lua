@@ -20,10 +20,8 @@ vim.g.vim_svelte_plugin_use_sass = 1
 vim.g.nvim_tree_width_allow_resize = 1
 vim.g.nvim_tree_width = 50
 vim.g.nvim_tree_side = 'right'
-vim.g.nvim_tree_show_icons = {
-  git = 0,
-  folders = 0,
-  files = 0,
+vim.g.nvim_tree_icons = {
+  default = ' ',
 }
 
 -- airline

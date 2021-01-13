@@ -41,12 +41,13 @@ return packer.startup {
       requires = {
         {'nvim-lua/popup.nvim'},
         {'nvim-lua/plenary.nvim'},
+        {'kyazdani42/nvim-web-devicons'},
       	-- {'nvim-telescope/telescope-fzf-writer.nvim'},
       }
     }
     use {'kyazdani42/nvim-tree.lua',
       requires = {
-        -- {'kyazdani42/nvim-web-devicons', opt = true},
+        {'kyazdani42/nvim-web-devicons'},
       }
     }
 
