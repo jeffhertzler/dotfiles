@@ -30,8 +30,11 @@ return packer.startup {
     use {'andymass/vim-matchup'}
 
     -- navigation
-    use {'justinmk/vim-dirvish'}
-    use {'roginfarrer/vim-dirvish-dovish', branch = 'main'}
+    use {'justinmk/vim-dirvish',
+      requires = {
+        {'roginfarrer/vim-dirvish-dovish', branch = 'main'},
+      }
+    }
     use {'christoomey/vim-tmux-navigator'}
     use {'liuchengxu/vim-which-key'}
     use {

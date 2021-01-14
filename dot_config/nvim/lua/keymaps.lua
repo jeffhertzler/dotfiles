@@ -1,3 +1,5 @@
+local keymap = require('helpers').keymap
+
 local go = {
   ['%'] = {
     name = 'matchit backward',
