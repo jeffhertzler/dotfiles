@@ -48,6 +48,25 @@ return packer.startup {
       	-- {'nvim-telescope/telescope-fzf-writer.nvim'},
       }
     }
+    -- use {
+    --   'nvim-telescope/telescope-frecency.nvim',
+    --   requires = {
+    --     {'tami5/sql.nvim'},
+    --     {'nvim-telescope/telescope.nvim'},
+    --   },
+    --   config = function()
+    --     require('telescope').load_extension('frecency')
+    --   end
+    -- }
+    use {
+      'nvim-telescope/telescope-fzy-native.nvim',
+      requires = {
+        {'nvim-telescope/telescope.nvim'},
+      },
+      config = function()
+        require('telescope').load_extension('fzy_native')
+      end
+    }
     use {'kyazdani42/nvim-tree.lua',
       requires = {
         {'kyazdani42/nvim-web-devicons'},

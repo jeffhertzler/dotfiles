@@ -204,6 +204,11 @@ local leader = {
         opts = { noremap = true },
       },
       d = {
+        name = 'directory',
+        action = [[:Telescope live_grep cwd=%:p:h<cr>]],
+        opts = { noremap = true },
+      },
+      D = {
         name = 'diffs',
         action = [[:Telescope git_status<cr>]],
         opts = { noremap = true },
@@ -211,11 +216,6 @@ local leader = {
       f = {
         name = 'files',
         action = [[:Telescope git_files<cr>]],
-        opts = { noremap = true },
-      },
-      F = {
-        name = 'files (old)',
-        action = [[:Telescope oldfiles<cr>]],
         opts = { noremap = true },
       },
       g = {
@@ -238,11 +238,18 @@ local leader = {
         action = [[:Telescope marks<cr>]],
         opts = { noremap = true },
       },
-      r = {
-        name = 'registers',
-        action = [[:Telescope registers<cr>]],
+      p = {
+        name = 'project',
+        action = [[:Telescope live_grep<cr>]],
+        -- action = [[:lua require('telescope').extensions.fzf_writer.staged_grep()<cr>]],
         opts = { noremap = true },
       },
+      -- TODO: figure out why this doesn't find sqlite module
+      -- r = {
+      --   name = 'recent',
+      --   action = [[:Telescope frecency<cr>]],
+      --   opts = { noremap = true },
+      -- },
       s = {
         name = 'search',
         action = [[:Telescope live_grep<cr>]],
@@ -252,6 +259,11 @@ local leader = {
       S = {
         name = 'search (buffer)',
         action = [[:Telescope current_buffer_fuzzy_find<cr>]],
+        opts = { noremap = true },
+      },
+      t = {
+        name = 'this',
+        action = [[:Telescope grep_string<cr>]],
         opts = { noremap = true },
       },
     },
@@ -264,6 +276,16 @@ local leader = {
         action = [[:e $MYVIMRC<cr>]],
         opts = { noremap = true },
       },
+      h = {
+        name = 'helpers',
+        action = [[:e ~/.config/nvim/lua/helpers.lua<cr>]],
+        opts = { noremap = true },
+      },
+      k = {
+        name = 'keymaps',
+        action = [[:e ~/.config/nvim/lua/keymaps.lua<cr>]],
+        opts = { noremap = true },
+      },
       p = {
         name = 'plugins',
         action = [[:e ~/.config/nvim/lua/plugins.lua<cr>]],
@@ -272,6 +294,11 @@ local leader = {
       r = {
         name = 'reload',
         action = [[:luafile $MYVIMRC<cr>]],
+        opts = { noremap = true },
+      },
+      s = {
+        name = 'settings',
+        action = [[:e ~/.config/nvim/lua/settings.lua<cr>]],
         opts = { noremap = true },
       },
       u = {
