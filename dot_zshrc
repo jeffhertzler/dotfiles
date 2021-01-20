@@ -94,6 +94,9 @@ abbrev-alias -c gwtrf="git worktree remove --force"
 abbrev-alias -c v="nvim ."
 abbrev-alias -c lg="lazygit"
 
+abbrev-alias -c c="chezmoi"
+abbrev-alias -c cg="chezmoi git"
+
 CLIENT_DIR="$HOME/dev/greenlight/client"
 SERVER_DIR="$HOME/dev/greenlight/server"
 GG_DIR="$HOME/dev/greenlight/gg"
