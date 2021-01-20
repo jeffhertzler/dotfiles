@@ -405,3 +405,7 @@ keymap('n', 'k', 'gk', { noremap = true })
 
 -- clear search highlight - <C-_> is actually <C-/> :shrug:
 keymap('n', '<C-_>', ':nohl<cr>', { noremap = true })
+
+-- i wan't to change indent multiple times while in visual mode easier
+keymap('v', '<', '<gv', { noremap = true })
+keymap('v', '>', '>gv', { noremap = true })
