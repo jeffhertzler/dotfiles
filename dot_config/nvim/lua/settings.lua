@@ -43,6 +43,9 @@ vim.o.showmode = false;
 vim.o.termguicolors = true
 vim.o.timeoutlen = 500
 
+vim.o.ignorecase = true
+vim.o.smartcase = true
+
 -- do i really want to turn these off or can I just move where they live?
 vim.o.backup = false
 vim.o.writebackup = false
