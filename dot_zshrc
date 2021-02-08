@@ -112,7 +112,7 @@ JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
 ggbuild() { (cd "$SERVER_DIR" && mvn clean install -Dmaven.test.skip=true --batch-mode) }
 ggrepo() { (cd "$SERVER_DIR/RepoSvc" && java "${SERVER_OPTIONS[@]}" -Dderby.stream.error.file=RepositoryRoot/log/derby.log -Dfile.encoding=UTF-8 -Xdebug -Xrunjdwp:transport=dt_socket,address=27271,server=y,suspend=n com.greenlight.camel.CamelMain) }
 ggah() { (cd "$SERVER_DIR/ActivityHistory" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27272,server=y,suspend=n com.greenlight.camel.CamelMain) }
-ggauth() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27273,server=y,suspend=n com.greenlight.idm.CamelMain) }
+ggauthz() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27273,server=y,suspend=n com.greenlight.idm.CamelMain) }
 ggauthn() { (cd "$MICRO_DIR/authentication-service/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 gg() { (cd "$GG_DIR/local/docker" && ./gg.sh $@) }
 ggpull() { (cd "$GG_DIR/local/docker" && git pull) }
