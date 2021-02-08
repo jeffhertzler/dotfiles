@@ -2,7 +2,9 @@
   "coc.preferences.formatOnSaveFiletypes": [
     "json",
     "javascript",
+    "javascriptreact",
     "typescript",
+    "typescriptreact",
     "svelte"
   ],
   "Lua.diagnostics.globals": ["vim"],
