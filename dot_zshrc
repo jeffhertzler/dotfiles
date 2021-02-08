@@ -116,6 +116,7 @@ ggauthz() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrun
 ggauthn() { (cd "$MICRO_DIR/authentication-service/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 gg() { (cd "$GG_DIR/local/docker" && ./gg.sh $@) }
 ggpull() { (cd "$GG_DIR/local/docker" && git pull) }
+ggauthnstop() { (cd "$GG_DIR/local/docker" && docker stop docker_authN_1) }
 
 java11() { $JAVA11 $@ }
 
