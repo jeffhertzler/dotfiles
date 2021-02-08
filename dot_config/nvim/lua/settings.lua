@@ -129,6 +129,12 @@ require('gitsigns').setup {
   },
 }
 
+vim.cmd [[augroup TmuxYankAuto]]
+vim.cmd [[autocmd!]]
+vim.cmd [[autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | OSCYankReg + | endif]]
+vim.cmd [[augroup END]]
+
+
 -- autorecompile packer on save
 vim.cmd [[autocmd BufWritePost plugins.lua PackerCompile]]
 

@@ -29,13 +29,16 @@ return packer.startup {
     use {'justinmk/vim-sneak'}
     use {'andymass/vim-matchup'}
 
+    -- tmux
+    use {'christoomey/vim-tmux-navigator'}
+    use {'ojroques/vim-oscyank'}
+
     -- navigation
     use {'justinmk/vim-dirvish',
       requires = {
         {'roginfarrer/vim-dirvish-dovish', branch = 'main'},
       }
     }
-    use {'christoomey/vim-tmux-navigator'}
     use {'liuchengxu/vim-which-key'}
     use {
       'nvim-telescope/telescope.nvim',
