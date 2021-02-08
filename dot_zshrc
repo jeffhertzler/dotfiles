@@ -97,6 +97,7 @@ abbrev-alias -c lg="lazygit"
 abbrev-alias -c c="chezmoi"
 abbrev-alias -c cg="chezmoi git"
 
+abbrev-alias -c cat="bat"
 CLIENT_DIR="$HOME/dev/greenlight/client"
 SERVER_DIR="$HOME/dev/greenlight/server"
 GG_DIR="$HOME/dev/greenlight/gg"
