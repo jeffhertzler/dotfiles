@@ -141,7 +141,7 @@ abbrev-alias -c reload="source ~/.zshrc"
 abbrev-alias -c ls="exa"
 abbrev-alias -c la="exa -lag"
 
-neovimupdate() {
+nvu() {
   wget https://github.com/neovim/neovim/releases/download/nightly/nvim.appimage
   sudo chmod +x nvim.appimage
   sudo chown root:root nvim.appimage
