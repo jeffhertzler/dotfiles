@@ -148,6 +148,11 @@ nvu() {
   sudo mv nvim.appimage /usr/local/bin/nvim
 }
 
+rcu() {
+  rustup update
+  cargo install-update --all
+}
+
 # set_java_version() {
 #   if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
 #     export JAVA_HOME="$(\asdf where java ${match[1]})/Contents/Home"
