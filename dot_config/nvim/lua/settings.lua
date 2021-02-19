@@ -62,6 +62,7 @@ vim.bo.shiftwidth = 2
 vim.bo.softtabstop = 2
 vim.bo.tabstop = 2
 
+vim.cmd [[filetype plugin on]]
 vim.cmd [[colorscheme dracula]]
 -- vim.cmd [[highlight link WhichKeyFloating DraculaSelection]]
 
@@ -134,6 +135,8 @@ vim.cmd [[autocmd!]]
 vim.cmd [[autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | OSCYankReg + | endif]]
 vim.cmd [[augroup END]]
 
+
+vim.cmd [[autocmd FileType html.handlebars setlocal commentstring={{!--\ %s\ --}}]]
 
 -- autorecompile packer on save
 vim.cmd [[autocmd BufWritePost plugins.lua PackerCompile]]
