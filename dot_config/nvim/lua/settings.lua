@@ -69,6 +69,7 @@ vim.cmd [[colorscheme dracula]]
 -- coc
 vim.g.coc_global_extensions = {
   'coc-css',
+  'coc-cssmodules',
   'coc-ember',
   'coc-eslint',
   -- 'coc-git',
