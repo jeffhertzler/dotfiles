@@ -34,6 +34,9 @@ vim.g.airline_powerline_fonts = 1
 vim.g.which_key_disable_default_offset = 1
 -- allow fallthrough commands (gg)
 vim.g.which_key_fallback_to_native_key = 1
+vim.g.which_key_sort_horizontal = 1
+vim.g.which_key_sort_ignore_case = 1
+vim.g.which_key_sort_includes_nested = 1
 
 vim.o.clipboard = 'unnamedplus'
 vim.o.completeopt = 'menuone,noinsert,noselect'

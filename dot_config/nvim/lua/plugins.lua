@@ -34,9 +34,11 @@ return packer.startup {
     use {'ojroques/vim-oscyank'}
 
     -- navigation
-    use {'liuchengxu/vim-which-key'}
     use {'justinmk/vim-dirvish'}
     use {'roginfarrer/vim-dirvish-dovish'}
+    -- use {'liuchengxu/vim-which-key'}
+    -- use {'jeffhertzler/vim-which-key', branch = 'better-sort'}
+    use {'~/dev/vim-which-key'}
     use {
       'nvim-telescope/telescope.nvim',
       requires = {
