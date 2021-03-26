@@ -27,7 +27,6 @@ vim.g.nvim_tree_icons = {
 -- vim.cmd [[call dirvish#add_icon_fn({p -> luaeval("require('helpers').get_icon('" .. p .. "')")})]]
 
 -- airline
--- vim.g.airline_statusline_ontop = 1
 vim.g.airline_powerline_fonts = 1
 
 -- don't stop at sign column
@@ -100,18 +99,11 @@ require('telescope').setup {
   defaults = {
     mappings = {
       i = {
-        ["<c-k>"] = require('telescope.actions').move_selection_previous,
-        ["<c-j>"] = require('telescope.actions').move_selection_next,
-      }
-    }
+        ['<c-k>'] = require('telescope.actions').move_selection_previous,
+        ['<c-j>'] = require('telescope.actions').move_selection_next,
+      },
+    },
   },
-  extensions = {
-    fzf_writer = {
-      minimum_grep_characters = 2,
-      minimum_files_characters = 2,
-      use_highlighter = true,
-    }
-  }
 }
 
 -- treesitter
