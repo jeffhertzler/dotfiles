@@ -4,7 +4,11 @@ eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 
 export VOLTA_HOME="$HOME/.volta"
 
+export GOPATH="$HOME/dev/go"
+
+PATH="/usr/local/go/bin:$PATH"
 PATH="$VOLTA_HOME/bin:$PATH"
+PATH="$GOPATH/bin:$PATH"
 PATH="$HOME/.cargo/bin:$PATH"
 PATH="$HOME/.local/bin:$PATH"
 PATH="$HOME/bin:$PATH"
