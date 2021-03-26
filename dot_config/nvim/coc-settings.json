@@ -1,14 +1,16 @@
 {
   "coc.preferences.formatOnSaveFiletypes": [
+    "go",
     "json",
     "javascript",
     "javascriptreact",
+    "php",
+    "svelte",
     "typescript",
-    "typescriptreact",
-    "svelte"
+    "typescriptreact"
   ],
   "Lua.diagnostics.globals": ["vim"],
-  "Lua.runtime.version": "Lua 5.1",
+  "Lua.runtime.version": "LuaJIT",
   "snippets.extends": { "typescript": ["javascript"] },
   "suggest.noselect": false
 }
