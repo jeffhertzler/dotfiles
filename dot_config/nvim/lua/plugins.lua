@@ -34,38 +34,25 @@ return packer.startup {
     use {'ojroques/vim-oscyank'}
 
     -- navigation
-    use {'justinmk/vim-dirvish',
-      requires = {
-        {'roginfarrer/vim-dirvish-dovish', branch = 'main'},
-      }
-    }
     use {'liuchengxu/vim-which-key'}
+    use {'justinmk/vim-dirvish'}
+    use {'roginfarrer/vim-dirvish-dovish'}
     use {
       'nvim-telescope/telescope.nvim',
-      -- 'oberblastmeister/telescope.nvim',
-      -- branch = 'async',
       requires = {
         {'nvim-lua/popup.nvim'},
         {'nvim-lua/plenary.nvim'},
         {'kyazdani42/nvim-web-devicons'},
-      	-- {'nvim-telescope/telescope-fzf-writer.nvim'},
       }
     }
-    -- use {
-    --   'nvim-telescope/telescope-frecency.nvim',
-    --   requires = {
-    --     {'tami5/sql.nvim'},
-    --     {'nvim-telescope/telescope.nvim'},
-    --   },
-    --   config = function()
-    --     require('telescope').load_extension('frecency')
-    --   end
-    -- }
     use {
-      'nvim-telescope/telescope-fzy-native.nvim',
+      'nvim-telescope/telescope-github.nvim',
       requires = {
         {'nvim-telescope/telescope.nvim'},
       },
+    }
+    use {
+      'nvim-telescope/telescope-fzy-native.nvim',
       config = function()
         require('telescope').load_extension('fzy_native')
       end
@@ -78,7 +65,6 @@ return packer.startup {
 
     -- git
     use {'rhysd/git-messenger.vim'}
-    -- use {'airblade/vim-gitgutter'}
     use {
       'lewis6991/gitsigns.nvim',
       requires = {
@@ -107,9 +93,6 @@ return packer.startup {
     -- CoC
     use {'neoclide/coc.nvim', branch = 'release', run = ':CocUpdate'}
 
-    -- javascript/typescript
-    -- use {'jparise/vim-graphql'}
-
     -- ember
     use {'joukevandermaas/vim-ember-hbs'}
     use {'josemarluedke/ember-vim-snippets'}
@@ -122,8 +105,6 @@ return packer.startup {
     -- visuals
     use {'dracula/vim', as = 'dracula'}
     use {'vim-airline/vim-airline'}
-    -- use {'ryanoasis/vim-devicons'}
-    -- {'kyazdani42/nvim-web-devicons'}
   end,
   config = {
     display = {
