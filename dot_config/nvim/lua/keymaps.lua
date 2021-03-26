@@ -1,4 +1,6 @@
-local keymap = require('helpers').keymap
+local helpers = require('helpers')
+local keymap = helpers.keymap
+local map_from_table = helpers.map_from_table
 
 local go = {
   ['%'] = {
@@ -20,9 +22,6 @@ local go = {
     action = [[<Plug>(coc-declaration)]],
     opts = { silent = true },
   },
-  -- g = {
-  --   name = 'top',
-  -- },
   h = {
     name = 'hover',
     action = [[:call CocActionAsync('doHover')<cr>]],
@@ -52,7 +51,7 @@ local go = {
 
 local leader = {
   b = {
-    name = '+buffer',
+    name = 'buffer',
     keys = {
       b = {
         name = 'buffers',
@@ -92,11 +91,21 @@ local leader = {
     },
   },
   c = {
-    name = '+code',
+    name = 'code',
     keys = {
       a = {
         name = 'action',
         action = [[<Plug>(coc-codeaction-line)]],
+      },
+      e = {
+        name = 'error',
+        keys = {
+          l = {
+            name= 'list',
+            action = [[:CocList diagnostics<cr>]],
+            opts = { noremap = true },
+          },
+        },
       },
       o = {
         name = 'organize imports',
@@ -110,11 +119,10 @@ local leader = {
     },
   },
   f = {
-    name = '+file',
+    name = 'file',
     keys = {
       f = {
         name = 'files',
-        -- action = [[:lua require('telescope').extensions.fzf_writer.files()<cr>]],
         action = [[:lua require('telescope.builtin').find_files({ hidden = true })<cr>]],
         opts = { noremap = true, silent = true },
       },
@@ -141,7 +149,7 @@ local leader = {
     },
   },
   g = {
-    name = '+go/git',
+    name = 'go/git',
     keys = vim.fn.extend(go, {
       b = {
         name = 'branches',
@@ -171,7 +179,7 @@ local leader = {
     }),
   },
   q = {
-    name = '+quit',
+    name = 'quit',
     keys = {
       q = {
         name = 'quit',
@@ -186,7 +194,7 @@ local leader = {
     }
   },
   s = {
-    name = '+search',
+    name = 'search',
     keys = {
       b = {
         name = 'buffers',
@@ -220,13 +228,38 @@ local leader = {
       },
       g = {
         name = 'git',
-        action = [[:Telescope git_commits<cr>]],
-        opts = { noremap = true },
+        keys = {
+          b = {
+            name = 'buffer commits',
+            action = [[:Telescope git_bcommits<cr>]],
+            opts = { noremap = true },
+          },
+          c = {
+            name = 'commits',
+            action = [[:Telescope git_commits<cr>]],
+            opts = { noremap = true },
+          },
+        },
       },
       G = {
-        name = 'git (buffer)',
-        action = [[:Telescope git_bcommits<cr>]],
-        opts = { noremap = true },
+        name = 'github',
+        keys = {
+          g = {
+            name = 'gists',
+            action = [[:Telescope gh gists<cr>]],
+            opts = { noremap = true },
+          },
+          i = {
+            name = 'issues',
+            action = [[:Telescope gh issues<cr>]],
+            opts = { noremap = true },
+          },
+          p = {
+            name = 'pull requests',
+            action = [[:Telescope gh pull_requests<cr>]],
+            opts = { noremap = true },
+          },
+        },
       },
       h = {
         name = 'help',
@@ -241,19 +274,11 @@ local leader = {
       p = {
         name = 'project',
         action = [[:Telescope live_grep<cr>]],
-        -- action = [[:lua require('telescope').extensions.fzf_writer.staged_grep()<cr>]],
         opts = { noremap = true },
       },
-      -- TODO: figure out why this doesn't find sqlite module
-      -- r = {
-      --   name = 'recent',
-      --   action = [[:Telescope frecency<cr>]],
-      --   opts = { noremap = true },
-      -- },
       s = {
         name = 'search',
         action = [[:Telescope live_grep<cr>]],
-        -- action = [[:lua require('telescope').extensions.fzf_writer.staged_grep()<cr>]],
         opts = { noremap = true },
       },
       S = {
@@ -269,7 +294,7 @@ local leader = {
     },
   },
   v = {
-    name = '+vim',
+    name = 'vim',
     keys = {
       e = {
         name = 'edit',
@@ -309,7 +334,7 @@ local leader = {
     },
   },
   w = {
-    name = '+window',
+    name = 'window',
     keys = {
       c = {
         name = 'close',
@@ -329,7 +354,7 @@ local leader = {
     },
   },
   z = {
-    name = '+zsh',
+    name = 'zsh',
     keys = {
       e = {
         name = 'edit',
@@ -345,35 +370,8 @@ local leader = {
   },
 }
 
-local leader_map = {}
-for k, v in pairs(leader) do
-  leader_map[k] = { name = v.name }
-  for kk, vv in pairs(v.keys) do
-    if vv.action then
-      keymap('n', '<leader>'..k..kk, vv.action, vv.opts)
-    end
-    if vv.ignore then
-      leader_map[k][kk] = 'which_key_ignore'
-    else
-      leader_map[k][kk] = vv.name
-    end
-  end
-end
-
-local g_map = {}
-for k, v in pairs(go) do
-  if v.action then
-    keymap('n', 'g'..k, v.action, v.opts)
-  end
-  if v.ignore then
-    g_map[k] = 'which_key_ignore'
-  else
-    g_map[k] = v.name
-  end
-end
-
-vim.g.leader_map = leader_map
-vim.g.g_map = g_map
+vim.g.leader_map = map_from_table('n', leader, '<leader>')
+vim.g.g_map = map_from_table('n', go, 'g')
 
 vim.fn['which_key#register']('<Space>', 'g:leader_map')
 vim.fn['which_key#register']('g', 'g:g_map')
