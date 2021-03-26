@@ -110,6 +110,7 @@ MICRO_DIR="$G_DIR/micro"
 SERVER_OPTIONS=(-Dgreenlight.application.properties=conf/application-dev.properties -Dlogback.configurationFile=logback.xml -classpath "target/*:target/lib/*")
 
 JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
+JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
 
 ggbuild() { (cd "$SERVER_DIR" && mvn clean install -Dmaven.test.skip=true --batch-mode) }
 ggrepo() { (cd "$SERVER_DIR/RepoSvc" && java "${SERVER_OPTIONS[@]}" -Dderby.stream.error.file=RepositoryRoot/log/derby.log -Dfile.encoding=UTF-8 -Xdebug -Xrunjdwp:transport=dt_socket,address=27271,server=y,suspend=n com.greenlight.camel.CamelMain) }
@@ -121,6 +122,7 @@ ggpull() { (cd "$GG_DIR/local/docker" && git pull) }
 ggauthnstop() { (cd "$GG_DIR/local/docker" && docker stop docker_authN_1) }
 
 java11() { $JAVA11 $@ }
+java8() { $JAVA8 $@ }
 
 abbrev-alias -c cdgc="cd ~/dev/greenlight/client"
 abbrev-alias -c cdgce="cd ~/dev/greenlight/client/src/greenlight"
@@ -179,7 +181,6 @@ rcu() {
 export JAVA_HOME="$(jabba which default)"
 export PATH="$JAVA_HOME/bin:$PATH"
 
-
 # abbrev-alias -c ci="composer install"
 # abbrev-alias -c cu="composer update"
 # abbrev-alias -c cgo="composer global outdated"
@@ -197,3 +198,5 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
+
+source ~/.codeartifact_mvn_auth
