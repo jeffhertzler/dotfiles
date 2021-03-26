@@ -69,12 +69,12 @@ return packer.startup {
 
     -- git
     use {'rhysd/git-messenger.vim'}
-    use {
-      'lewis6991/gitsigns.nvim',
-      requires = {
-        {'nvim-lua/plenary.nvim'},
-      },
-    }
+    -- use {
+    --   'lewis6991/gitsigns.nvim',
+    --   requires = {
+    --     {'nvim-lua/plenary.nvim'},
+    --   },
+    -- }
 
     -- buffers
     use {'moll/vim-bbye'}

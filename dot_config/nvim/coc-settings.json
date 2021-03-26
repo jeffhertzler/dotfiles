@@ -9,6 +9,9 @@
     "typescript",
     "typescriptreact"
   ],
+  "git.addGBlameToVirtualText": true,
+  "git.removedSign.hlGroup": "DraculaRed",
+  "git.topRemovedSign.hlGroup": "DraculaRed",
   "Lua.diagnostics.globals": ["vim"],
   "Lua.runtime.version": "LuaJIT",
   "snippets.extends": { "typescript": ["javascript"] },

@@ -74,7 +74,7 @@ vim.g.coc_global_extensions = {
   'coc-cssmodules',
   'coc-ember',
   'coc-eslint',
-  -- 'coc-git',
+  'coc-git',
   'coc-go',
   -- 'coc-graphql',
   'coc-highlight',
@@ -158,15 +158,15 @@ require('nvim-treesitter.configs').setup {
 require('plenary.filetype').add_file('extras')
 
 -- gitsigns
-require('gitsigns').setup {
-  signs = {
-    add          = {hl = 'DiffAdd'   , text = '│'},
-    change       = {hl = 'DiffChange', text = '│'},
-    delete       = {hl = 'DraculaRed', text = '_'},
-    topdelete    = {hl = 'DraculaRed', text = '‾'},
-    changedelete = {hl = 'DiffChange', text = '~'},
-  },
-}
+-- require('gitsigns').setup {
+--   signs = {
+--     add          = {hl = 'DiffAdd'   , text = '│'},
+--     change       = {hl = 'DiffChange', text = '│'},
+--     delete       = {hl = 'DraculaRed', text = '_'},
+--     topdelete    = {hl = 'DraculaRed', text = '‾'},
+--     changedelete = {hl = 'DiffChange', text = '~'},
+--   },
+-- }
 
 vim.cmd [[augroup TmuxYankAuto]]
 vim.cmd [[autocmd!]]
