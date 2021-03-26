@@ -29,6 +29,8 @@ return packer.startup {
     use {'justinmk/vim-sneak'}
     use {'andymass/vim-matchup'}
 
+    use {'rmagatti/alternate-toggler'}
+
     -- tmux
     use {'christoomey/vim-tmux-navigator'}
     use {'ojroques/vim-oscyank'}

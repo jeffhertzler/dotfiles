@@ -293,6 +293,16 @@ local leader = {
       },
     },
   },
+  t = {
+    name = 'toggle',
+    keys = {
+      b = {
+        name = 'boolean',
+        action = [[:ToggleAlternate<cr>]],
+        opts = { noremap = true },
+      },
+    },
+  },
   v = {
     name = 'vim',
     keys = {
