@@ -154,6 +154,9 @@ require('nvim-treesitter.configs').setup {
   },
 }
 
+-- plenary
+require('plenary.filetype').add_file('extras')
+
 -- gitsigns
 require('gitsigns').setup {
   signs = {
