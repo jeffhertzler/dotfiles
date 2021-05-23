@@ -16,7 +16,7 @@ fi;
 source ~/.zplug/init.zsh
 
 zplug "zplug/zplug", hook-build:"zplug --self-manage"
-zplug "chriskempson/base16-shell"
+# zplug "chriskempson/base16-shell"
 zplug "momo-lab/zsh-abbrev-alias"
 zplug "peterhurford/up.zsh"
 # zplug "jeffreytse/zsh-vi-mode"
@@ -33,12 +33,12 @@ fi
 
 zplug load
 
-dark() {
-  base16_dracula
-}
-light() {
-  base16_harmonic-light
-}
+# dark() {
+#   base16_dracula
+# }
+# light() {
+#   base16_harmonic-light
+# }
 
 # e() {
 #   emacsclient -na /Applications/Emacs.app/Contents/MacOS/Emacs $@ >/dev/null 2>&1 &
@@ -113,13 +113,33 @@ JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
 JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
 
 ggbuild() { (cd "$SERVER_DIR" && mvn clean install -Dmaven.test.skip=true --batch-mode) }
-ggrepo() { (cd "$SERVER_DIR/RepoSvc" && java "${SERVER_OPTIONS[@]}" -Dderby.stream.error.file=RepositoryRoot/log/derby.log -Dfile.encoding=UTF-8 -Xdebug -Xrunjdwp:transport=dt_socket,address=27271,server=y,suspend=n com.greenlight.camel.CamelMain) }
-ggah() { (cd "$SERVER_DIR/ActivityHistory" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27272,server=y,suspend=n com.greenlight.camel.CamelMain) }
-ggauthz() { (cd "$SERVER_DIR/AuthZ" && java "${SERVER_OPTIONS[@]}" -Xdebug -Xrunjdwp:transport=dt_socket,address=27273,server=y,suspend=n com.greenlight.idm.CamelMain) }
 ggauthn() { (cd "$AUTHN_DIR/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 gg() { (cd "$GG_DIR/local/docker" && ./gg.sh $@) }
-ggpull() { (cd "$GG_DIR/local/docker" && git pull) }
+ggpull() {
+  (cd "$GG_DIR" && git pull)
+  (cd "$AUTHN_DIR" && git pull)
+  (cd "$SERVER_DIR" && git pull)
+  (cd "$G_DIR/ah" && git pull)
+  (cd "$G_DIR/authz" && git pull)
+  (cd "$G_DIR/common" && git pull)
+  (cd "$G_DIR/grpc" && git pull)
+  (cd "$G_DIR/org" && git pull)
+  (cd "$G_DIR/repo" && git pull)
+  (cd "$G_DIR/server" && git pull)
+}
 ggauthnstop() { (cd "$GG_DIR/local/docker" && docker stop docker_authN_1) }
+ggauthnbuild() {
+  (cd "$AUTHN_DIR" && mvn clean install -Dmaven.test.skip=true && cp keystore/rootCA.pem target/ && cp keystore/.greenlight.wildcard target/)
+}
+ggkey() { (cd "$GG_DIR/local/aws"; ./get_mvn_token.sh; source ~/.zshrc) }
+
+# ggrepo() {
+#   if [ ! $# = 1 ]; then
+#     cd "$SERVER_REPO_DIR"
+#   else
+#     (cd "$SERVER_REPO_DIR"; ./gg.sh $@)
+#   fi
+# }
 
 java11() { $JAVA11 $@ }
 java8() { $JAVA8 $@ }
@@ -131,7 +151,9 @@ abbrev-alias -c cdgg="cd ~/dev/greenlight/gg"
 abbrev-alias -c cdgm="cd ~/dev/greenlight/micro"
 abbrev-alias -c cdgs="cd ~/dev/greenlight/server"
 
-export MAC_REMOTE="xxx@xxx.xxx.xxx.xxx";
+abbrev-alias -c vdb="docker exec -it -u docker server_app_1 /bin/bash"
+
+# export MAC_REMOTE="xxx@xxx.xxx.xxx.xxx";
 
 abbrev-alias sshm="ssh $MAC_REMOTE"
 scpm() { scp $1 "$MAC_REMOTE:$2" "${@:3}" }
@@ -150,6 +172,13 @@ nvu() {
   sudo chmod +x nvim.appimage
   sudo chown root:root nvim.appimage
   sudo mv nvim.appimage /usr/local/bin/nvim
+}
+
+wtu() {
+  wget https://github.com/wez/wezterm/releases/download/nightly/WezTerm-nightly-Ubuntu16.04.AppImage -O wezterm.appimage
+  sudo chmod +x wezterm.appimage
+  sudo chown root:root wezterm.appimage
+  sudo mv wezterm.appimage /usr/local/bin/wezterm
 }
 
 rcu() {

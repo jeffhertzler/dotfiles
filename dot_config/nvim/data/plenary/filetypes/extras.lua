@@ -1,5 +1,5 @@
 return {
   extension = {
-    ['hbs'] = [[html.handlebars]],
+    ['hbs'] = [[handlebars]],
   },
 }

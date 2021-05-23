@@ -1,25 +1,24 @@
-local function packadd()
-  return pcall(vim.cmd, [[packadd packer.nvim]])
-end
+require('plugins.packer').setup()
 
-if not packadd() then
-  local dir = vim.fn.stdpath('data') .. '/site/pack/packer/opt/'
-
-  vim.fn.mkdir(dir, 'p')
-
-  local git = 'git clone https://github.com/wbthomason/packer.nvim ' .. dir .. '/packer.nvim'
-
-  vim.fn.system(git)
-
-  packadd()
-end
-
-local packer = require('packer')
-local util = require('packer.util')
-
-return packer.startup {
+require('packer').startup {
   function(use)
     use {'wbthomason/packer.nvim', opt = true}
+
+    use {
+      'nvim-lua/plenary.nvim',
+      config = function() require('plugins.plenary').config() end,
+    }
+    use {'nvim-lua/popup.nvim'}
+
+    use {
+      'kyazdani42/nvim-web-devicons',
+      config = function() require('plugins.icons').config() end,
+    }
+
+    -- use {'famiu/nvim-reload'}
+
+    use {'nanotee/nvim-lua-guide'}
+    use {'folke/lua-dev.nvim'}
 
     -- motions
     use {'tpope/vim-commentary'}
@@ -35,71 +34,133 @@ return packer.startup {
     use {'christoomey/vim-tmux-navigator'}
     use {'ojroques/vim-oscyank'}
 
+    -- lsp
+    use {'neovim/nvim-lspconfig'}
+    use {
+      'kabouzeid/nvim-lspinstall',
+      config = function() require('plugins.lsp').config() end,
+  }
+    use {
+      'glepnir/lspsaga.nvim',
+      config = function() require('plugins.lsp.saga').config() end,
+    }
+    use {
+      'onsails/lspkind-nvim',
+      config = function() require('plugins.lsp.kind').config() end,
+    }
+    use {'jose-elias-alvarez/nvim-lsp-ts-utils'}
+    use {
+      'folke/trouble.nvim',
+      config = function() require('trouble').setup() end,
+    }
+    use {
+      'folke/todo-comments.nvim',
+      config = function() require('todo-comments').setup() end,
+    }
+
+    -- use {
+    --   'hrsh7th/vim-vsnip',
+    --   setup = function() require('plugins.snippets').setup() end,
+    -- }
+    use {
+      'hrsh7th/nvim-compe',
+      config = function() require('plugins.completion').config() end,
+    }
+    -- use {'kosayoda/nvim-lightbulb'}
+    -- use {'mfussenegger/nvim-jdtls'}
+
+    -- debugging
+    -- use {'mfussenegger/nvim-dap'}
+
     -- navigation
-    use {'justinmk/vim-dirvish'}
-    use {'roginfarrer/vim-dirvish-dovish'}
-    -- use {'liuchengxu/vim-which-key'}
-    -- use {'jeffhertzler/vim-which-key', branch = 'better-sort'}
-    use {'~/dev/vim-which-key'}
+    -- use {'justinmk/vim-dirvish'}
+    -- use {'roginfarrer/vim-dirvish-dovish'}
+    use {
+      'tamago324/lir.nvim',
+      after = {'nvim-web-devicons'},
+      config = function() require('plugins.lir').config() end,
+    }
+    use {
+      'folke/which-key.nvim',
+      config = function() require('plugins.which-key').config() end,
+    }
+
     use {
       'nvim-telescope/telescope.nvim',
-      requires = {
-        {'nvim-lua/popup.nvim'},
-        {'nvim-lua/plenary.nvim'},
-        {'kyazdani42/nvim-web-devicons'},
-      }
+      config = function() require('plugins.telescope').config() end,
+    }
+    use {'nvim-telescope/telescope-github.nvim'}
+    -- use {
+    --   'nvim-telescope/telescope-fzy-native.nvim',
+    --   config = function() require('plugins.telescope.fzy').config() end,
+    -- }
+    use {
+      'nvim-telescope/telescope-fzf-native.nvim',
+      run = 'make',
+      config = function() require('plugins.telescope.fzf').config() end,
     }
     use {
-      'nvim-telescope/telescope-github.nvim',
-      requires = {
-        {'nvim-telescope/telescope.nvim'},
-      },
-    }
-    use {
-      'nvim-telescope/telescope-fzy-native.nvim',
-      config = function()
-        require('telescope').load_extension('fzy_native')
-      end
-    }
-    use {'kyazdani42/nvim-tree.lua',
-      requires = {
-        {'kyazdani42/nvim-web-devicons'},
-      }
+      'kyazdani42/nvim-tree.lua',
+      setup = function() require('plugins.tree').setup() end,
     }
 
     -- git
     use {'rhysd/git-messenger.vim'}
-    -- use {
-    --   'lewis6991/gitsigns.nvim',
-    --   requires = {
-    --     {'nvim-lua/plenary.nvim'},
-    --   },
-    -- }
+    use {
+      'lewis6991/gitsigns.nvim',
+      config = function() require('plugins.gitsigns').config() end,
+    }
+    use {
+      'TimUntersberger/neogit',
+      config = function() require('plugins.neogit').config() end,
+    }
 
     -- buffers
     use {'moll/vim-bbye'}
-    use {'Asheq/close-buffers.vim'}
+    use {
+      'Asheq/close-buffers.vim',
+      setup = function() require('plugins.close-buffers').setup() end,
+    }
 
     -- wrappers
     use {'kdheepak/lazygit.nvim'}
-    use {'numtostr/FTerm.nvim'}
+    use {
+      'numtostr/FTerm.nvim',
+      config = function() require('plugins.term').config() end,
+    }
 
     -- extras
-    use {'mhinz/vim-startify'}
+    use {
+      'glepnir/dashboard-nvim',
+      setup = function() require('plugins.dashboard').setup() end,
+    }
 
     -- treesitter
-    use {'nvim-treesitter/nvim-treesitter', run = ':TSUpdate'}
+    use {
+      'nvim-treesitter/nvim-treesitter',
+      run = ':TSUpdate',
+      config = function() require('plugins.treesitter').config() end,
+    }
+    -- use {
+    --   'windwp/nvim-ts-autotag',
+    --   config = function() require('plugins.treesitter.autotag').config() end,
+    -- }
+    use {'nvim-treesitter/playground'}
 
     -- indenting
-    use {'editorconfig/editorconfig-vim'}
+    use {
+      'editorconfig/editorconfig-vim',
+      setup = function() require('plugins.editorconfig').setup() end,
+    }
     use {'tpope/vim-sleuth'}
 
-    -- CoC
-    use {'neoclide/coc.nvim', branch = 'release', run = ':CocUpdate'}
-
     -- ember
-    use {'joukevandermaas/vim-ember-hbs'}
-    use {'josemarluedke/ember-vim-snippets'}
+    -- use {'josemarluedke/ember-vim-snippets'}
+    use {'Exelord/ember-snippets', run = 'npm install && npm run build'}
+    use {
+      'L3MON4D3/LuaSnip',
+      config = function() require('plugins.snippets').config() end,
+    }
 
     -- langs
     use {'mattn/emmet-vim'}
@@ -107,12 +168,29 @@ return packer.startup {
     use {'leafOfTree/vim-svelte-plugin'}
 
     -- visuals
-    use {'dracula/vim', as = 'dracula'}
-    use {'vim-airline/vim-airline'}
+    use {'folke/tokyonight.nvim'}
+    use {
+      'hoob3rt/lualine.nvim',
+      config = function() require('plugins.statusline').config() end,
+    }
+    use {
+      'lukas-reineke/indent-blankline.nvim',
+      branch = 'lua',
+      setup = function() require('plugins.indent').setup() end,
+    }
+    -- use {'dracula/vim', as = 'dracula'}
+    -- use {
+    --   'vim-airline/vim-airline',
+    --   setup = function() require('plugins.airline').setup() end,
+    -- }
   end,
   config = {
     display = {
-      open_fn = util.float
-    }
-  }
+      open_fn = require('plugins.packer').open_fn,
+    },
+    profile = {
+      enable = true,
+      threshold = 1,
+    },
+  },
 }

@@ -1,5 +1,4 @@
 --
---
 --          _|  _|    _|
 --          _|  _|    _|      Jeff Hertzler
 --          _|  _|_|_|_|      https://github.com/jeffhertzler
@@ -13,7 +12,7 @@ package.loaded['plugins']  = nil
 package.loaded['settings'] = nil
 package.loaded['keymaps']  = nil
 
-require 'helpers'
-require 'plugins'
-require 'settings'
-require 'keymaps'
+require('helpers')
+require('plugins')
+require('settings')
+require('keymaps')
