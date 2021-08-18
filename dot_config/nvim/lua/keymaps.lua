@@ -38,7 +38,8 @@ local normal = {
         n = { require('lspsaga.diagnostic').lsp_jump_diagnostic_next, 'next' },
         p = { require('lspsaga.diagnostic').lsp_jump_diagnostic_prev, 'prev' },
       },
-      f = { [[<cmd>w | e | TSBufEnable highlight<cr>]], 'fix highlights' },
+      f = { function() vim.lsp.buf.formatting_seq_sync(); end, 'format' },
+      F = { [[<cmd>w | e | TSBufEnable highlight<cr>]], 'fix highlights' },
       o = { require('nvim-lsp-ts-utils').organize_imports, 'organize imports' },
       r = { require('lspsaga.rename').rename, 'rename' },
       s = { tb.lsp_document_symbols, 'symbols' },
@@ -115,6 +116,7 @@ local normal = {
       p = { [[<cmd>e ~/.config/nvim/lua/plugins.lua<cr>]], 'plugins' },
       r = { [[<cmd>luafile ~/.config/nvim/init.lua<cr>]], 'reload' },
       s = { [[<cmd>e ~/.config/nvim/lua/settings.lua<cr>]], 'settings' },
+      v = { function() tb.find_files({ search_dirs = { '~/.config/nvim' } }) end, 'search' },
       u = { [[<cmd>PackerSync<cr>]], 'update (plugins)' },
     },
     w = {
@@ -135,7 +137,8 @@ local normal = {
   ['<C-_>'] = { [[<cmd>nohl<cr>]], 'clear search' },
   j = { 'gj', 'down' },
   k = { 'gk', 'up' },
-  ['-'] = { [[<cmd>execute 'e ' .. expand('%:p:h')<cr>]], 'dir' },
+  -- ['-'] = { [[<cmd>execute 'e ' .. expand('%:p:h')<cr>]], 'dir' },
+  ['-'] = { function() require('lir.float').toggle() end, 'dir' },
 }
 
 local visual = {
@@ -156,11 +159,28 @@ local terminal = {
 
 local comp = {
   ['<tab>'] = { function() require('plugins.snippets').complete('<tab>', 1) end, 'next' },
-  -- ['<s-tab>'] = { function() require('plugins.snippets').complete('<s-tab>', -1) end, 'prev' },
-  ['<s-tab>'] = { function() require('luasnip').jump(-1) end, 'prev' },
+  ['<s-tab>'] = { function() require('plugins.snippets').complete('<s-tab>', -1) end, 'prev' },
+  -- ['<s-tab>'] = { function() require('luasnip').jump(-1) end, 'prev' },
 }
 
 local insert = vim.tbl_extend('force', comp, {
+  -- ['<bs>'] = { function() require('plugins.completion').pum('<bs>', '<C-e><bs>') end, 'exit'},
+  -- ['<cr>']  = {
+  --   function()
+  --     require('plugins.completion').pum('<cr>', function()
+  --       if vim.fn.complete_info().selected == -1 then
+  --         require('helpers').feedkeys('<C-e><cr>')
+  --       else
+  --         require('helpers').feedkeys('<C-y>')
+  --       end
+  --     end)
+  --   end,
+  --   'confirm'
+  -- },
+  -- ['<esc>'] = { function() require('plugins.completion').pum('<esc>', '<C-e><esc>') end, 'exit'},
+  -- ['<C-c>'] = { function() require('plugins.completion').pum('<C-c>', '<C-e><C-c>') end, 'exit'},
+  -- ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
+  -- ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
   ['<cr>']  = { [[compe#confirm('<cr>')]], 'confirm', expr = true },
   ['<esc>'] = { function() require('plugins.completion').close('<esc>') end, 'exit'},
   ['<C-c>'] = { function() require('plugins.completion').close('<C-c>') end, 'exit'},

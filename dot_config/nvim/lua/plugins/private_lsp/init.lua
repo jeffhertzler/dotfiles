@@ -38,24 +38,12 @@ M.configs = {
         debug = false,
         enable_import_on_completion = true,
         import_on_completion_timeout = 5000,
-        -- eslint
-        eslint_bin = "eslint",
-        eslint_args = {"-f", "json", "--stdin", "--stdin-filename", "$FILENAME"},
-        eslint_enable_disable_comments = true,
 
-        -- experimental settings!
         -- eslint diagnostics
         eslint_enable_diagnostics = true,
-        eslint_diagnostics_debounce = 250,
+
         -- formatting
         enable_formatting = true,
-        formatter = "prettier",
-        formatter_args = {"--stdin-filepath", "$FILENAME"},
-        format_on_save = true,
-        no_save_after_format = false,
-        -- parentheses completion
-        complete_parens = false,
-        signature_help_in_parens = false,
       })
 
       -- required to enable ESLint code actions and formatting
@@ -81,6 +69,8 @@ end
 function M.start()
   if not loaded then
     M.ember()
+    require('null-ls').config({})
+    require('lspconfig')['null-ls'].setup({})
     require('lspinstall').setup()
     local servers = require('lspinstall').installed_servers()
     for _, server in pairs(servers) do
@@ -88,6 +78,7 @@ function M.start()
       config.capabilities = capabilities
       if server ~= 'efm' then
         require('lspconfig')[server].setup(config)
+        -- require('lspconfig')[server].setup(require("coq")().lsp_ensure_capabilities(config))
       end
     end
     loaded = true

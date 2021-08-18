@@ -9,7 +9,7 @@ vim.g.mapleader = ' '
 vim.g.node_host_prog = vim.fn.trim(vim.fn.system('volta which neovim-node-host'))
 
 vim.o.clipboard = 'unnamedplus'
-vim.o.completeopt = 'menuone,noselect'
+vim.o.completeopt = 'menuone,noselect,noinsert'
 vim.o.hidden = true
 vim.o.shortmess = vim.o.shortmess .. 'c'
 vim.o.showmode = false;
@@ -57,6 +57,8 @@ vim.cmd [[
     autocmd FileType handlebars setlocal commentstring={{!--\ %s\ --}}
     autocmd BufRead,BufNewFile *.hbs set filetype=handlebars
     autocmd BufRead,BufNewFile jsconfig.json,jsconfig*.json,tsconfig.json,tsconfig*.json,*.json5 set filetype=jsonc
+
+    autocmd BufWritePre *.go,*.js,*.ts,*.jsx,*.tsx lua vim.lsp.buf.formatting_seq_sync()
 
     autocmd BufWritePost *.lua PackerCompile
 

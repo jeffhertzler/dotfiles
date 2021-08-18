@@ -35,10 +35,16 @@ function M.config()
       ['P'] = clipboard_actions.paste,
     },
     float = {
-      borderchars = require('helpers').border,
-      border = true,
-      size_percentage = 0.8,
       winblend = 0,
+      win_opts = function()
+        local width = math.floor(vim.o.columns * 0.8)
+        local height = math.floor(vim.o.lines * 0.8)
+        return {
+          border = require('lir.float.helper').make_border_opts(require('helpers').border),
+          width = width,
+          height = height,
+        }
+      end,
     },
   })
 end

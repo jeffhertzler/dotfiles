@@ -1,5 +1,16 @@
 local M = {}
 
+function M.setup()
+  vim.g.coq_settings = {
+    auto_start = true,
+    keymap = {
+      recommended = false,
+      bigger_preview = '<C-A-k>',
+      jump_to_mark = '<C-A-h>',
+    }
+  }
+end
+
 function M.close(key)
   M.pum(key, function()
     require('compe')._close()

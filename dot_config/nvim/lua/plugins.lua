@@ -48,6 +48,7 @@ require('packer').startup {
       'onsails/lspkind-nvim',
       config = function() require('plugins.lsp.kind').config() end,
     }
+    use { 'jose-elias-alvarez/null-ls.nvim' }
     use {'jose-elias-alvarez/nvim-lsp-ts-utils'}
     use {
       'folke/trouble.nvim',
@@ -58,6 +59,12 @@ require('packer').startup {
       config = function() require('todo-comments').setup() end,
     }
 
+    -- use {
+    --   'ms-jpq/coq_nvim',
+    --   branch = 'coq',
+    --   setup = function() require('plugins.completion').setup() end,
+    -- }
+    -- use { 'ms-jpq/coq.artifacts', branch = 'artifacts' }
     -- use {
     --   'hrsh7th/vim-vsnip',
     --   setup = function() require('plugins.snippets').setup() end,
@@ -110,10 +117,10 @@ require('packer').startup {
       'lewis6991/gitsigns.nvim',
       config = function() require('plugins.gitsigns').config() end,
     }
-    use {
-      'TimUntersberger/neogit',
-      config = function() require('plugins.neogit').config() end,
-    }
+    -- use {
+    --   'TimUntersberger/neogit',
+    --   config = function() require('plugins.neogit').config() end,
+    -- }
 
     -- buffers
     use {'moll/vim-bbye'}
@@ -175,14 +182,8 @@ require('packer').startup {
     }
     use {
       'lukas-reineke/indent-blankline.nvim',
-      branch = 'lua',
       setup = function() require('plugins.indent').setup() end,
     }
-    -- use {'dracula/vim', as = 'dracula'}
-    -- use {
-    --   'vim-airline/vim-airline',
-    --   setup = function() require('plugins.airline').setup() end,
-    -- }
   end,
   config = {
     display = {
