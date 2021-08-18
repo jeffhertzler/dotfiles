@@ -65,6 +65,7 @@ local normal = {
       -- g = { require('neogit').open, 'gui' },
       s = { tb.git_status, 'status' },
     }),
+    h = { name = "gitsigns" },
     q = {
       name = 'quit',
       q = { [[<cmd>qa<cr>]], 'quit' },
@@ -116,7 +117,8 @@ local normal = {
       p = { [[<cmd>e ~/.config/nvim/lua/plugins.lua<cr>]], 'plugins' },
       r = { [[<cmd>luafile ~/.config/nvim/init.lua<cr>]], 'reload' },
       s = { [[<cmd>e ~/.config/nvim/lua/settings.lua<cr>]], 'settings' },
-      v = { function() tb.find_files({ search_dirs = { '~/.config/nvim' } }) end, 'search' },
+      v = { function() tb.find_files({ search_dirs = { '~/.config/nvim' } }) end, 'files' },
+      V = { function() tb.live_grep({ search_dirs = { '~/.config/nvim' } }) end, 'search' },
       u = { [[<cmd>PackerSync<cr>]], 'update (plugins)' },
     },
     w = {

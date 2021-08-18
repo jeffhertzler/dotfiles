@@ -26,7 +26,7 @@ vim.o.swapfile = false
 
 vim.wo.list = true
 vim.wo.number = true
-vim.wo.relativenumber = true
+-- vim.wo.relativenumber = true
 vim.wo.signcolumn = 'yes:1'
 vim.wo.colorcolumn = ""
 

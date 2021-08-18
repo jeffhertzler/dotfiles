@@ -25,8 +25,9 @@ require('packer').startup {
     use {'tpope/vim-eunuch'}
     use {'tpope/vim-surround'}
     use {'tpope/vim-repeat'}
-    use {'justinmk/vim-sneak'}
+    -- use {'justinmk/vim-sneak'}
     use {'andymass/vim-matchup'}
+    use {'ggandor/lightspeed.nvim'}
 
     use {'rmagatti/alternate-toggler'}
 
