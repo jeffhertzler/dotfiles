@@ -57,6 +57,11 @@ require('packer').startup {
       config = function() require('todo-comments').setup() end,
     }
 
+    use {
+      'rcarriga/nvim-notify',
+      config = function() vim.notify = require('notify') end,
+    }
+
     -- use {
     --   'ms-jpq/coq_nvim',
     --   branch = 'coq',
