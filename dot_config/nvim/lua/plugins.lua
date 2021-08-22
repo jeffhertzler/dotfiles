@@ -15,8 +15,6 @@ require('packer').startup {
       config = function() require('plugins.icons').config() end,
     }
 
-    -- use {'famiu/nvim-reload'}
-
     use {'nanotee/nvim-lua-guide'}
     use {'folke/lua-dev.nvim'}
 
@@ -25,7 +23,6 @@ require('packer').startup {
     use {'tpope/vim-eunuch'}
     use {'tpope/vim-surround'}
     use {'tpope/vim-repeat'}
-    -- use {'justinmk/vim-sneak'}
     use {'andymass/vim-matchup'}
     use {'ggandor/lightspeed.nvim'}
 
@@ -66,10 +63,6 @@ require('packer').startup {
     --   setup = function() require('plugins.completion').setup() end,
     -- }
     -- use { 'ms-jpq/coq.artifacts', branch = 'artifacts' }
-    -- use {
-    --   'hrsh7th/vim-vsnip',
-    --   setup = function() require('plugins.snippets').setup() end,
-    -- }
     use {
       'hrsh7th/nvim-compe',
       config = function() require('plugins.completion').config() end,
@@ -98,10 +91,6 @@ require('packer').startup {
       config = function() require('plugins.telescope').config() end,
     }
     use {'nvim-telescope/telescope-github.nvim'}
-    -- use {
-    --   'nvim-telescope/telescope-fzy-native.nvim',
-    --   config = function() require('plugins.telescope.fzy').config() end,
-    -- }
     use {
       'nvim-telescope/telescope-fzf-native.nvim',
       run = 'make',
