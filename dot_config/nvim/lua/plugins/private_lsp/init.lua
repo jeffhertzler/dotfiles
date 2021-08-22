@@ -31,6 +31,7 @@ M.configs = {
   typescript = {
     on_attach = function(client)
       local ts_utils = require("nvim-lsp-ts-utils")
+      client.resolved_capabilities.document_formatting = false
 
       -- defaults
       ts_utils.setup({
