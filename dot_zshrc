@@ -245,6 +245,5 @@ eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
 # source ~/.asdf/asdf.sh
-source ~/.codeartifact_mvn_auth
 export VOLTA_HOME="$HOME/.volta"
 export PATH="$VOLTA_HOME/bin:$PATH"

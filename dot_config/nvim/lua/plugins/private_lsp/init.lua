@@ -1,7 +1,7 @@
 local M = {}
 
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities.textDocument.completion.completionItem.snippetSupport = true
+-- local capabilities = vim.lsp.protocol.make_client_capabilities()
+-- capabilities.textDocument.completion.completionItem.snippetSupport = true
 
 local loaded = false
 
@@ -41,6 +41,7 @@ M.configs = {
         import_on_completion_timeout = 5000,
 
         -- eslint diagnostics
+        eslint_disable_if_no_config = true,
         eslint_enable_diagnostics = true,
 
         -- formatting
@@ -76,11 +77,10 @@ function M.start()
     local servers = require('lspinstall').installed_servers()
     for _, server in pairs(servers) do
       local config = M.configs[server] or {}
-      config.capabilities = capabilities
-      if server ~= 'efm' then
-        require('lspconfig')[server].setup(config)
-        -- require('lspconfig')[server].setup(require("coq")().lsp_ensure_capabilities(config))
-      end
+      -- config.capabilities = capabilities
+      config.capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+      require('lspconfig')[server].setup(config)
+      -- require('lspconfig')[server].setup(require("coq")().lsp_ensure_capabilities(config))
     end
     loaded = true
   end

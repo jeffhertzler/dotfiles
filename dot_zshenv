@@ -13,4 +13,6 @@ PATH="$HOME/.cargo/bin:$PATH"
 PATH="$HOME/.local/bin:$PATH"
 PATH="$HOME/bin:$PATH"
 
+source ~/.codeartifact_mvn_auth
+
 export PATH

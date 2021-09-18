@@ -2,14 +2,23 @@ local wk = require('which-key');
 
 local tb = require('telescope.builtin')
 local te = require('telescope').extensions
+local tt = require('telescope.themes')
+
+local chezmoi = '~/.local/share/chezmoi'
+
+-- TODO: save and optionally add to chezmoi if in allowlist
+-- local save_and_add = function()
+-- end
 
 local n_go_git = {
   d = { tb.lsp_definitions, 'definition' },
-  h = { require('lspsaga.hover').render_hover_doc, 'hover' },
+  -- h = { require('lspsaga.hover').render_hover_doc, 'hover' },
+  h = { function() vim.lsp.buf.hover() end, 'hover' },
   i = { tb.lsp_implementations, 'implementation' },
   m = { [[:GitMessenger<cr>]], 'messenger' },
   r = { tb.lsp_references, 'references' },
-  s = { require('lspsaga.signaturehelp').signature_help, 'signature' },
+  -- s = { require('lspsaga.signaturehelp').signature_help, 'signature' },
+  s = { function() vim.lsp.buf.signature_help() end, 'signature' },
 }
 
 local normal = {
@@ -28,24 +37,57 @@ local normal = {
     },
     c = {
       name = 'code',
-      a = { require('lspsaga.codeaction').code_action, 'actions' },
-      d = { require('lspsaga.diagnostic').show_cursor_diagnostics, 'diagnostics (cursor)' },
-      D = { require('lspsaga.diagnostic').show_line_diagnostics, 'diagnostics (line)' },
+      -- a = { require('lspsaga.codeaction').code_action, 'actions' },
+      a = { function() tb.lsp_code_actions(tt.get_cursor()) end, 'actions' },
+      d = { function() vim.lsp.diagnostic.show_position_diagnostics() end, 'diagnostics (cursor)' },
+      D = { function() vim.lsp.diagnostic.show_line_diagnostics() end, 'diagnostics (line)' },
+      -- d = { require('lspsaga.diagnostic').show_cursor_diagnostics, 'diagnostics (cursor)' },
+      -- D = { require('lspsaga.diagnostic').show_line_diagnostics, 'diagnostics (line)' },
       e = {
         name = 'error',
         l = { tb.lsp_document_diagnostics, 'list' },
         L = { tb.lsp_workspace_diagnostics, 'list (workspace)' },
-        n = { require('lspsaga.diagnostic').lsp_jump_diagnostic_next, 'next' },
-        p = { require('lspsaga.diagnostic').lsp_jump_diagnostic_prev, 'prev' },
+        n = { function() vim.lsp.diagnostic.goto_next() end, 'next' },
+        p = { function() vim.lsp.diagnostic.goto_prev() end, 'prev' },
+        -- n = { require('lspsaga.diagnostic').lsp_jump_diagnostic_next, 'next' },
+        -- p = { require('lspsaga.diagnostic').lsp_jump_diagnostic_prev, 'prev' },
       },
       f = { function() vim.lsp.buf.formatting_seq_sync(); end, 'format' },
       F = { [[<cmd>w | e | TSBufEnable highlight<cr>]], 'fix highlights' },
       o = { require('nvim-lsp-ts-utils').organize_imports, 'organize imports' },
-      r = { require('lspsaga.rename').rename, 'rename' },
+      -- r = { require('lspsaga.rename').rename, 'rename' },
+      r = { function() vim.lsp.buf.rename() end, 'rename' },
       s = { tb.lsp_document_symbols, 'symbols' },
       S = { tb.lsp_workspace_symbols, 'symbols (workspace)' },
       -- s = { [[:Telescope coc document_symbols<cr>]], 'symbols' },
       -- S = { [[:Telescope coc workspace_symbols<cr>]], 'symbols (workspace)' },
+    },
+    d = {
+      name = 'dotfiles',
+      c = {
+        name = 'chezmoi',
+        a = { [[<cmd>silent !chezmoi add %:p<cr>]], 'add' },
+        c = { function() tb.find_files({ search_dirs = { chezmoi } }) end, 'files' },
+        C = { function() tb.live_grep({ search_dirs = { chezmoi } }) end, 'search' },
+        d = { [[<cmd>e ]] .. chezmoi .. [[ <cr>]], 'cd' },
+      },
+      v = {
+        name = 'vim',
+        e = { [[<cmd>e $MYVIMRC<cr>]], 'edit' },
+        h = { [[<cmd>e ~/.config/nvim/lua/helpers.lua<cr>]], 'helpers' },
+        k = { [[<cmd>e ~/.config/nvim/lua/keymaps.lua<cr>]], 'keymaps' },
+        l = { [[<cmd>e ~/.local/share/nvim<cr>]], 'local' },
+        p = { [[<cmd>e ~/.config/nvim/lua/plugins.lua<cr>]], 'plugins' },
+        r = { [[<cmd>luafile ~/.config/nvim/init.lua<cr>]], 'reload' },
+        s = { [[<cmd>e ~/.config/nvim/lua/settings.lua<cr>]], 'settings' },
+        v = { function() tb.find_files({ search_dirs = { '~/.config/nvim' } }) end, 'files' },
+        V = { function() tb.live_grep({ search_dirs = { '~/.config/nvim' } }) end, 'search' },
+        u = { [[<cmd>PackerSync<cr>]], 'update (plugins)' },
+      },
+      z = {
+        name = 'chezmoiz/zsh',
+        e = { [[<cmd>e ~/.zshrc<cr>]], 'edit' },
+      },
     },
     f = {
       name = 'file',
@@ -54,7 +96,7 @@ local normal = {
       D = { [[<cmd>!rm %<cr>:bd<cr>]], 'delete' },
       n = { [[:e %:p:h/]], 'new' },
       s = { [[<cmd>w<cr>]], 'save' },
-      t = { [[<cmd>NvimTreeToggle<cr>]], 'tree' },
+      -- t = { [[<cmd>NvimTreeToggle<cr>]], 'tree' },
     },
     g = vim.tbl_extend('force', n_go_git, {
       name = 'go/git',
@@ -108,33 +150,16 @@ local normal = {
       b = { [[<cmd>ToggleAlternate<cr>]], 'boolean' },
       h = { [[<cmd>TSBufToggle highlight<cr>]], 'highlight' },
     },
-    v = {
-      name = 'vim',
-      e = { [[<cmd>e $MYVIMRC<cr>]], 'edit' },
-      h = { [[<cmd>e ~/.config/nvim/lua/helpers.lua<cr>]], 'helpers' },
-      k = { [[<cmd>e ~/.config/nvim/lua/keymaps.lua<cr>]], 'keymaps' },
-      l = { [[<cmd>e ~/.local/share/nvim<cr>]], 'local' },
-      p = { [[<cmd>e ~/.config/nvim/lua/plugins.lua<cr>]], 'plugins' },
-      r = { [[<cmd>luafile ~/.config/nvim/init.lua<cr>]], 'reload' },
-      s = { [[<cmd>e ~/.config/nvim/lua/settings.lua<cr>]], 'settings' },
-      v = { function() tb.find_files({ search_dirs = { '~/.config/nvim' } }) end, 'files' },
-      V = { function() tb.live_grep({ search_dirs = { '~/.config/nvim' } }) end, 'search' },
-      u = { [[<cmd>PackerSync<cr>]], 'update (plugins)' },
-    },
     w = {
       name = 'window',
       c = { [[<cmd>close<cr>]], 'close' },
       h = { [[<cmd>sp<cr>]], 'horizontal split' },
       v = { [[<cmd>vs<cr>]], 'vertical split' },
     },
-    z = {
-      name = 'zsh',
-      e = { [[<cmd>e ~/.zshrc<cr>]], 'edit' },
-    },
     ['/'] = { tb.current_buffer_fuzzy_find, 'search (buffer)' },
   },
-  ['<C-b>'] = { function() require('lspsaga.action').smart_scroll_with_saga(-1) end, 'back (diagnostics hover)' },
-  ['<C-f>'] = { function() require('lspsaga.action').smart_scroll_with_saga(1) end, 'forward (diagnostics hover)' },
+  -- ['<C-b>'] = { function() require('lspsaga.action').smart_scroll_with_saga(-1) end, 'back (diagnostics hover)' },
+  -- ['<C-f>'] = { function() require('lspsaga.action').smart_scroll_with_saga(1) end, 'forward (diagnostics hover)' },
   ['<C-t>'] = { require('FTerm').toggle, 'terminal' },
   ['<C-_>'] = { [[<cmd>nohl<cr>]], 'clear search' },
   j = { 'gj', 'down' },
@@ -147,7 +172,7 @@ local visual = {
   ['<leader>'] = {
     c = {
       name = 'code',
-      a = { require('lspsaga.codeaction').range_code_action, 'actions' },
+      -- a = { require('lspsaga.codeaction').range_code_action, 'actions' },
       s = { [[:!sort<cr>]], 'sort' },
     },
   },
@@ -183,11 +208,11 @@ local insert = vim.tbl_extend('force', comp, {
   -- ['<C-c>'] = { function() require('plugins.completion').pum('<C-c>', '<C-e><C-c>') end, 'exit'},
   -- ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
   -- ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
-  ['<cr>']  = { [[compe#confirm('<cr>')]], 'confirm', expr = true },
-  ['<esc>'] = { function() require('plugins.completion').close('<esc>') end, 'exit'},
-  ['<C-c>'] = { function() require('plugins.completion').close('<C-c>') end, 'exit'},
-  ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
-  ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
+  -- ['<cr>']  = { [[compe#confirm('<cr>')]], 'confirm', expr = true },
+  -- ['<esc>'] = { function() require('plugins.completion').close('<esc>') end, 'exit'},
+  -- ['<C-c>'] = { function() require('plugins.completion').close('<C-c>') end, 'exit'},
+  -- ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
+  -- ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
 })
 
 local select = vim.tbl_extend('force', comp, {})

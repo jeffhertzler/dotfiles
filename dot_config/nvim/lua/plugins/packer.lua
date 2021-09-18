@@ -4,11 +4,14 @@ function M.packadd()
   return pcall(vim.cmd, [[packadd packer.nvim]])
 end
 
+M.pack_path = vim.fn.stdpath('data') .. '/site/pack/packer/'
+M.opt_path = M.pack_path .. 'opt/'
+M.start_path = M.pack_path .. 'start/'
+
 function M.setup()
   if not M.packadd() then
-    local dir = vim.fn.stdpath('data') .. '/site/pack/packer/opt/'
-    vim.fn.mkdir(dir, 'p')
-    local git = 'git clone https://github.com/wbthomason/packer.nvim ' .. dir .. '/packer.nvim'
+    vim.fn.mkdir(M.opt_path, 'p')
+    local git = 'git clone https://github.com/wbthomason/packer.nvim ' .. M.opt_path .. '/packer.nvim'
     vim.fn.system(git)
     M.packadd()
   end
