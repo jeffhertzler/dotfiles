@@ -4,6 +4,10 @@ local loaded = false
 
 function M.config()
   if not loaded then
+
+    local status = require('nvim-spotify').status
+    status:start()
+
     require('lualine').setup({
       options = {
         theme = 'tokyonight'
@@ -17,7 +21,7 @@ function M.config()
           },
           {
             'diagnostics',
-            sources = {'nvim_lsp'},
+            sources = {'nvim_diagnostic'},
           },
         },
         lualine_x = {
@@ -25,7 +29,10 @@ function M.config()
             'filetype',
             colored = false,
           },
-        }
+        },
+        lualine_y = {
+          status.listen,
+        },
       },
     })
     loaded = true

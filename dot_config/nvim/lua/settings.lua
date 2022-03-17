@@ -4,37 +4,38 @@ vim.g.loaded_netrwPlugin = 1
 vim.g.loaded_matchit = 1
 
 vim.g.mapleader = ' '
+vim.g.tokyonight_dark_float = false
 
 -- make sure neovim can find my node version when using volta
 vim.g.node_host_prog = vim.fn.trim(vim.fn.system('volta which neovim-node-host'))
 
-vim.o.clipboard = 'unnamedplus'
-vim.o.completeopt = 'menu,menuone,noselect'
-vim.o.hidden = true
-vim.o.shortmess = vim.o.shortmess .. 'c'
-vim.o.showmode = false;
-vim.o.termguicolors = true
-vim.o.timeoutlen = 500
+vim.opt.clipboard = 'unnamedplus'
+vim.opt.completeopt = 'menu,menuone,noselect'
+vim.opt.hidden = true
+vim.opt.shortmess = vim.o.shortmess .. 'c'
+vim.opt.showmode = false;
+vim.opt.termguicolors = true
+vim.opt.timeoutlen = 500
 
-vim.o.ignorecase = true
-vim.o.smartcase = true
+vim.opt.ignorecase = true
+vim.opt.smartcase = true
 
 -- do i really want to turn these off or can I just move where they live?
-vim.o.backup = false
-vim.o.writebackup = false
-vim.o.swapfile = false
+vim.opt.backup = false
+vim.opt.writebackup = false
+vim.opt.swapfile = false
 
-vim.wo.list = true
-vim.wo.number = true
+vim.opt.list = true
+vim.opt.number = true
 -- vim.wo.relativenumber = true
-vim.wo.signcolumn = 'yes:1'
-vim.wo.colorcolumn = ""
+vim.opt.signcolumn = 'yes:1'
+vim.opt.colorcolumn = ""
 
-vim.bo.autoindent = true
-vim.bo.expandtab = true
-vim.bo.shiftwidth = 2
-vim.bo.softtabstop = 2
-vim.bo.tabstop = 2
+vim.opt.autoindent = true
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 2
+vim.opt.softtabstop = 2
+vim.opt.tabstop = 2
 
 vim.cmd [[filetype plugin on]]
 vim.cmd [[colorscheme tokyonight]]
@@ -58,7 +59,7 @@ vim.cmd [[
     autocmd BufRead,BufNewFile *.hbs set filetype=handlebars
     autocmd BufRead,BufNewFile jsconfig.json,jsconfig*.json,tsconfig.json,tsconfig*.json,*.json5 set filetype=jsonc
 
-    autocmd BufWritePre *.php,*.go,*.js,*.ts,*.jsx,*.tsx lua vim.lsp.buf.formatting_seq_sync()
+    autocmd BufWritePre *.lua,*.php,*.go,*.js,*.ts,*.jsx,*.tsx lua vim.lsp.buf.formatting_seq_sync()
 
     autocmd BufWritePost *.lua PackerCompile
 

@@ -1,99 +1,76 @@
 local M = {}
 
--- local capabilities = vim.lsp.protocol.make_client_capabilities()
--- capabilities.textDocument.completion.completionItem.snippetSupport = true
+local handlers =  {
+  ["textDocument/hover"] =  vim.lsp.with(vim.lsp.handlers.hover, { border = 'rounded' }),
+  ["textDocument/signatureHelp"] =  vim.lsp.with(vim.lsp.handlers.signature_help, { border = 'rounded' }),
+}
 
-local loaded = false
+local on_attach = function(client)
+  if client.resolved_capabilities.code_lens then
+    vim.lsp.codelens.refresh()
+    vim.cmd([[
+      augroup lsp_code_lens_refresh
+        autocmd! * <buffer>
+        autocmd BufEnter,CursorHold,InsertLeave <buffer> lua vim.lsp.codelens.refresh()
+      augroup END
+    ]])
+  end
+end
 
 M.configs = {
-  -- efm = { -- TODO: figure this out or figure out null-ls
-  --   filetypes = {
-  --     'json',
-  --     'javascript',
-  --     'javascriptreact',
-  --     'javascript.jsx',
-  --     'typescript',
-  --     'typescript.tsx',
-  --     'typescriptreact',
-  --   },
-  -- },
   ember = {
     settings = {
       useBuiltinLinting = false,
       addons = {},
     },
   },
-  lua = vim.tbl_extend('force', require('lua-dev').setup({
+  sumneko_lua = vim.tbl_extend('force', require('lua-dev').setup({
     library = { plugins = false } -- TODO: too slow with all plugins, consider narrowing to allowlist
   }), {
 
   }),
-  typescript = {
+  tsserver = {
     on_attach = function(client)
       local ts_utils = require("nvim-lsp-ts-utils")
       client.resolved_capabilities.document_formatting = false
 
-      -- defaults
       ts_utils.setup({
-        disable_commands = false,
-        debug = false,
         enable_import_on_completion = true,
-        import_on_completion_timeout = 5000,
-
-        -- eslint diagnostics
-        eslint_disable_if_no_config = true,
-        eslint_enable_diagnostics = true,
-
-        -- formatting
-        enable_formatting = true,
+        auto_inlay_hints = false,
       })
 
-      -- required to enable ESLint code actions and formatting
+      on_attach(client)
+
       ts_utils.setup_client(client)
     end
   }
 }
 
-function M.ember()
-  require('lspinstall/servers').ember = {
-    install_script = [[
-    ! test -f package.json && npm init -y --scope=lspinstall || true
-    npm install @lifeart/ember-language-server@latest
-    ]],
-    default_config = {
-      cmd = {'./node_modules/.bin/ember-language-server', '--stdio'},
-      filetypes = { 'javascript', 'typescript', 'handlebars', 'html.handlebars' },
-      root_dir = require('lspconfig').util.root_pattern('ember-cli-build.js'),
-    },
-  }
-end
-
-function M.start()
-  if not loaded then
-    M.ember()
-    require('null-ls').config({})
-    require('lspconfig')['null-ls'].setup({})
-    require('lspinstall').setup()
-    local servers = require('lspinstall').installed_servers()
-    for _, server in pairs(servers) do
-      local config = M.configs[server] or {}
-      -- config.capabilities = capabilities
-      config.capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
-      require('lspconfig')[server].setup(config)
-      -- require('lspconfig')[server].setup(require("coq")().lsp_ensure_capabilities(config))
-    end
-    loaded = true
-  end
-end
-
-function M.restart()
-  M.start()
-  vim.cmd('bufdo e')
-end
-
 function M.config()
-  -- require('lspinstall').post_install_hook = M.restart
-  M.start()
+  local null_ls = require("null-ls")
+  null_ls.setup({
+    sources = {
+      null_ls.builtins.diagnostics.eslint.with({
+        condition = function(utils)
+          return utils.root_has_file({ '.eslintrc.*' })
+        end,
+      }),
+      null_ls.builtins.code_actions.eslint.with({
+        condition = function(utils)
+          return utils.root_has_file({ '.eslintrc.*' })
+        end,
+      }),
+      null_ls.builtins.formatting.prettier,
+    }
+  })
+  require("nvim-lsp-installer").on_server_ready(function(server)
+    local opts = M.configs[server.name] or {}
+    opts.handlers = handlers
+    opts.capabilities = require('cmp_nvim_lsp').update_capabilities(vim.lsp.protocol.make_client_capabilities())
+    if (not opts.on_attach) then opts.on_attach = on_attach end
+
+    server:setup(opts);
+  end)
 end
 
 return M

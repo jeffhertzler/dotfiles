@@ -111,13 +111,14 @@ GG="$HOME/dev/greenlight"
 
 SERVER_OPTIONS=(-Dgreenlight.application.properties=conf/application-dev.properties -Dlogback.configurationFile=logback.xml -classpath "target/*:target/lib/*")
 
-GGREPOSERVICE="$GG/repo" # for compat with other scripts
+export GGREPOSERVICE="$GG/repo" # for compat with other scripts
 export POLICY_DIR="$GG/authz/resources" # for repo svc to know where authz is
 
 JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
 JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
 
 gg() { (cd "$GG/local" && ./docker.sh $@) }
+ggpdm() { http POST "local.greenlight.guru:8022/admin/refreshSearch?orgPath=testorg_develop&stackId=local" "Authorization: Bearer ${GG_JWT}" }
 gga() { (cd "$GG/authn/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 ggab() { (cd "$GG/authn" && mvn clean install -Dmaven.test.skip=true) }
 ggkey() { (cd "$GG/local"; ./gg.sh "good morning"); source ~/.zshrc }
@@ -144,6 +145,8 @@ ggpull() {
   (cd "$GG/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}pdm${normal}..."
   (cd "$GG/pdm" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}routing${normal}..."
+  (cd "$GG/routing" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
 }
 
 # ggrepo() {
@@ -241,9 +244,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
 
 # prompt
 
+
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
-# source ~/.asdf/asdf.sh
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
+source ~/.codeartifact_mvn_auth

@@ -23,6 +23,12 @@ require('packer').startup {
     use {'nanotee/nvim-lua-guide'}
     use {'folke/lua-dev.nvim'}
 
+    use {
+      'KadoBOT/nvim-spotify',
+      config = function() require('nvim-spotify').setup({}) end,
+      run = 'make'
+    }
+
     -- motions
     use {'tpope/vim-commentary'}
     use {'tpope/vim-eunuch'}
@@ -40,12 +46,8 @@ require('packer').startup {
     -- lsp
     use {'neovim/nvim-lspconfig'}
     use {
-      'kabouzeid/nvim-lspinstall',
+      'williamboman/nvim-lsp-installer',
       config = function() require('plugins.lsp').config() end,
-  }
-    use {
-      'glepnir/lspsaga.nvim',
-      config = function() require('plugins.lsp.saga').config() end,
     }
     use {
       'onsails/lspkind-nvim',
@@ -111,15 +113,16 @@ require('packer').startup {
       config = function() require('plugins.telescope').config() end,
     }
     use {'nvim-telescope/telescope-github.nvim'}
+    use {"natecraddock/telescope-zf-native.nvim"} -- TODO: try this
     use {
       'nvim-telescope/telescope-fzf-native.nvim',
       run = 'make',
       config = function() require('plugins.telescope.fzf').config() end,
     }
-    -- use {
-    --   'kyazdani42/nvim-tree.lua',
-    --   setup = function() require('plugins.tree').setup() end,
-    -- }
+    use {
+      'kyazdani42/nvim-tree.lua',
+      setup = function() require('plugins.tree').setup() end,
+    }
 
     -- git
     use {'rhysd/git-messenger.vim'}
@@ -144,7 +147,10 @@ require('packer').startup {
     }
 
     -- wrappers
-    use {'kdheepak/lazygit.nvim'}
+    use {
+      'kdheepak/lazygit.nvim',
+      branch = 'main',
+    }
     use {
       'numtostr/FTerm.nvim',
       config = function() require('plugins.term').config() end,
@@ -191,7 +197,7 @@ require('packer').startup {
     -- visuals
     use {'folke/tokyonight.nvim'}
     use {
-      'hoob3rt/lualine.nvim',
+      'nvim-lualine/lualine.nvim',
       config = function() require('plugins.statusline').config() end,
     }
     use {
