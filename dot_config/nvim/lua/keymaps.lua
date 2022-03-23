@@ -159,6 +159,7 @@ local normal = {
     },
     t = {
       name = 'toggle',
+      t = { require('plugins.theme').toggle, 'theme' },
       b = { [[<cmd>ToggleAlternate<cr>]], 'boolean' },
       h = { [[<cmd>TSBufToggle highlight<cr>]], 'highlight' },
     },
