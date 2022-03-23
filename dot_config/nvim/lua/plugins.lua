@@ -83,10 +83,12 @@ require('packer').startup {
     --   config = function() require('plugins.completion').config() end,
     -- }
     use {'hrsh7th/cmp-nvim-lsp'}
+    use {'hrsh7th/cmp-nvim-lsp-signature-help'}
     use {'hrsh7th/cmp-buffer'}
     use {'saadparwaiz1/cmp_luasnip'}
     use {
       'hrsh7th/nvim-cmp',
+      branch = 'dev',
       config = function() require('plugins.completion').config() end,
     }
     -- use {'kosayoda/nvim-lightbulb'}
