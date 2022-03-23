@@ -10,7 +10,8 @@ function M.config()
 
     require('lualine').setup({
       options = {
-        theme = 'tokyonight'
+        theme = 'tokyonight',
+        globalstatus = true,
       },
       sections = {
         lualine_c = {
