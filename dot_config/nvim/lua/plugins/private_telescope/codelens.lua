@@ -1,111 +1,114 @@
-local pickers = require('telescope.pickers')
-local action_state = require('telescope.actions.state')
 local actions = require('telescope.actions')
+local action_state = require('telescope.actions.state')
+local conf = require('telescope.config').values
 local entry_display = require('telescope.pickers.entry_display')
 local finders = require('telescope.finders')
-local conf = require('telescope.config').values
+local pickers = require('telescope.pickers')
 local strings = require('plenary.strings')
+local utils = require('telescope.utils')
 
-return function(opts)
-  opts = opts or {}
+local attach_mappings = function(prompt_bufnr)
+  actions.select_default:replace(function()
+    local selection = action_state.get_selected_entry()
+    actions.close(prompt_bufnr)
+    vim.lsp.buf.execute_command(selection.value)
+  end)
 
-  local results_lsp = vim.lsp.codelens.get(0)
-  local cursor_pos = vim.api.nvim_win_get_cursor(0)
+  return true
+end
 
-  if not results_lsp or vim.tbl_isempty(results_lsp) then
-    print "No executable codelens actions found at the current buffer"
-    return
+local build_displayer = function(widths)
+  return entry_display.create({
+    separator = " ",
+    items = {
+      { width = widths.idx + 1 }, -- +1 for ":" suffix
+      { width = widths.title },
+      { width = widths.command },
+    },
+  })
+end
+
+local build_make_display = function(displayer)
+  return function(entry)
+    return displayer({
+      { entry.value.idx .. ":", "TelescopePromptPrefix" },
+      { entry.value.title },
+      { entry.value.command, "TelescopeResultsComment" },
+    })
   end
+end
 
-  local idx = 1
-  local results = {}
+local build_widths = function(results)
   local widths = {
     idx = 0,
-    command_title = 0,
-    client_name = 0,
+    title = 0,
+    command = 0,
   }
 
-  for _, result in ipairs(results_lsp) do
-    if result.command and result.range.start.line == cursor_pos[1] - 1 then
+  for _, result in ipairs(results) do
+    for key, value in pairs(widths) do
+      widths[key] = math.max(value, strings.strdisplaywidth(result[key]))
+    end
+  end
+
+  return widths
+end
+
+local build_entry_maker = function(results)
+  local widths = build_widths(results)
+  local displayer = build_displayer(widths)
+  local make_display = build_make_display(displayer)
+  return function(entry)
+    return {
+      value = entry,
+      ordinal = entry.idx .. entry.title,
+      display = make_display
+    }
+  end
+end
+
+local build_results = function()
+  local lsp_results = vim.lsp.codelens.get()
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+  local idx = 1
+  local results = {}
+
+  for _, result in ipairs(lsp_results) do
+    local command = result.command
+    local line = result.range.start.line
+    if command and line == lnum - 1 then
       local entry = {
         idx = idx,
-        command_title = result.command.title:gsub("\r\n", "\\r\\n"):gsub("\n", "\\n"):gsub("▶︎ ",""),
-        command = result.command,
-        client_name = result.command.command,
+        title = result.command.title:gsub("\r\n", "\\r\\n"):gsub("\n", "\\n"):gsub("▶︎ ",""),
+        command = command.command,
+        arguments = command.arguments
       }
-
-      for key, value in pairs(widths) do
-        widths[key] = math.max(value, strings.strdisplaywidth(entry[key]))
-      end
 
       table.insert(results, entry)
       idx = idx + 1
     end
   end
 
+  return results
+end
+
+return function(opts)
+  local results = build_results()
+
   if #results == 0 then
-    print "No codelens actions available"
-    return
+    return utils.notify("lsp_codelens", {
+      msg = "No results from codelens",
+      level = "INFO",
+    })
   end
-
-  local displayer = entry_display.create {
-    separator = " ",
-    items = {
-      { width = widths.idx + 1 }, -- +1 for ":" suffix
-      { width = widths.command_title },
-      { width = widths.client_name },
-    },
-  }
-
-  local function make_display(entry)
-    return displayer {
-      { entry.idx .. ":", "TelescopePromptPrefix" },
-      { entry.command_title },
-      { entry.client_name, "TelescopeResultsComment" },
-    }
-  end
-
-  local execute_action = opts.execute_action
-    or function(action)
-      if action.edit or type(action.command) == "table" then
-        if action.edit then
-          vim.lsp.util.apply_workspace_edit(action.edit)
-        end
-        if type(action.command) == "table" then
-          vim.lsp.buf.execute_command(action.command)
-        end
-      else
-        vim.lsp.buf.execute_command(action)
-      end
-    end
 
   pickers.new(opts, {
     prompt_title = "LSP CodeLens Actions",
-    finder = finders.new_table {
+    finder = finders.new_table({
       results = results,
-      entry_maker = function(line)
-        return {
-          valid = line ~= nil,
-          value = line.command,
-          ordinal = line.idx .. line.command_title,
-          command_title = line.command_title,
-          idx = line.idx,
-          client_name = line.client_name,
-          display = make_display,
-        }
-      end,
-    },
-    attach_mappings = function(prompt_bufnr)
-      actions.select_default:replace(function()
-        local selection = action_state.get_selected_entry()
-        actions.close(prompt_bufnr)
-        local action = selection.value
-
-        execute_action(action)
-      end)
-
-      return true
-    end,
+      entry_maker = build_entry_maker(results)
+    }),
+    attach_mappings = attach_mappings,
     sorter = conf.generic_sorter(opts),
   }):find()
 end

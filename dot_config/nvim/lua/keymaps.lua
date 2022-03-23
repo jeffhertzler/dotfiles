@@ -56,7 +56,7 @@ local normal = {
       F = { [[<cmd>w | e | TSBufEnable highlight<cr>]], 'fix highlights' },
       l = {
         name = 'lens',
-        a = { require('plugins.telescope.codelens'), 'actions' },
+        a = { function() require('plugins.telescope.codelens')(tt.get_cursor()) end, 'actions' },
         r = { function() vim.lsp.codelens.refresh() end, 'refresh' },
       },
       o = { require('nvim-lsp-ts-utils').organize_imports, 'organize imports' },
