@@ -147,10 +147,7 @@ require('packer').startup {
     }
 
     -- wrappers
-    use {
-      'kdheepak/lazygit.nvim',
-      branch = 'main',
-    }
+    use {'kdheepak/lazygit.nvim'}
     use {
       'numtostr/FTerm.nvim',
       config = function() require('plugins.term').config() end,
