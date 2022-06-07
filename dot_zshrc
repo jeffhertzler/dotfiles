@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+source ~/.private.zsh
+
 bindkey -v
 # bindkey '^[[A' history-substring-search-up
 # bindkey '^[[B' history-substring-search-down
@@ -121,11 +123,24 @@ export POLICY_DIR="$GG/authz/resources" # for repo svc to know where authz is
 JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
 JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
 
+disable-private-npm() {
+  mv ~/.npmrc ~/.npmrc_disable
+}
+enable-private-npm() {
+  mv ~/.npmrc_disable ~/.npmrc
+}
+
+clean-npmrc() {
+  if [ "$(cat ~/.npmrc | wc -l)" -eq "2" ]; then
+    sed -i "2 i $GG_NPM_REPO" ~/.npmrc
+  fi
+}
+
 gg() { (cd "$GG/local" && ./docker.sh $@) }
 ggpdm() { http POST "local.greenlight.guru:8022/admin/refreshSearch?orgPath=testorg_develop&stackId=local" "Authorization: Bearer ${GG_JWT}" }
 gga() { (cd "$GG/authn/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 ggab() { (cd "$GG/authn" && mvn clean install -Dmaven.test.skip=true) }
-ggkey() { (cd "$GG/local" && ./gg.sh "good morning" && cleanNpmrc); source ~/.zshrc }
+ggkey() { (cd "$GG/local" && ./gg.sh "good morning" && clean-npmrc); source ~/.zshrc }
 ggkeyr() { (cd "$GG/local" && BROWSER=/usr/bin/echo ./gg.sh "good morning"); source ~/.zshrc }
 ggpull() {
   echo "pulling ${bold}auth${normal}..."
@@ -156,6 +171,17 @@ ggpull() {
   (cd "$GG/identity" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
 }
 
+vmdbimport() {
+  mysql -h 0.0.0.0 -P 33061 -psecret -u homestead homestead < "${1:-mathbots.dump}"
+}
+vldbimport() {
+  mysql -h 0.0.0.0 -P 33060 -psecret -u homestead homestead < "${1:-vimme.dump}"
+}
+vmldbdump() {
+  ssh forge@mathbots.vimmelearning.com "$MATHBOTS_MYSQLDUMP" > "${1:-mathbots.dump}"
+}
+vldbdump() {
+  ssh forge@old-app.vimmelearning.com "$VIMME_MYSQLDUMP" > "${1:-vimme.dump}"
 }
 
 # ggrepo() {
@@ -178,8 +204,6 @@ abbrev-alias -c cdgsg="cd $GG/style-guide"
 abbrev-alias -c gt="gotestsum"
 
 abbrev-alias -c vdb="docker exec -it -u docker server_app_1 /bin/bash"
-
-# export MAC_REMOTE="xxx@xxx.xxx.xxx.xxx";
 
 abbrev-alias sshm="ssh $MAC_REMOTE"
 scpm() { scp $1 "$MAC_REMOTE:$2" "${@:3}" }
@@ -253,15 +277,8 @@ export PATH="$JAVA_HOME/bin:$PATH"
 # fnm
 # eval "$(fnm env --multi --shel=zsh --use-on-cd)"
 
-
-# write command to hot swap .npmrc and .m2 stuff on and off between work and non-work
-
-
-
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
-
-source ~/.codeartifact_mvn_auth
 
 export FZF_DEFAULT_OPTS='--color=bg+:#302D41,bg:#1E1E2E,spinner:#F8BD96,hl:#F28FAD --color=fg:#D9E0EE,header:#F28FAD,info:#DDB6F2,pointer:#F8BD96 --color=marker:#F8BD96,fg+:#F2CDCD,prompt:#DDB6F2,hl+:#F28FAD'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
