@@ -1,6 +1,8 @@
 #!/usr/bin/env zsh
 
 bindkey -v
+# bindkey '^[[A' history-substring-search-up
+# bindkey '^[[B' history-substring-search-down
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -27,6 +29,7 @@ zplug "zsh-users/zsh-completions"
 zplug "zsh-users/zsh-autosuggestions"
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
 zplug "zsh-users/zsh-history-substring-search", defer:2
+zplug "joshskidmore/zsh-fzf-history-search"
 # zplug "plugins/asdf", from:oh-my-zsh, defer:2
 
 # Install plugins if there are plugins that have not been installed
@@ -59,6 +62,7 @@ zplug load
 
 # bindkey -M viins " " __abbrev_alias::magic_abbrev_expand
 
+abbrev-alias -c ae="nvim ~/.config/alacritty/alacritty.yml"
 abbrev-alias -c te="nvim ~/.config/tmux/tmux.conf"
 abbrev-alias -c ve="(cd ~/.config/nvim && nvim init.lua)"
 abbrev-alias -c vep="(cd ~/.config/nvim && nvim lua/plugins.lua)"
@@ -121,7 +125,8 @@ gg() { (cd "$GG/local" && ./docker.sh $@) }
 ggpdm() { http POST "local.greenlight.guru:8022/admin/refreshSearch?orgPath=testorg_develop&stackId=local" "Authorization: Bearer ${GG_JWT}" }
 gga() { (cd "$GG/authn/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
 ggab() { (cd "$GG/authn" && mvn clean install -Dmaven.test.skip=true) }
-ggkey() { (cd "$GG/local"; ./gg.sh "good morning"); source ~/.zshrc }
+ggkey() { (cd "$GG/local" && ./gg.sh "good morning" && cleanNpmrc); source ~/.zshrc }
+ggkeyr() { (cd "$GG/local" && BROWSER=/usr/bin/echo ./gg.sh "good morning"); source ~/.zshrc }
 ggpull() {
   echo "pulling ${bold}auth${normal}..."
   (cd "$GG/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
@@ -147,6 +152,10 @@ ggpull() {
   (cd "$GG/pdm" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}routing${normal}..."
   (cd "$GG/routing" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}identity${normal}..."
+  (cd "$GG/identity" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+}
+
 }
 
 # ggrepo() {
@@ -165,6 +174,8 @@ abbrev-alias -c cdgce="cd $GG/client/src/greenlight"
 abbrev-alias -c cdgg="cd $GG"
 abbrev-alias -c cdgr="cd $GG/repo"
 abbrev-alias -c cdgsg="cd $GG/style-guide"
+
+abbrev-alias -c gt="gotestsum"
 
 abbrev-alias -c vdb="docker exec -it -u docker server_app_1 /bin/bash"
 
@@ -242,10 +253,15 @@ export PATH="$JAVA_HOME/bin:$PATH"
 # fnm
 # eval "$(fnm env --multi --shel=zsh --use-on-cd)"
 
-# prompt
+
+# write command to hot swap .npmrc and .m2 stuff on and off between work and non-work
+
 
 
 eval "$(starship init zsh)"
 eval "$(zoxide init zsh)"
 
 source ~/.codeartifact_mvn_auth
+
+export FZF_DEFAULT_OPTS='--color=bg+:#302D41,bg:#1E1E2E,spinner:#F8BD96,hl:#F28FAD --color=fg:#D9E0EE,header:#F28FAD,info:#DDB6F2,pointer:#F8BD96 --color=marker:#F8BD96,fg+:#F2CDCD,prompt:#DDB6F2,hl+:#F28FAD'
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

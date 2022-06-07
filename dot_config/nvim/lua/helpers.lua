@@ -1,6 +1,6 @@
 local M = {}
 
-M.border = {'╭','─','╮','│','╯','─','╰','│'}
+M.border = { '╭', '─', '╮', '│', '╯', '─', '╰', '│' }
 
 function M.keymap(mode, lhs, rhs, opts)
   vim.api.nvim_set_keymap(mode, lhs, rhs, opts or {});
@@ -15,8 +15,12 @@ function M.feedkeys(str)
 end
 
 function M.dump(...)
-  local objects = vim.tbl_map(vim.inspect, {...})
+  local objects = vim.tbl_map(vim.inspect, { ... })
   print(unpack(objects))
+end
+
+function M.is_tmux()
+  return os.getenv("TMUX") ~= nil
 end
 
 _G.dump = M.dump

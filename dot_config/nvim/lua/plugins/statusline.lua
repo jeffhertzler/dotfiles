@@ -10,7 +10,7 @@ function M.config()
 
     require('lualine').setup({
       options = {
-        theme = 'tokyonight',
+        theme = 'catppuccin',
         globalstatus = true,
       },
       sections = {
@@ -22,7 +22,7 @@ function M.config()
           },
           {
             'diagnostics',
-            sources = {'nvim_diagnostic'},
+            sources = { 'nvim_diagnostic' },
           },
         },
         lualine_x = {
@@ -41,4 +41,3 @@ function M.config()
 end
 
 return M
-

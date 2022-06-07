@@ -7,7 +7,7 @@ local M = {}
 function M.config()
   require('lir').setup({
     devicons_enable = true,
-    hide_cursor = true,
+    hide_cursor = false,
     show_hidden_files = true,
     mappings = {
       ['<cr>'] = actions.edit,

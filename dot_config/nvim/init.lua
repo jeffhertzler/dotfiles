@@ -12,6 +12,8 @@ package.loaded['plugins']  = nil
 package.loaded['settings'] = nil
 package.loaded['keymaps']  = nil
 
+require('impatient')
+
 require('helpers')
 require('plugins')
 require('settings')

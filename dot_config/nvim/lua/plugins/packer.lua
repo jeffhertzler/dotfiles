@@ -4,6 +4,7 @@ function M.packadd()
   return pcall(vim.cmd, [[packadd packer.nvim]])
 end
 
+M.compile_path = vim.fn.stdpath('data') .. '/site/plugin/packer_compiled.lua'
 M.pack_path = vim.fn.stdpath('data') .. '/site/pack/packer/'
 M.opt_path = M.pack_path .. 'opt/'
 M.start_path = M.pack_path .. 'start/'

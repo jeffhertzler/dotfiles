@@ -2,17 +2,11 @@ local M = {}
 
 function M.config()
   local cmp = require('cmp')
+
   cmp.setup({
-    completion = {
-      completeopt = 'menu,menuone,noinsert',
-    },
     window = {
-      completion = {
-        border = 'rounded',
-      },
-      documentation = {
-        border = 'rounded',
-      },
+      completion = cmp.config.window.bordered(),
+      documentation = cmp.config.window.bordered(),
     },
     experimental = {
       ghost_text = true
@@ -28,24 +22,68 @@ function M.config()
         require('luasnip').lsp_expand(args.body)
       end
     },
-    mapping = {
+    mapping = cmp.mapping.preset.insert({
       ['<C-d>'] = cmp.mapping.scroll_docs(-4),
       ['<C-f>'] = cmp.mapping.scroll_docs(4),
       ['<C-j>'] = cmp.mapping.select_next_item(),
       ['<C-k>'] = cmp.mapping.select_prev_item(),
-      ['<C-space>'] = cmp.mapping.complete(),
+      ['<CR>'] = cmp.mapping.confirm({ select = true }),
       ['<esc>'] = function(fallback)
         cmp.close()
         fallback()
       end,
-      ['<cr>'] = cmp.mapping.confirm({ select = true }),
-    },
-    sources = {
+    }),
+    sources = cmp.config.sources({
       { name = 'nvim_lsp' },
       { name = 'nvim_lsp_signature_help' },
       { name = 'luasnip' },
+    }, {
       { name = 'buffer' },
+    })
+  })
+
+  local cmd_keymaps = {
+    ['<C-j>'] = {
+      c = function(fallback)
+        if cmp.visible() then
+          cmp.select_next_item()
+        else
+          fallback()
+        end
+      end,
     },
+    ['<C-k>'] = {
+      c = function(fallback)
+        if cmp.visible() then
+          cmp.select_prev_item()
+        else
+          fallback()
+        end
+      end,
+    },
+  }
+
+  cmp.setup.cmdline('/', {
+    mapping = cmp.mapping.preset.cmdline(cmd_keymaps);
+    sources = {
+      { name = 'buffer' }
+    }
+  })
+
+  cmp.setup.cmdline('?', {
+    mapping = cmp.mapping.preset.cmdline(cmd_keymaps);
+    sources = {
+      { name = 'buffer' }
+    }
+  })
+
+  cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(cmd_keymaps);
+    sources = cmp.config.sources({
+      { name = 'path' }
+    }, {
+      { name = 'cmdline' }
+    })
   })
 end
 
