@@ -19,10 +19,7 @@ end
 function M.catppuccin()
   local catp = require('catppuccin');
   local colors = require('catppuccin.api.colors').get_colors();
-  -- dump(colors)
   catp.remap({
-    -- InclineNormal = { fg = colors.base, bg = colors.blue },
-    -- InclineNormalNC = { fg = colors.text, bg = colors.base },
     NormalFloat = { bg = colors.none },
     WildMenu = { bg = colors.none },
   })
@@ -46,10 +43,21 @@ function M.catppuccin()
   require('incline').setup({
     render = function(props)
       local fill = props.focused and colors.blue or colors.surface0
-      local text = props.focused and colors.base or colors.text
+      local text = props.focused and colors.base or colors.blue
+
+      local bufname = vim.api.nvim_buf_get_name(props.buf)
+      local res = bufname ~= '' and vim.fn.fnamemodify(bufname, ':t') or '[No Name]'
+      local icon = require('nvim-web-devicons').get_icon(res, vim.fn.expand('%:e'))
+
+      if vim.api.nvim_buf_get_option(props.buf, 'modified') then
+        fill = props.focused and colors.mauve or fill
+        text = props.focused and text or colors.mauve
+      end
+
       return {
         { '', guifg = fill, guibg = colors.base },
-        { ' ' .. string.gsub(vim.api.nvim_buf_get_name(props.buf), vim.loop.cwd() .. '/', '') .. ' ', guifg = text, guibg = fill }
+        { icon, guifg = text, guibg = fill },
+        { ' ' .. res .. ' ', guifg = text, guibg = fill }
       }
     end,
     window = {
