@@ -2,10 +2,12 @@ local M = {}
 
 function M.dark()
   vim.opt.background = "dark"
+  vim.cmd("Catppuccin mocha");
 end
 
 function M.light()
   vim.opt.background = "light"
+  vim.cmd("Catppuccin latte");
 end
 
 function M.toggle()

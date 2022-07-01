@@ -70,6 +70,7 @@ abbrev-alias -c ve="(cd ~/.config/nvim && nvim init.lua)"
 abbrev-alias -c vep="(cd ~/.config/nvim && nvim lua/plugins.lua)"
 abbrev-alias -c xe="nvim ~/.config/xmonad/xmonad.hs"
 abbrev-alias -c ze="nvim ~/.zshrc"
+abbrev-alias -c we="nvim ~/.config/wezterm/wezterm.lua"
 
 # abbrev-alias -c tls="tmux ls"
 # abbrev-alias -c t="tmux new -t"
@@ -203,7 +204,7 @@ abbrev-alias -c cdgsg="cd $GG/style-guide"
 
 abbrev-alias -c gt="gotestsum"
 
-abbrev-alias -c vdb="docker exec -it -u docker server_app_1 /bin/bash"
+abbrev-alias -c vdb="docker exec -it -u docker vimme-app-1 /bin/bash"
 
 abbrev-alias sshm="ssh $MAC_REMOTE"
 scpm() { scp $1 "$MAC_REMOTE:$2" "${@:3}" }
@@ -229,10 +230,18 @@ nvu() {
 }
 
 wtu() {
-  wget https://github.com/wez/wezterm/releases/download/nightly/WezTerm-nightly-Ubuntu16.04.AppImage -O wezterm.appimage
+  wget https://github.com/wez/wezterm/releases/download/nightly/WezTerm-nightly-Ubuntu18.04.AppImage -O wezterm.appimage
+  # wget https://github.com/wez/wezterm/releases/download/20220624-141144-bd1b7c5d/WezTerm-20220624-141144-bd1b7c5d-Ubuntu18.04.AppImage -O wezterm.appimage
   sudo chmod +x wezterm.appimage
   sudo chown root:root wezterm.appimage
   sudo mv wezterm.appimage /usr/local/bin/wezterm
+}
+
+kittyu() {
+  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
+  ln -s ~/.local/kitty.app/bin/kitty ~/.local/bin/
+  cp ~/.local/kitty.app/share/applications/kitty.desktop ~/.local/share/applications
+  sed -i "s|Icon=kitty|Icon=/home/$USER/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" ~/.local/share/applications/kitty.desktop
 }
 
 rcu() {

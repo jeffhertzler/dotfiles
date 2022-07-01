@@ -12,8 +12,12 @@ function M.config()
       ghost_text = true
     },
     formatting = {
-      format = function(_, vim_item)
-        vim_item.kind = require('lspkind').presets.default[vim_item.kind] .. ' [' .. vim_item.kind .. ']'
+      format = function(entry, vim_item)
+        if entry.source.name == 'copilot' then
+          vim_item.kind = ' [Copilot]';
+        else
+          vim_item.kind = require('lspkind').presets.default[vim_item.kind] .. ' [' .. vim_item.kind .. ']'
+        end
         return vim_item
       end
     },
@@ -25,21 +29,46 @@ function M.config()
     mapping = cmp.mapping.preset.insert({
       ['<C-d>'] = cmp.mapping.scroll_docs(-4),
       ['<C-f>'] = cmp.mapping.scroll_docs(4),
-      ['<C-j>'] = cmp.mapping.select_next_item(),
-      ['<C-k>'] = cmp.mapping.select_prev_item(),
-      ['<CR>'] = cmp.mapping.confirm({ select = true }),
+      ['<C-j>'] = cmp.mapping.select_next_item({ behavior = cmp.SelectBehavior.Select }),
+      ['<C-k>'] = cmp.mapping.select_prev_item({ behavior = cmp.SelectBehavior.Select }),
+      ['<C-l>'] = cmp.mapping.confirm({
+        behavior = cmp.ConfirmBehavior.Replace,
+        select = true,
+      }),
+      ['<CR>'] = cmp.mapping.confirm({
+        behavior = cmp.ConfirmBehavior.Replace,
+      }),
       ['<esc>'] = function(fallback)
         cmp.close()
         fallback()
       end,
     }),
     sources = cmp.config.sources({
-      { name = 'nvim_lsp' },
-      { name = 'nvim_lsp_signature_help' },
-      { name = 'luasnip' },
-    }, {
-      { name = 'buffer' },
-    })
+      { name = 'copilot', group_index = 2 },
+      { name = 'nvim_lsp', group_index = 2 },
+      { name = 'nvim_lsp_signature_help', group_index = 2 },
+      { name = 'luasnip', group_index = 2 },
+      { name = 'buffer', group_index = 2 },
+    }),
+    sorting = {
+      priority_weight = 2,
+      comparators = {
+        require("copilot_cmp.comparators").prioritize,
+        require("copilot_cmp.comparators").score,
+
+        -- Below is the default comparitor list and order for nvim-cmp
+        cmp.config.compare.offset,
+        -- cmp.config.compare.scopes, --this is commented in nvim-cmp too
+        cmp.config.compare.exact,
+        cmp.config.compare.score,
+        cmp.config.compare.recently_used,
+        cmp.config.compare.locality,
+        cmp.config.compare.kind,
+        cmp.config.compare.sort_text,
+        cmp.config.compare.length,
+        cmp.config.compare.order,
+      }
+    }
   })
 
   local cmd_keymaps = {

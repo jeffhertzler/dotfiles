@@ -98,8 +98,10 @@ local normal = {
     g = vim.tbl_extend('force', n_go_git, {
       name = 'go/git',
       b = { tb.git_branches, 'branches' },
-      c = { tb.git_commits, 'commits' },
-      C = { tb.git_bcommits, 'commits (buffer)' },
+      -- c = { tb.git_commits, 'commits' },
+      -- C = { tb.git_bcommits, 'commits (buffer)' },
+      c = { [[<cmd>LazyGitFilter<cr>]], 'commits' },
+      C = { [[<cmd>LazyGitFilterCurrentFile<cr>]], 'commits (buffer)' },
       g = { [[<cmd>LazyGit<cr>]], 'gui' },
       -- g = { require('neogit').open, 'gui' },
       s = { tb.git_status, 'status' },
@@ -189,38 +191,13 @@ local terminal = {
   ['<C-t>'] = { require('FTerm').toggle, 'terminal' },
 }
 
-local comp = {
-  ['<tab>'] = { function() require('plugins.snippets').complete('<tab>', 1) end, 'next' },
-  ['<s-tab>'] = { function() require('plugins.snippets').complete('<s-tab>', -1) end, 'prev' },
-  -- ['<s-tab>'] = { function() require('luasnip').jump(-1) end, 'prev' },
+local insert = {
+  ['<C-1>'] = { "hello", "s" },
+  ['<C-S-j>'] = { "hello", "s" }
 }
 
-local insert = vim.tbl_extend('force', comp, {
-  -- ['<bs>'] = { function() require('plugins.completion').pum('<bs>', '<C-e><bs>') end, 'exit'},
-  -- ['<cr>']  = {
-  --   function()
-  --     require('plugins.completion').pum('<cr>', function()
-  --       if vim.fn.complete_info().selected == -1 then
-  --         require('helpers').feedkeys('<C-e><cr>')
-  --       else
-  --         require('helpers').feedkeys('<C-y>')
-  --       end
-  --     end)
-  --   end,
-  --   'confirm'
-  -- },
-  -- ['<esc>'] = { function() require('plugins.completion').pum('<esc>', '<C-e><esc>') end, 'exit'},
-  -- ['<C-c>'] = { function() require('plugins.completion').pum('<C-c>', '<C-e><C-c>') end, 'exit'},
-  -- ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
-  -- ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
-  -- ['<cr>']  = { [[compe#confirm('<cr>')]], 'confirm', expr = true },
-  -- ['<esc>'] = { function() require('plugins.completion').close('<esc>') end, 'exit'},
-  -- ['<C-c>'] = { function() require('plugins.completion').close('<C-c>') end, 'exit'},
-  -- ['<C-j>'] = { function() require('plugins.completion').pum('<C-j>', '<C-n>') end, 'next' },
-  -- ['<C-k>'] = { function() require('plugins.completion').pum('<C-k>', '<C-p>') end, 'prev' },
-})
-
-local select = vim.tbl_extend('force', comp, {})
+local select = {
+}
 
 legendary.setup()
 

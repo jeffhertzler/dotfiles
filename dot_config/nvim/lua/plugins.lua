@@ -6,7 +6,10 @@ require('packer').startup {
     use { 'wbthomason/packer.nvim', opt = true }
     use { 'dstein64/vim-startuptime' }
     use { 'lewis6991/impatient.nvim' }
-    use { 'nathom/filetype.nvim' } -- there's a built-in thing for this now, but it doesn't fully replace the old filetype.vim yet
+
+    -- there's a built-in thing for this now, but it doesn't fully replace the old filetype.vim yet
+    use { 'nathom/filetype.nvim' }
+
     use { 'antoinemadec/FixCursorHold.nvim' }
     -- use {
     --   'rktjmp/hotpot.nvim',
@@ -83,10 +86,10 @@ require('packer').startup {
     use { 'jose-elias-alvarez/null-ls.nvim' }
     use { 'jose-elias-alvarez/nvim-lsp-ts-utils' }
     use { 'kosayoda/nvim-lightbulb' }
-    use {
-      'j-hui/fidget.nvim',
-      config = function() require('fidget').setup() end,
-    }
+    -- use {
+    --   'j-hui/fidget.nvim',
+    --   config = function() require('fidget').setup() end,
+    -- }
 
     use {
       'folke/trouble.nvim',
@@ -104,16 +107,29 @@ require('packer').startup {
       config = function() vim.notify = require('notify') end,
     }
 
-    -- use {
-    --   'ms-jpq/coq_nvim',
-    --   branch = 'coq',
-    --   setup = function() require('plugins.completion').setup() end,
-    -- }
-    -- use { 'ms-jpq/coq.artifacts', branch = 'artifacts' }
-    -- use {
-    --   'hrsh7th/nvim-compe',
-    --   config = function() require('plugins.completion').config() end,
-    -- }
+    -- use { 'github/copilot.vim' }
+    use {
+      'zbirenbaum/copilot.lua',
+      event = { "VimEnter" },
+      config = function()
+        vim.defer_fn(function()
+          require("copilot").setup({
+            -- cmp = {
+            --   enabled = true,
+            --   method = "getCompletionsCycling",
+            -- },
+            -- panel = {
+            --   enabled = true,
+            -- }
+          })
+        end, 100)
+      end,
+    }
+
+    use {
+      'zbirenbaum/copilot-cmp',
+      module = 'copilot_cmp',
+    }
     use { 'hrsh7th/cmp-nvim-lsp' }
     use { 'hrsh7th/cmp-nvim-lsp-signature-help' }
     use { 'hrsh7th/cmp-buffer' }
@@ -146,7 +162,7 @@ require('packer').startup {
       config = function() require('plugins.telescope').config() end,
     }
     use { 'nvim-telescope/telescope-github.nvim' }
-    use { "natecraddock/telescope-zf-native.nvim" } -- TODO: try this
+    -- use { "natecraddock/telescope-zf-native.nvim" } -- TODO: try this
     use {
       'nvim-telescope/telescope-fzf-native.nvim',
       run = 'make',

@@ -39,7 +39,7 @@ M.configs = {
 
       ts_utils.setup({
         enable_import_on_completion = true,
-        auto_inlay_hints = false,
+        filter_out_diagnostics_by_code = { 80001 }
       })
 
       on_attach(client)
@@ -58,13 +58,27 @@ function M.config()
         -- null_ls.builtins.formatting.stylua,
         null_ls.builtins.diagnostics.eslint.with({
           condition = function(utils)
-            return utils.root_has_file({ ".eslintrc.*" })
+            return utils.root_has_file({
+              ".eslintrc",
+              ".eslintrc.js",
+              ".eslintrc.cjs",
+              ".eslintrc.yaml",
+              ".eslintrc.yml",
+              ".eslintrc.json",
+            })
           end,
           prefer_local = "node_modules/.bin",
         }),
         null_ls.builtins.code_actions.eslint.with({
           condition = function(utils)
-            return utils.root_has_file({ ".eslintrc.*" })
+            return utils.root_has_file({
+              ".eslintrc",
+              ".eslintrc.js",
+              ".eslintrc.cjs",
+              ".eslintrc.yaml",
+              ".eslintrc.yml",
+              ".eslintrc.json",
+            })
           end,
           prefer_local = "node_modules/.bin",
         }),

@@ -2,12 +2,15 @@
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 vim.g.loaded_matchit = 1
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_perl_provider = 0
 
 vim.g.mapleader = ' '
 -- vim.g.tokyonight_dark_float = false
 
 -- make sure neovim can find my node version when using volta
 vim.g.node_host_prog = vim.fn.trim(vim.fn.system('volta which neovim-node-host'))
+vim.g.python3_host_prog = vim.fn.trim(vim.fn.system('which python3'))
 
 if require('helpers').is_tmux() then
   vim.opt.tabline = " "
@@ -21,6 +24,8 @@ vim.opt.shortmess = vim.o.shortmess .. 'c'
 vim.opt.showmode = false;
 vim.opt.termguicolors = true
 vim.opt.timeoutlen = 500
+
+vim.opt.scrolloff = 5
 
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
@@ -65,7 +70,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   group = configGroup,
 })
 vim.api.nvim_create_autocmd("BufWritePre", {
-  pattern = { "*.lua", "*.php", "*.go", "*.json", "*.js", "*.ts", "*.jsx", "*.tsx" },
+  pattern = { "*.lua", "*.php", "*.go", "*.mjs", "*.js", "*.mts", "*.ts", "*.jsx", "*.tsx" },
   callback = function() require("plugins.lsp").format() end,
   group = configGroup,
 })
