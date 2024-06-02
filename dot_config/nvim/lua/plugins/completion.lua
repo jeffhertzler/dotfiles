@@ -38,6 +38,7 @@ return {
       })
 
       table.insert(cmp_config.sources, 1, { name = 'copilot' })
+      table.insert(cmp_config.sources, { name = 'lazydev', group_index = 0 })
 
       cmp.setup(cmp_config)
 

@@ -13,8 +13,6 @@ return {
     'VonHeikemen/lsp-zero.nvim',
     event = "BufReadPre",
     config = function()
-      require('neodev').setup()
-
       local lsp = require('lsp-zero')
       local null_ls = require('null-ls')
       local typescript = require('typescript')

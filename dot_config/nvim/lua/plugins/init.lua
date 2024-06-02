@@ -104,7 +104,11 @@ return {
     config = true,
   },
   {
-    'folke/neodev.nvim',
+    'folke/lazydev.nvim',
+  },
+  {
+    'Bilal2453/luvit-meta',
+    lazy = true,
   },
   {
     'neovim/nvim-lspconfig',
