@@ -6,15 +6,8 @@
 --      _|_|    _|    _|
 --
 
--- this bit disables the lua module cache
-package.loaded['helpers']  = nil
-package.loaded['plugins']  = nil
-package.loaded['settings'] = nil
-package.loaded['keymaps']  = nil
-
-require('impatient')
-
-require('helpers')
-require('plugins')
-require('settings')
-require('keymaps')
+require('config.utils')
+require('config.settings')
+require('config.lazy')
+require('config.autocommands')
+require('config.keymaps')

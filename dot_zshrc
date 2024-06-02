@@ -2,6 +2,8 @@
 
 source ~/.private.zsh
 
+MY_THEME="dark"
+
 bindkey -v
 # bindkey '^[[A' history-substring-search-up
 # bindkey '^[[B' history-substring-search-down
@@ -74,6 +76,7 @@ abbrev-alias -c we="nvim ~/.config/wezterm/wezterm.lua"
 
 # abbrev-alias -c tls="tmux ls"
 # abbrev-alias -c t="tmux new -t"
+abbrev-alias -c ta="tmux a"
 
 abbrev-alias -c gco="git checkout"
 abbrev-alias -c gcob="git checkout -b"
@@ -89,6 +92,7 @@ abbrev-alias -c gs="git status"
 abbrev-alias -c gb="git branch"
 abbrev-alias -c gbd="git branch -D"
 abbrev-alias -c gmd="git merge develop"
+abbrev-alias -c gci="git commit --allow-empty -m 'ci: bump'"
 
 abbrev-alias -c gcp="git cherry-pick"
 
@@ -101,6 +105,14 @@ abbrev-alias -c gwtl="git worktree list"
 abbrev-alias -c gwtp="git worktree prune"
 abbrev-alias -c gwtr="git worktree remove"
 abbrev-alias -c gwtrf="git worktree remove --force"
+
+docker-socket() {
+  docker context inspect | jq -r '.[].Endpoints.docker.Host'
+}
+
+lazydocker() {
+  DOCKER_HOST=`docker-socket` command lazydocker
+}
 
 abbrev-alias -c lad="lazydocker"
 abbrev-alias -c lag="lazygit"
@@ -119,10 +131,11 @@ GG="$HOME/dev/greenlight"
 SERVER_OPTIONS=(-Dgreenlight.application.properties=conf/application-dev.properties -Dlogback.configurationFile=logback.xml -classpath "target/*:target/lib/*")
 
 export GGREPOSERVICE="$GG/repo" # for compat with other scripts
+export GGCLIENTSERVICE="$GG/client" # for compat with other scripts
 export POLICY_DIR="$GG/authz/resources" # for repo svc to know where authz is
 
-JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
-JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
+# JAVA11="$HOME/.jabba/jdk/adopt@1.11.0-9/bin/java"
+# JAVA8="$HOME/.jabba/jdk/adopt@1.8.0-265/bin/java"
 
 disable-private-npm() {
   mv ~/.npmrc ~/.npmrc_disable
@@ -137,12 +150,20 @@ clean-npmrc() {
   fi
 }
 
-gg() { (cd "$GG/local" && ./docker.sh $@) }
-ggpdm() { http POST "local.greenlight.guru:8022/admin/refreshSearch?orgPath=testorg_develop&stackId=local" "Authorization: Bearer ${GG_JWT}" }
-gga() { (cd "$GG/authn/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
-ggab() { (cd "$GG/authn" && mvn clean install -Dmaven.test.skip=true) }
-ggkey() { (cd "$GG/local" && ./gg.sh "good morning" && clean-npmrc); source ~/.zshrc }
-ggkeyr() { (cd "$GG/local" && BROWSER=/usr/bin/echo ./gg.sh "good morning"); source ~/.zshrc }
+gggm() {
+  cd "$GG/local"
+  git config --global user.email jeff.hertzler@greenlight.guru
+  ./gg.sh "good morning"
+  git config --global user.email jeffhertzler@gmail.com
+}
+
+ggd() { (cd "$GG/local" && ./docker.sh $@) }
+gg() { (cd "$GG/local" && ./gg.sh $@) }
+# ggpdm() { http POST "local.greenlight.guru:8022/admin/refreshSearch?orgPath=testorg_develop&stackId=local" "Authorization: Bearer ${GG_JWT}" }
+# gga() { (cd "$GG/authn/target" && $JAVA11 -jar greenlight-authentication-service.jar) }
+# ggab() { (cd "$GG/authn" && mvn clean install -Dmaven.test.skip=true) }
+ggkey() { (gggm); source ~/.zshrc }
+ggkeyr() { (BROWSER=/usr/bin/echo gggm); source ~/.zshrc }
 ggpull() {
   echo "pulling ${bold}auth${normal}..."
   (cd "$GG/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
@@ -158,8 +179,6 @@ ggpull() {
   (cd "$GG/local" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}org${normal}..."
   (cd "$GG/org" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}parent${normal}..."
-  (cd "$GG/parent" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}repo${normal}..."
   (cd "$GG/repo" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}risk${normal}..."
@@ -170,19 +189,66 @@ ggpull() {
   (cd "$GG/routing" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}identity${normal}..."
   (cd "$GG/identity" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}graphql${normal}..."
+  (cd "$GG/graphql" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}legacy-proxy${normal}..."
+  (cd "$GG/legacy-proxy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}notification${normal}..."
+  (cd "$GG/notification" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}legacy-frontend${normal}..."
+  (cd "$GG/frontend/legacy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}risk-frontend${normal}..."
+  (cd "$GG/frontend/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}design-system${normal}..."
+  (cd "$GG/design-system" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}node-common${normal}..."
+  (cd "$GG/node-common" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
 }
 
 vmdbimport() {
+  sed -i 's/`forge`/`homestead`/g' "${1:-mathbots.dump}"
   mysql -h 0.0.0.0 -P 33061 -psecret -u homestead homestead < "${1:-mathbots.dump}"
 }
+vmldbimport() {
+  ssh forge@mathbots.vimmelearning.com mysql -u forge -plDBxQ8BZy42VJfnuKp8G < "${1:-mathbots.dump}"
+}
+vlcdbimport() {
+  ssh forge@classrooms.app.vimmelearning.com mysql -u forge -pBpvvfWCrPjxmlgakDo9n < "${1:-vimme_classrooms.dump}"
+}
+vllivedbimport() {
+  ssh forge@old-app.vimmelearning.com mysql -u forge -pBpvvfWCrPjxmlgakDo9n < "${1:-vimme.dump}"
+}
 vldbimport() {
+  sed -i 's/`forge`/`homestead`/g' "${1:-vimme.dump}"
   mysql -h 0.0.0.0 -P 33060 -psecret -u homestead homestead < "${1:-vimme.dump}"
+}
+vedbimport() {
+  sed -i 's/`forge`/`homestead`/g' "${1:-nonilearn.dump}"
+  mysql -h 0.0.0.0 -P 33060 -psecret -u homestead homestead < "${1:-nonilearn.dump}"
 }
 vmldbdump() {
   ssh forge@mathbots.vimmelearning.com "$MATHBOTS_MYSQLDUMP" > "${1:-mathbots.dump}"
 }
 vldbdump() {
   ssh forge@old-app.vimmelearning.com "$VIMME_MYSQLDUMP" > "${1:-vimme.dump}"
+}
+vldbdumpassignments() {
+  ssh forge@old-app.vimmelearning.com "$VIMME_MYSQLDUMP_ASSIGNMENTS" > "${1:-vimme-assignments.dump}"
+}
+vldbdumpclassrooms() {
+  ssh forge@old-app.vimmelearning.com "$VIMME_MYSQLDUMP_CLASSROOMS" > "${1:-vimme_classrooms.dump}"
+}
+vedbdump() {
+  ssh forge@nonilearnreporting.com "$NONILEARN_MYSQLDUMP" > "${1:-nonilearn.dump}"
+}
+vlldbdump() {
+  mysqldump -h 0.0.0.0 -P 33060 -u homestead -psecret --column-statistics=0 --no-tablespaces homestead > "${1:-homestead.dump}"
+}
+vlssh() {
+  ssh forge@old-app.vimmelearning.com "$@"
+}
+vlscp() {
+  scp "$1" "forge@old-app.vimmelearning.com:old-app.vimmelearning.com/storage/students/$2"
 }
 
 # ggrepo() {
@@ -193,14 +259,10 @@ vldbdump() {
 #   fi
 # }
 
-java11() { $JAVA11 $@ }
-java8() { $JAVA8 $@ }
+# java11() { $JAVA11 $@ }
+# java8() { $JAVA8 $@ }
 
-abbrev-alias -c cdgc="cd $GG/client"
-abbrev-alias -c cdgce="cd $GG/client/src/greenlight"
 abbrev-alias -c cdgg="cd $GG"
-abbrev-alias -c cdgr="cd $GG/repo"
-abbrev-alias -c cdgsg="cd $GG/style-guide"
 
 abbrev-alias -c gt="gotestsum"
 
@@ -219,7 +281,7 @@ abbrev-alias -c ls="exa"
 abbrev-alias -c la="exa -lag"
 
 stripe() {
-  docker run --network host --rm -v ~/.config/stripe:/root/.config/stripe -it stripe/stripe-cli:latest "$@"
+  docker run --network=host --rm -it stripe/stripe-cli "$@"
 }
 
 nvu() {
@@ -233,21 +295,21 @@ wtu() {
   wget https://github.com/wez/wezterm/releases/download/nightly/WezTerm-nightly-Ubuntu18.04.AppImage -O wezterm.appimage
   # wget https://github.com/wez/wezterm/releases/download/20220624-141144-bd1b7c5d/WezTerm-20220624-141144-bd1b7c5d-Ubuntu18.04.AppImage -O wezterm.appimage
   sudo chmod +x wezterm.appimage
-  sudo chown root:root wezterm.appimage
-  sudo mv wezterm.appimage /usr/local/bin/wezterm
-}
-
-kittyu() {
-  curl -L https://sw.kovidgoyal.net/kitty/installer.sh | sh /dev/stdin
-  ln -s ~/.local/kitty.app/bin/kitty ~/.local/bin/
-  cp ~/.local/kitty.app/share/applications/kitty.desktop ~/.local/share/applications
-  sed -i "s|Icon=kitty|Icon=/home/$USER/.local/kitty.app/share/icons/hicolor/256x256/apps/kitty.png|g" ~/.local/share/applications/kitty.desktop
+  # sudo chown root:root wezterm.appimage
+  sudo mv wezterm.appimage ~/Applications
 }
 
 rcu() {
   rustup update
   cargo install-update --all
 }
+
+gou() {
+  bash <(curl -sL https://git.io/go-installer)
+}
+
+abbrev-alias -c tsu="sudo tailscale up --accept-routes --accept-dns"
+abbrev-alias -c tsd="sudo tailscale down"
 
 # set_java_version() {
 #   if [[ "$(\asdf current java 2>&1)" =~ "^([-_.a-zA-Z0-9]+)[[:space:]]*\(set by.*$" ]]; then
@@ -270,8 +332,8 @@ rcu() {
 # export JAVA_HOME="$(/usr/libexec/java_home)"
 
 # export JAVA_HOME=`type -p javac|awk '{ print $3 }'|xargs readlink -f|xargs dirname|xargs dirname`
-export JAVA_HOME="$(jabba which default)"
-export PATH="$JAVA_HOME/bin:$PATH"
+# export JAVA_HOME="$(jabba which default)"
+# export PATH="$JAVA_HOME/bin:$PATH"
 
 # abbrev-alias -c ci="composer install"
 # abbrev-alias -c cu="composer update"
@@ -291,3 +353,25 @@ eval "$(zoxide init zsh)"
 
 export FZF_DEFAULT_OPTS='--color=bg+:#302D41,bg:#1E1E2E,spinner:#F8BD96,hl:#F28FAD --color=fg:#D9E0EE,header:#F28FAD,info:#DDB6F2,pointer:#F8BD96 --color=marker:#F8BD96,fg+:#F2CDCD,prompt:#DDB6F2,hl+:#F28FAD'
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+# bun completions
+[ -s "/home/jeffhertzler/.bun/_bun" ] && source "/home/jeffhertzler/.bun/_bun"
+
+# Bun
+export BUN_INSTALL="/home/jeffhertzler/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+export GG_BANNER_LEVEL="accent"
+
+[ -s "/home/jeffhertzler/.jabba/jabba.sh" ] && source "/home/jeffhertzler/.jabba/jabba.sh"
+
+[ -z "$COLORFGBG" ] && export COLORFGBG='7;0'
+
+export LOGBACK_APPENDER="pretty"
+
+# export PHPBREW_RC_ENABLE=1
+
+# source /home/jeffhertzler/.phpbrew/bashrc
+export GOROOT=/home/jeffhertzler/.go
+export GOPATH=/home/jeffhertzler/dev/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin

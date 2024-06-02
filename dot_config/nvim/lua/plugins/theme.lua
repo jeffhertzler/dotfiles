@@ -1,79 +1,89 @@
-local M = {}
+local M = {
+  'catppuccin/nvim',
+  name = 'catppuccin',
+  lazy = false,
+  opts = {
+    flavour = 'mocha',
+    background = {
+      dark = 'mocha',
+      light = 'latte',
+    },
+    compile_path = vim.fn.stdpath("cache") .. "/catppuccin",
+    -- there is a built in way to get someothing like this now! theme = 'nvchad'
+    custom_highlights = function(colors)
+      return {
+        FloatBorder = { bg = colors.mantle, fg = colors.mantle },
+        LeapBackdrop = { fg = colors.surface2, style = { 'italic' } },
+        NormalFloat = { bg = colors.mantle, fg = colors.text },
+        Pmenu = { bg = colors.mantle, fg = colors.text },
+        PmenuSel = { bg = colors.crust, bold = true },
+        TelescopeMatching = { fg = colors.flamingo },
+        TelescopeSelection = { fg = colors.text, bg = colors.surface0, bold = true },
+        TelescopePromptPrefix = { bg = colors.crust },
+        TelescopePromptNormal = { bg = colors.crust },
+        TelescopeResultsNormal = { bg = colors.mantle },
+        TelescopePreviewNormal = { bg = colors.mantle },
+        TelescopePromptBorder = { bg = colors.crust, fg = colors.crust },
+        TelescopeResultsBorder = { bg = colors.mantle, fg = colors.mantle },
+        TelescopePreviewBorder = { bg = colors.mantle, fg = colors.mantle },
+        TelescopePromptTitle = { bg = colors.pink, fg = colors.mantle },
+        TelescopeResultsTitle = { bg = colors.sky, fg = colors.mantle },
+        TelescopePreviewTitle = { bg = colors.green, fg = colors.mantle },
+        TroubleNormal = { bg = colors.mantle, fg = colors.text },
+      }
+    end,
+    integrations = {
+      barbecue = false,
+      dashboard = false,
+      leap = true,
+      lsp_trouble = true,
+      mason = true,
+      notify = true,
+      nvimtree = false,
+      treesitter_context = true,
+      ts_rainbow = false,
+      which_key = true,
+    },
+  },
+}
 
-function M.dark()
+M.colors = function()
+  return require('catppuccin.palettes').get_palette()
+end
+
+M.highlights = function(fn)
+  local colors = M.colors()
+
+  local highlights = fn(colors)
+
+  if not highlights then return end
+
+  for hl, col in pairs(highlights) do
+    vim.api.nvim_set_hl(0, hl, col)
+  end
+end
+
+M.config = function(_, opts)
+  require('catppuccin').setup(opts)
+  vim.cmd [[colorscheme catppuccin]]
+end
+
+M.dark = function()
   vim.opt.background = "dark"
-  vim.cmd("Catppuccin mocha");
+  vim.fn.jobstart("~/.config/tmux/bin/theme dark");
 end
 
-function M.light()
+M.light = function()
   vim.opt.background = "light"
-  vim.cmd("Catppuccin latte");
+  vim.fn.jobstart("~/.config/tmux/bin/theme light");
 end
 
-function M.toggle()
-  if vim.opt.background == "light" then
+M.toggle = function()
+  if vim.opt.background:get() == "light" then
     M.dark()
   else
     M.light()
   end
-end
-
-function M.catppuccin()
-  local catp = require('catppuccin');
-  local colors = require('catppuccin.api.colors').get_colors();
-  catp.remap({
-    NormalFloat = { bg = colors.none },
-    WildMenu = { bg = colors.none },
-  })
-  catp.setup({
-    integrations = {
-      lsp_trouble = true,
-      nvimtree = false,
-      neotree = false,
-      which_key = true,
-      dashboard = false,
-      bufferline = false,
-      lightspeed = true,
-      telekasten = false,
-    }
-  })
-  vim.opt.laststatus = 3;
-  require('feline').setup({
-    components = require('catppuccin.core.integrations.feline')
-  })
-  -- require('feline').winbar.setup()
-  require('incline').setup({
-    render = function(props)
-      local fill = props.focused and colors.blue or colors.surface0
-      local text = props.focused and colors.base or colors.blue
-
-      local bufname = vim.api.nvim_buf_get_name(props.buf)
-      local res = bufname ~= '' and vim.fn.fnamemodify(bufname, ':t') or '[No Name]'
-      local icon = require('nvim-web-devicons').get_icon(res, vim.fn.expand('%:e'))
-
-      if vim.api.nvim_buf_get_option(props.buf, 'modified') then
-        fill = props.focused and colors.mauve or fill
-        text = props.focused and text or colors.mauve
-      end
-
-      return {
-        { '', guifg = fill, guibg = colors.base },
-        { icon, guifg = text, guibg = fill },
-        { ' ' .. res .. ' ', guifg = text, guibg = fill }
-      }
-    end,
-    window = {
-      margin = {
-        horizontal = 0,
-        vertical = 0,
-      },
-      padding = {
-        left = 0,
-        right = 0,
-      }
-    }
-  })
-  vim.cmd [[colorscheme catppuccin]]
 end
 
 return M
