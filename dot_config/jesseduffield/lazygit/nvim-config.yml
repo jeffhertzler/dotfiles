@@ -1,0 +1,18 @@
+customCommands:
+  - key: 'e'
+    command: 'nvr -l {{.SelectedFile.Name}} --nostart'
+    context: 'files'
+    description: 'edit'
+  - key: 'o'
+    command: 'nvr -l {{.SelectedFile.Name}} --nostart'
+    context: 'files'
+    description: 'open'
+  - key: 'e'
+    command: 'nvr -l {{.SelectedCommitFile.Name}} --nostart'
+    context: 'commitFiles'
+    description: 'edit'
+  - key: 'o'
+    command: 'nvr -l {{.SelectedCommitFile.Name}} --nostart'
+    context: 'commitFiles'
+    description: 'open'
+
