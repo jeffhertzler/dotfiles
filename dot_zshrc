@@ -375,3 +375,8 @@ export LOGBACK_APPENDER="pretty"
 export GOROOT=/home/jeffhertzler/.go
 export GOPATH=/home/jeffhertzler/dev/go
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"

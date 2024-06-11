@@ -6,8 +6,4 @@
 --      _|_|    _|    _|
 --
 
-require('config.utils')
-require('config.settings')
-require('config.lazy')
-require('config.autocommands')
-require('config.keymaps')
+require("config.lazy")
