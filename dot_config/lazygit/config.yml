@@ -1,1 +1,5 @@
-reporting: "off"
+os:
+  edit: '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q<cmd>sleep 10m<cr><cmd>e {{filename}}<cr>")'
+  editAtLine: '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q<cmd>sleep 10m<cr><cmd>e {{filename}}<cr><cmd>{{line}}<cr>")'
+  editAtLineAndWait: "nvim +{{line}} {{filename}}"
+  openDirInEditor: '[ -z "$NVIM" ] && (nvim -- {{dir}}) || (nvim --server "$NVIM" --remote-send "q<cmd>sleep 10m<cr><cmd>e {{dir}}<cr>")'

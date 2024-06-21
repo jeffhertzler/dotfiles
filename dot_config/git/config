@@ -1,7 +1,7 @@
 [filter "lfs"]
+	clean = git-lfs clean -- %f
 	process = git-lfs filter-process
 	required = true
-	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 [user]
 	name = Jeff Hertzler
@@ -14,3 +14,7 @@
 	rebase = false
 [init]
 	defaultBranch = main
+[includeIf "gitdir:~/dev/greenlight/"]
+  path = ~/dev/greenlight/.gitconfig
+[core]
+	excludesFile = ~/.config/git/ignore
