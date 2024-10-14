@@ -13,8 +13,6 @@
 	smudge = git-lfs smudge -- %f
 [github]
 	user = jeffhertzler
-[includeIf "gitdir:~/dev/greenlight/"]
-  path = ~/dev/greenlight/.gitconfig
 [init]
 	defaultBranch = main
 [pull]
@@ -22,3 +20,5 @@
 [user]
 	name = Jeff Hertzler
 	email = jeffhertzler@gmail.com
+[includeIf "gitdir:~/dev/greenlight/"]
+  path = ~/dev/greenlight/.gitconfig
