@@ -1,3 +1,7 @@
+VIMME="$HOME/dev/vimme"
+
+abbrev-alias -c cdv="cd $VIMME"
+
 vldbdump() {
   ssh "${VIMME_USER}@${VIMME_SERVER} mysqldump --add-drop-database -u ${VIMME_DB_USER} -p${VIMME_DB_PASS} --databases ${VIMME_DB_NAME}" > "${1:-vimme.dump}"
 }
