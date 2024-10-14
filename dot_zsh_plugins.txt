@@ -1,0 +1,4 @@
+jeffreytse/zsh-vi-mode
+mattmc3/ez-compinit
+momo-lab/zsh-abbrev-alias
+
