@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
-source /usr/share/zsh-antidote/antidote.zsh
+F=/usr/share/zsh-antidote/antidote.zsh; [ -f $F ] && . $F
+F=~/.antidote/antidote.zsh; [ -f $F ] && . $F
 
 antidote load
 
@@ -51,10 +52,18 @@ alias reload="source ~/.zshrc"
 alias sail="./vendor/bin/sail"
 alias stripe="docker run --network=host --rm -it stripe/stripe-cli"
 
-source ~/.greenlight.zsh
-source ~/.vimme.zsh
-source ~/.jabba/jabba.sh
-eval "$(atuin init zsh)"
+alias tsd="sudo tailscale down"
+alias tsu="sudo tailscale up --accept-dns"
+
+F=~/.private.zsh; [ -f $F ] && . $F
+F=~/.greenlight.zsh; [ -f $F ] && . $F
+F=~/.vimme.zsh; [ -f $F ] && . $F
+F=~/.jabba/jabba.sh; [ -f $F ] && . $F
+
 eval "$(zoxide init zsh)"
 eval "$(op completion zsh)"; compdef _op op
 type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
+
+function zvm_after_init() {
+  eval "$(atuin init zsh)"
+}
