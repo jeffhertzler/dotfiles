@@ -11,6 +11,8 @@ export VISUAL="nvim"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
+alias cm="chezmoi"
+
 alias cat="bat"
 
 alias gb="git branch"
