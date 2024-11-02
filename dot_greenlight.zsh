@@ -7,6 +7,7 @@ fi
 
 GG="$HOME/dev/greenlight"
 
+export GG_BANNER_LEVEL="accent"
 export GGREPOSERVICE="$GG/services/repo" # for compat with other scripts
 export GGLEGACYPROXYSERVICE="$GG/gateways/legacy"
 export GG_NOTIFICATION_SERVICE="$GG/services/notification"
@@ -66,5 +67,3 @@ ggpull() {
   echo "pulling ${bold}node-common${normal}..."
   (cd "$GG/node-common" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
 }
-
-
