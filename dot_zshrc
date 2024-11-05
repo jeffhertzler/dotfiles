@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+autoload -Uz compinit && compinit
+
 F=/usr/share/zsh-antidote/antidote.zsh; [ -f $F ] && . $F
 F=~/.antidote/antidote.zsh; [ -f $F ] && . $F
 
