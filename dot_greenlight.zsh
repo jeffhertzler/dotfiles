@@ -28,42 +28,62 @@ gg() { (cd "$GG/local" && ./gg.sh $@) }
 ggkey() { (gggm); source ~/.zshrc }
 ggkeyr() { (BROWSER=/usr/bin/echo gggm); source ~/.zshrc }
 ggpull() {
-  echo "pulling ${bold}auth${normal}..."
-  (cd "$GG/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}ah${normal}..."
-  (cd "$GG/ah" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}authz${normal}..."
-  (cd "$GG/authz" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}common${normal}..."
-  (cd "$GG/common" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}grpc${normal}..."
-  (cd "$GG/grpc" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}local${normal}..."
-  (cd "$GG/local" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}org${normal}..."
-  (cd "$GG/org" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}repo${normal}..."
-  (cd "$GG/repo" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}risk${normal}..."
-  (cd "$GG/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}pdm${normal}..."
-  (cd "$GG/pdm" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}routing${normal}..."
-  (cd "$GG/routing" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}identity${normal}..."
-  (cd "$GG/identity" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}graphql${normal}..."
-  (cd "$GG/graphql" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}legacy-proxy${normal}..."
-  (cd "$GG/legacy-proxy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}notification${normal}..."
-  (cd "$GG/notification" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}legacy-frontend${normal}..."
-  (cd "$GG/frontend/legacy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}risk-frontend${normal}..."
-  (cd "$GG/frontend/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}auth${normal}..."
+  # (cd "$GG/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}ah${normal}..."
+  # (cd "$GG/ah" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}authz${normal}..."
+  # (cd "$GG/authz" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}common/java${normal}..."
+  (cd "$GG/common/java" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}common/node${normal}..."
+  (cd "$GG/common/node" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}grpc${normal}..."
+  # (cd "$GG/grpc" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}design-system${normal}..."
   (cd "$GG/design-system" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}node-common${normal}..."
-  (cd "$GG/node-common" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/about${normal}..."
+  (cd "$GG/frontend/about" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/authn${normal}..."
+  (cd "$GG/frontend/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/download-center${normal}..."
+  (cd "$GG/frontend/download-center" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/legacy${normal}..."
+  (cd "$GG/frontend/legacy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/risk${normal}..."
+  (cd "$GG/frontend/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/settings${normal}..."
+  (cd "$GG/frontend/settings" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/settings${normal}..."
+  (cd "$GG/frontend/settings" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}frontend/training${normal}..."
+  (cd "$GG/frontend/training" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}gateways/graphql${normal}..."
+  (cd "$GG/gateways/graphql" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}gateways/legacy${normal}..."
+  (cd "$GG/gateways/legacy" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}infra/github${normal}..."
+  (cd "$GG/infra/github" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}local${normal}..."
+  (cd "$GG/local" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}services/identity${normal}..."
+  # (cd "$GG/services/identity" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}services/org${normal}..."
+  # (cd "$GG/services/org" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}services/notification${normal}..."
+  (cd "$GG/services/notification" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}servies/pdm${normal}..."
+  # (cd "$GG/servies/pdm" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}services/repo${normal}..."
+  (cd "$GG/services/repo" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}services/risk${normal}..."
+  # (cd "$GG/services/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  # echo "pulling ${bold}services/routing${normal}..."
+  # (cd "$GG/services/routing" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}services/suppliers${normal}..."
+  (cd "$GG/services/suppliers" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}waffles${normal}..."
+  (cd "$GG/waffles" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
+  echo "pulling ${bold}yeoman${normal}..."
+  (cd "$GG/yeoman" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
 }
