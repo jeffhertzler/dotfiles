@@ -55,7 +55,6 @@ alias ze="nvim ~/.zshrc"
 alias reload="source ~/.zshrc"
 
 alias sail="./vendor/bin/sail"
-alias stripe="docker run --network=host --rm -it stripe/stripe-cli"
 
 alias tsd="sudo tailscale down"
 alias tsu="sudo tailscale up --accept-dns"
