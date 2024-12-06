@@ -60,7 +60,7 @@ alias reload="source ~/.zshrc"
 alias sail="./vendor/bin/sail"
 
 alias tsd="sudo tailscale down"
-alias tsu="sudo tailscale up --accept-dns"
+alias tsu="sudo tailscale up --accept-dns --accept-routes"
 
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
