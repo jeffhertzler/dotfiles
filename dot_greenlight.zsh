@@ -23,10 +23,15 @@ gggm() {
   git config --global user.email jeffhertzler@gmail.com
 }
 
-ggd() { (cd "$GG/local" && ./docker.sh $@) }
 gg() { (cd "$GG/local" && ./gg.sh $@) }
+
+ggd() { (cd "$GG/local" && ./docker.sh $@) }
+ggsa() { (cd "$GG/local" && ./docker.sh stop-all) }
+ggsrp() { (cd "$GG/local" && ./docker.sh start-repo-plus) }
+
 ggkey() { (gggm); source ~/.zshrc }
 ggkeyr() { (BROWSER=/usr/bin/echo gggm); source ~/.zshrc }
+
 ggpull() {
   # echo "pulling ${bold}auth${normal}..."
   # (cd "$GG/authn" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
