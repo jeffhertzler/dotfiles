@@ -14,7 +14,7 @@ export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
 alias au="antidote update"
-alias nvu="yay -S neovim-git --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
+alias nvu="yay -S neovim-nightly --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
 
 alias cd="z"
 alias cm="chezmoi"
