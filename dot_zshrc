@@ -62,6 +62,9 @@ alias sail="./vendor/bin/sail"
 alias tsd="sudo tailscale down"
 alias tsu="sudo tailscale up --accept-dns --accept-routes"
 
+alias oc="opencode"
+alias ca="cursor-agent --fullscreen"
+
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
 	yazi "$@" --cwd-file="$tmp"

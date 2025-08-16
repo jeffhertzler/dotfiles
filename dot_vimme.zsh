@@ -19,10 +19,10 @@ vmdbimport() {
 }
 
 vldbimportlive() {
-  ssh "${VIMME_USER}@${VIMME_SERVER} mysql -u ${VIMME_DB_USER} -p${VIMME_DB_PASS}" < "${1:-vimme.dump}"
+  ssh "${VIMME_USER}@${VIMME_SERVER}" mysql -u "${VIMME_DB_USER}" "-p${VIMME_DB_PASS}" forge < "${1:-vimme.dump}"
 }
 vmdbimportlive() {
-  ssh "${MATHBOTS_USER}@${MATHBOTS_SERVER} mysql -u ${MATHBOTS_DB_USER} -p${MATHBOTS_DB_PASS}" < "${1:-mathbots.dump}"
+  ssh "${MATHBOTS_USER}@${MATHBOTS_SERVER}" mysql -u "${MATHBOTS_DB_USER}" "-p${MATHBOTS_DB_PASS}" forge < "${1:-mathbots.dump}"
 }
 
 vlssh() {

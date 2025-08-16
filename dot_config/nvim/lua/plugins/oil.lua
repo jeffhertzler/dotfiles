@@ -10,6 +10,7 @@ return {
     },
   },
   config = function()
+    local columns = { "icon" }
     local oil = require("oil")
     oil.setup({
       keymaps = {
@@ -19,6 +20,14 @@ return {
         ["RR"] = "actions.refresh",
         ["<C-A-j>"] = "actions.select_split",
         ["<C-A-l>"] = "actions.select_vsplit",
+        ["<leader>uP"] = function()
+          if #columns == 1 then
+            columns = { "icon", "permissions", "size", "mtime" }
+          else
+            columns = { "icon" }
+          end
+          oil.set_columns(columns)
+        end,
       },
       lsp_file_methods = {
         autosave_changes = "unmodified",
