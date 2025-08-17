@@ -15,7 +15,6 @@ vim.cmd(newPath)
 
 vim.g.node_host_prog = vim.fn.trim(vim.fn.system("volta which neovim-node-host"))
 
-vim.opt.autochdir = true
 vim.opt.relativenumber = false
 vim.opt.showtabline = 0
 vim.opt.swapfile = false
