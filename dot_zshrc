@@ -86,3 +86,5 @@ type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
 function zvm_after_init() {
   eval "$(atuin init zsh)"
 }
+
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"

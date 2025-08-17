@@ -1,7 +1,10 @@
 #!/usr/bin/env zsh
 
+export BUN_INSTALL="$HOME/.bun"
 export VOLTA_HOME="$HOME/.volta"
 export COMPOSER_BIN="$HOME/.config/composer/vendor/bin"
+
 export PATH="$VOLTA_HOME/bin:$COMPOSER_BIN:$PATH"
 export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/bin:$PATH"
+export PATH="$BUN_INSTALL/bin:$PATH"
