@@ -38,5 +38,28 @@ return {
         show_hidden = true,
       },
     })
+
+    local LazyRoot = require("lazyvim.util.root")
+
+    ---@param patterns string[]|string
+    function LazyRoot.detectors.pattern(buf, patterns)
+      patterns = type(patterns) == "string" and { patterns } or patterns
+      local path = LazyRoot.bufpath(buf) or vim.uv.cwd()
+      if vim.bo[buf].filetype == "oil" then
+        path = path:gsub("^oil:", "")
+      end
+      local pattern = vim.fs.find(function(name)
+        for _, p in ipairs(patterns) do
+          if name == p then
+            return true
+          end
+          if p:sub(1, 1) == "*" and name:find(vim.pesc(p:sub(2)) .. "$") then
+            return true
+          end
+        end
+        return false
+      end, { path = path, upward = true })[1]
+      return pattern and { vim.fs.dirname(pattern) } or {}
+    end
   end,
 }
