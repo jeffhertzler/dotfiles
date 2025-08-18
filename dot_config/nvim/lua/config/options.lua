@@ -20,10 +20,3 @@ vim.opt.showtabline = 0
 vim.opt.swapfile = false
 
 vim.opt.clipboard = { "unnamed", "unnamedplus" }
-
-vim.filetype.add({
-  pattern = {
-    [".ember-cli"] = "jsonc",
-    -- ["*.hbs"] = "handlebars",
-  },
-})
