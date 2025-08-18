@@ -62,7 +62,8 @@ alias sail="./vendor/bin/sail"
 alias tsd="sudo tailscale down"
 alias tsu="sudo tailscale up --accept-dns --accept-routes"
 
-alias oc="opencode"
+alias ocp="oc -P personal"
+alias ocw="oc -P work"
 alias ca="cursor-agent --fullscreen"
 
 function y() {

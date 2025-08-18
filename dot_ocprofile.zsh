@@ -1,4 +1,41 @@
-function ocp() {
+function oc() {
+  local profile=""
+  local args=()
+
+  while [[ $# -gt 0 ]]; do
+    case $1 in
+      --profile=*|-P=*)
+        profile="${1#*=}"
+        shift
+        ;;
+      --profile|-P)
+        if [[ -n "$2" && "$2" != -* ]]; then
+          profile="$2"
+          shift 2
+        else
+          echo "Error: --profile/-P requires a value (personal|work)"
+          return 1
+        fi
+        ;;
+      *)
+        args+=("$1")
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -n "$profile" ]]; then
+    if [[ "$profile" != "personal" && "$profile" != "work" ]]; then
+      echo "Error: profile must be 'personal' or 'work'"
+      return 1
+    fi
+    ocpr "$profile"
+  fi
+
+  opencode "${args[@]}"
+}
+
+function ocpr() {
   local auth_dir="$HOME/.local/share/opencode"
   local auth_path="$auth_dir/auth.json"
   local personal_auth_path="$auth_dir/personal.json"
@@ -51,7 +88,7 @@ function ocp() {
       echo "Error: $work_auth_path not found"
     fi
   else
-    echo "Usage: ocp [personal|work]"
-    echo "Current profile: $(ocp)"
+    echo "Usage: ocpr [personal|work]"
+    echo "Current profile: $(ocpr)"
   fi
 }
