@@ -51,9 +51,9 @@ alias v="nvim ."
 alias vi="nvim"
 alias vim="nvim"
 
-alias te="nvim ~/.config/tmux/tmux.conf"
-alias ve="nvim ~/.config/nvim"
-alias ze="nvim ~/.zshrc"
+alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"
+alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
+alias ze="nvim ~/.local/share/chezmoi/dot_zshrc"
 
 alias reload="source ~/.zshrc"
 
