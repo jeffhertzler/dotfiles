@@ -1,2 +1,52 @@
 [mgr]
 show_hidden = true
+
+[opener]
+nvim = [
+  { run = '~/.config/yazi/nvim-remote.sh "$@"', desc = "Open in Neovim", orphan = true, for = "unix" },
+]
+open = [{ run = 'xdg-open "$@"', desc = "Open with system handler" }]
+
+[open]
+rules = [
+  # Text files
+  { mime = "text/*", use = "nvim" },
+  { mime = "application/json", use = "nvim" },
+  { mime = "application/javascript", use = "nvim" },
+  { mime = "application/x-yaml", use = "nvim" },
+
+  # Configuration files
+  { name = "*.conf", use = "nvim" },
+  { name = "*.config", use = "nvim" },
+  { name = "*.toml", use = "nvim" },
+  { name = "*.yaml", use = "nvim" },
+  { name = "*.yml", use = "nvim" },
+  { name = "*.json", use = "nvim" },
+  { name = "*.js", use = "nvim" },
+  { name = "*.ts", use = "nvim" },
+  { name = "*.md", use = "nvim" },
+  { name = "*.txt", use = "nvim" },
+  { name = "*.log", use = "nvim" },
+
+  # Shell scripts
+  { name = "*.sh", use = "nvim" },
+  { name = "*.bash", use = "nvim" },
+  { name = "*.zsh", use = "nvim" },
+
+  # Programming files
+  { name = "*.py", use = "nvim" },
+  { name = "*.rs", use = "nvim" },
+  { name = "*.go", use = "nvim" },
+  { name = "*.c", use = "nvim" },
+  { name = "*.cpp", use = "nvim" },
+  { name = "*.h", use = "nvim" },
+  { name = "*.hpp", use = "nvim" },
+
+  # Dotfiles
+  { name = ".*rc", use = "nvim" },
+  { name = ".*profile", use = "nvim" },
+  { name = ".*env", use = "nvim" },
+
+  # Fallback for everything else
+  { name = "*", use = ["nvim", "open"] },
+]
