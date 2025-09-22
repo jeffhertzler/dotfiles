@@ -6,6 +6,12 @@ return {
         and vim.bo.buftype ~= "prompt"
         and vim.b.completion ~= false
     end,
+    cmdline = {
+      keymap = {
+        ["<C-k>"] = { "select_prev", "fallback" },
+        ["<C-j>"] = { "select_next", "fallback" },
+      },
+    },
     keymap = {
       ["<C-k>"] = { "select_prev", "fallback" },
       ["<C-j>"] = { "select_next", "fallback" },

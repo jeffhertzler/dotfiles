@@ -1,6 +1,6 @@
 return {
   { "marilari88/neotest-vitest" },
-  { "jeffhertzler/neotest-pest" },
+  { "V13Axel/neotest-pest" },
   {
     "nvim-neotest/neotest",
     opts = { adapters = { "neotest-pest", "neotest-vitest" } },

@@ -4,6 +4,7 @@ return {
     ensure_installed = {
       "css",
       "glimmer",
+      "graphql",
       "html",
       "javascript",
       "latex",
