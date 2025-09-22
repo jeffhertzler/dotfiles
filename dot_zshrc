@@ -15,6 +15,7 @@ export GIT_EDITOR="nvim"
 
 alias au="antidote update"
 alias nvu="yay -S neovim-nightly --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
+alias uvu="uv tool upgrade --all"
 
 alias cd="z"
 alias cm="chezmoi"
@@ -51,6 +52,7 @@ alias v="nvim ."
 alias vi="nvim"
 alias vim="nvim"
 
+alias pe="nvim ~/.local/share/posting/default"
 alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
 alias ze="nvim ~/.local/share/chezmoi/dot_zshrc"
