@@ -1,3 +1,5 @@
+command_timeout = 2000
+
 [time]
 disabled = false
 use_12hr = true
