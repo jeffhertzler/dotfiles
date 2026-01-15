@@ -10,7 +10,6 @@ return {
       "latex",
       "markdown",
       "markdown_inline",
-      "norg",
       "scss",
       "svelte",
       "tsx",
