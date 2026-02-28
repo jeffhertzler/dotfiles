@@ -2,14 +2,7 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
-local get_current_dir = function()
-  local buf = vim.api.nvim_get_current_buf()
-  local path = vim.fn.expand("%:p:h")
-  if vim.bo[buf].filetype == "oil" then
-    path = path:gsub("^oil://", "")
-  end
-  return path
-end
+local keymap_helpers = require("config.keymap_helpers")
 
 vim.keymap.set("n", "<leader>bs", "<cmd>so %<cr>", { desc = "Source" })
 vim.keymap.set("n", "<leader>fs", "<cmd>w<cr>", { desc = "Save" })
@@ -23,21 +16,25 @@ vim.keymap.set("n", "<leader>xp", function()
 end, { desc = "Prev" })
 
 vim.keymap.set("n", "<leader>ff", function()
-  return LazyVim.pick("files", { hidden = true })()
+  return keymap_helpers.pick_with_ignored_allowlist("files", "files")
 end, { desc = "Find Files" })
 vim.keymap.set("n", "<leader>fF", function()
-  return LazyVim.pick("files", { cwd = get_current_dir(), hidden = true })()
+  return keymap_helpers.pick_with_ignored_allowlist("files", "files", { cwd = keymap_helpers.get_current_dir() })
 end, { desc = "Find Files (Current)" })
 
 vim.keymap.set("n", "<leader>sg", function()
-  return LazyVim.pick("live_grep", { hidden = true })()
+  return keymap_helpers.pick_with_ignored_allowlist("live_grep", "grep")
 end, { desc = "Grep" })
 vim.keymap.set("n", "<leader>sG", function()
-  return LazyVim.pick("live_grep", { cwd = get_current_dir(), hidden = true })()
+  return keymap_helpers.pick_with_ignored_allowlist("live_grep", "grep", { cwd = keymap_helpers.get_current_dir() })
 end, { desc = "Grep (Current)" })
 
 vim.keymap.set({ "n", "x" }, "<leader>sW", function()
-  return LazyVim.pick("grep_word", { cwd = get_current_dir() })()
+  return keymap_helpers.pick_with_ignored_allowlist(
+    "grep_word",
+    "grep_word",
+    { cwd = keymap_helpers.get_current_dir() }
+  )
 end, { desc = "Visual selection or word (Current)" })
 
 vim.keymap.set("n", "<leader>fh", function()
