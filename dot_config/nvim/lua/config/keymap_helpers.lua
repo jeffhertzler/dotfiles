@@ -4,6 +4,7 @@ local ignored_allowlist = {
   "**/.env",
   "**/.env.*",
   "**/opencode.json",
+  "**/.workmux.yaml",
   "**/.opencode/**",
   "**/.claude/**",
 }
