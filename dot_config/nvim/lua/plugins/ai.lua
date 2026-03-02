@@ -1,7 +1,14 @@
 return {
   {
     "NickvanDyke/opencode.nvim",
-    dependencies = { "folke/snacks.nvim" },
+    dependencies = {
+      "e-cal/opencode-tmux.nvim",
+      opts = {
+        focus = true,
+        auto_close = false,
+        allow_passthrough = true,
+      },
+    },
     -- stylua: ignore
     keys = {
       { '<leader>oa', function() require('opencode').ask('@this: ', { submit = true }) end, desc = 'Ask opencode', mode = { 'n', 'x', }  },
