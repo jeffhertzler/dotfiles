@@ -67,6 +67,7 @@ alias tsu="sudo tailscale up --accept-dns --accept-routes"
 alias ocp="oc -P personal"
 alias ocw="oc -P work"
 alias ca="cursor-agent --fullscreen"
+alias wm='workmux'
 
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
@@ -82,13 +83,13 @@ F=~/.greenlight.zsh; [ -f $F ] && . $F
 F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
+F=~/.bun/_bun; [ -f $F ] && . $F
 
 eval "$(zoxide init zsh)"
 eval "$(op completion zsh)"; compdef _op op
+eval "$(workmux completions zsh)"
 type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
 
 function zvm_after_init() {
   eval "$(atuin init zsh)"
 }
-
-[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
