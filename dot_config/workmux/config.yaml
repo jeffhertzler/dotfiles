@@ -5,6 +5,9 @@ agent: opencode
 
 status_format: false
 
+pre_remove:
+  - sh -lc 'oc-cleanup kill >/dev/null 2>&1 || true'
+
 panes:
   - command: nvim .
   - command:
