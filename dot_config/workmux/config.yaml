@@ -6,5 +6,11 @@ agent: opencode
 status_format: false
 
 panes:
+  - command: nvim .
+  - command:
+    split: vertical
+    size: 10
   - command: opencode --port
+    split: horizontal
     focus: true
+    target: 0
