@@ -1,0 +1,8 @@
+window_prefix: wt-
+
+nerdfont: true
+agent: opencode
+
+panes:
+  - command: opencode --port
+    focus: true
