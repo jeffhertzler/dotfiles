@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo='tmux/tmux-builds'
+tag='preview'
+install_dir="${HOME}/.local/bin"
+install_path="${install_dir}/tmux"
+
+os="$(uname -s)"
+arch="$(uname -m)"
+
+case "$os" in
+Linux) os_part='linux' ;;
+Darwin) os_part='macos' ;;
+*)
+  echo "Unsupported OS: $os" >&2
+  exit 1
+  ;;
+esac
+
+case "$arch" in
+x86_64 | amd64) arch_part='x86_64' ;;
+aarch64 | arm64) arch_part='arm64' ;;
+*)
+  echo "Unsupported architecture: $arch" >&2
+  exit 1
+  ;;
+esac
+
+pattern="${os_part}-${arch_part}.tar.gz"
+api_url="https://api.github.com/repos/${repo}/releases/tags/${tag}"
+
+tmp_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "$tmp_dir"
+}
+trap cleanup EXIT
+
+asset_url="$(
+  command -v jq >/dev/null || {
+    echo 'jq is required but not installed' >&2
+    exit 1
+  }
+
+  curl -fsSL "$api_url" |
+    jq -er --arg pattern "$pattern" \
+      '.assets | map(select(.name | endswith($pattern)))[0].browser_download_url'
+)"
+
+echo "Downloading: $asset_url"
+curl -fL "$asset_url" -o "${tmp_dir}/tmux.tar.gz"
+
+tar -xzf "${tmp_dir}/tmux.tar.gz" -C "$tmp_dir"
+
+bin_path="$(find "$tmp_dir" -type f -name tmux -perm -111 | head -n1 || true)"
+if [[ -z "$bin_path" ]]; then
+  echo 'Could not find tmux binary in archive' >&2
+  exit 1
+fi
+
+mkdir -p "$install_dir"
+cp "$bin_path" "${install_path}.new"
+chmod 755 "${install_path}.new"
+mv "${install_path}.new" "$install_path"
+
+echo "Installed to $install_path"
+"$install_path" -V
