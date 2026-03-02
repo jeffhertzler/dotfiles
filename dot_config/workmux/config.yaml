@@ -3,6 +3,8 @@ window_prefix: wt-
 nerdfont: true
 agent: opencode
 
+status_format: false
+
 panes:
   - command: opencode --port
     focus: true
