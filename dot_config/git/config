@@ -20,5 +20,9 @@
 [user]
 	name = Jeff Hertzler
 	email = jeffhertzler@gmail.com
+[include]
+  path = ~/dev/catppuccin/delta/catppuccin.gitconfig
+[delta]
+  features = catppuccin-mocha
 [includeIf "gitdir:~/dev/greenlight/"]
   path = ~/dev/greenlight/.gitconfig
