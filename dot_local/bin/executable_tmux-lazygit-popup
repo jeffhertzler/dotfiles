@@ -1,0 +1,16 @@
+#!/bin/sh
+
+wid=$1
+ppath=$2
+
+if [ -z "$wid" ]; then
+  wid=$(tmux display-message -p '#{window_id}') || exit 1
+fi
+
+if [ -z "$ppath" ]; then
+  ppath=$(tmux display-message -p '#{pane_current_path}') || exit 1
+fi
+
+tmux display-popup -E -h 80% -w 80% -d "$ppath" "export TMUX_NVM_TARGET=\"$wid\"; exec lazygit" >/dev/null 2>&1 || true
+
+exit 0

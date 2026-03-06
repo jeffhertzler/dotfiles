@@ -1,0 +1,74 @@
+#!/bin/sh
+
+mode=$1
+shift
+
+native_nvim=0
+
+if [ -n "$NVIM" ]; then
+  server=$NVIM
+  native_nvim=1
+else
+  server=$(~/.local/bin/tmux-nvim-server 2>/dev/null)
+fi
+
+if [ -z "$server" ]; then
+  case "$mode" in
+  edit)
+    exec nvim -- "$1"
+    ;;
+  line | wait)
+    exec nvim "+$1" -- "$2"
+    ;;
+  dir)
+    exec nvim -- "$1"
+    ;;
+  esac
+fi
+
+if [ "$native_nvim" -eq 1 ]; then
+  case "$mode" in
+  edit)
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $1<cr>"
+    ;;
+  line | wait)
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $2<cr><cmd>$1<cr>"
+    ;;
+  dir)
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $1<cr>"
+    ;;
+  *)
+    exit 1
+    ;;
+  esac
+  exit $?
+fi
+
+close_tmux_popup() {
+  if [ -n "$TMUX_NVM_TARGET" ]; then
+    tmux run-shell -b "sleep 0.1; tmux display-popup -C >/dev/null 2>&1 || true" >/dev/null 2>&1
+  fi
+}
+
+case "$mode" in
+edit)
+  nvim --server "$server" --remote "$1"
+  ;;
+line | wait)
+  nvim --server "$server" "+$1" --remote "$2"
+  ;;
+dir)
+  nvim --server "$server" --remote "$1"
+  ;;
+*)
+  exit 1
+  ;;
+esac
+
+status=$?
+
+if [ "$status" -eq 0 ]; then
+  close_tmux_popup
+fi
+
+exit "$status"

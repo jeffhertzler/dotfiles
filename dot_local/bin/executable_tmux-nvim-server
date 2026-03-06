@@ -1,0 +1,21 @@
+#!/bin/sh
+
+target="${1:-${TMUX_NVM_TARGET:-${TMUX_PANE:-}}}"
+
+if [ -n "$NVIM" ]; then
+  printf '%s\n' "$NVIM"
+  exit 0
+fi
+
+if [ -z "$target" ] || ! command -v tmux >/dev/null 2>&1; then
+  exit 1
+fi
+
+server=$(tmux show-options -wqv -t "$target" @nvim_server 2>/dev/null)
+
+if [ -n "$server" ] && [ -S "$server" ]; then
+  printf '%s\n' "$server"
+  exit 0
+fi
+
+exit 1
