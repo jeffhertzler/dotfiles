@@ -1,6 +1,6 @@
 #!/bin/sh
 
-target="${1:-${TMUX_NVM_TARGET:-${TMUX_PANE:-}}}"
+target="${1:-${TMUX_NVM_TARGET:-}}"
 
 if [ -n "$NVIM" ]; then
   printf '%s\n' "$NVIM"

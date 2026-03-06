@@ -3,12 +3,8 @@
 wid=$1
 ppath=$2
 
-if [ -z "$wid" ]; then
-  wid=$(tmux display-message -p '#{window_id}') || exit 1
-fi
-
-if [ -z "$ppath" ]; then
-  ppath=$(tmux display-message -p '#{pane_current_path}') || exit 1
+if [ -z "$wid" ] || [ -z "$ppath" ]; then
+  exit 1
 fi
 
 exec tmux split-window -v -c "$ppath" -e TMUX_NVM_TARGET="$wid" 'yazi; exit'
