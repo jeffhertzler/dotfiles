@@ -16,6 +16,7 @@ export GIT_EDITOR="nvim"
 alias au="antidote update"
 alias nvu="yay -S neovim-nightly --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
 alias uvu="uv tool upgrade --all"
+alias tu="tmux-preview-update"
 
 alias cd="z"
 alias cm="chezmoi"
