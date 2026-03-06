@@ -1,9 +1,12 @@
 [mgr]
 show_hidden = true
 
+[tasks]
+suppress_preload = true
+
 [opener]
 nvim = [
-  { run = '~/.config/yazi/nvim-remote.sh "$@"', desc = "Open in Neovim", orphan = true, for = "unix" },
+  { run = '~/.config/yazi/nvim-remote.sh "$@"', desc = "Open in Neovim", block = true, for = "unix" },
 ]
 open = [{ run = 'xdg-open "$@"', desc = "Open with system handler" }]
 
