@@ -3,6 +3,8 @@ vim.g.loaded_ruby_provider = 0
 
 vim.g.lazyvim_picker = "snacks"
 
+vim.g.lazyvim_ts_lsp = "tsgo"
+
 vim.g.lazyvim_php_lsp = "intelephense"
 
 vim.g.root_spec = { { ".git", "lua" }, "cwd" }

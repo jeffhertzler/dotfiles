@@ -53,12 +53,6 @@ return {
           )
         end,
       },
-      vtsls = false,
-      -- vtsls = {
-      --   tsserver = {
-      --     maxTsServerMemory = 8192,
-      --   },
-      -- },
     },
   },
 }
