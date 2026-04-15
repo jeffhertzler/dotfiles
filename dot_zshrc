@@ -17,6 +17,7 @@ alias au="antidote update"
 alias nvu="yay -S neovim-nightly --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
 alias uvu="uv tool upgrade --all"
 alias tu="tmux-preview-update"
+alias piu="volta install @mariozechner/pi-coding-agent"
 
 alias cd="z"
 alias cm="chezmoi"
@@ -67,7 +68,7 @@ alias tsu="sudo tailscale up --accept-dns --accept-routes"
 
 alias ocp="oc -P personal"
 alias ocw="oc -P work"
-alias ca="cursor-agent --fullscreen"
+alias ca="cursor-agent --yolo"
 alias wm='workmux'
 
 function y() {
