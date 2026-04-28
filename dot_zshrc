@@ -14,10 +14,14 @@ export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
 alias au="antidote update"
-alias nvu="yay -S neovim-nightly --answerclean None --answerdiff None --answeredit None --answerupgrade None --noconfirm"
-alias uvu="uv tool upgrade --all"
-alias tu="tmux-preview-update"
+alias gou="bash <(curl -sL https://git.io/go-installer)"
 alias piu="volta install @mariozechner/pi-coding-agent"
+alias uvu="uv tool upgrade --all"
+
+function rcu() {
+  rustup update
+  cargo install-update --all
+}
 
 alias cd="z"
 alias cm="chezmoi"
@@ -81,11 +85,14 @@ function y() {
 }
 
 F=~/.private.zsh; [ -f $F ] && . $F
+F=~/.linux.zsh; [ -f $F ] && . $F
+F=~/.mac.zsh; [ -f $F ] && . $F
 F=~/.greenlight.zsh; [ -f $F ] && . $F
 F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
+F=~/.go.zsh; [ -f $F ] && . $F
 
 eval "$(zoxide init zsh)"
 eval "$(op completion zsh)"; compdef _op op
