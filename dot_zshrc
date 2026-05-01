@@ -92,6 +92,7 @@ F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
+F=~/.cargo/env; [ -f $F ] && . $F
 F=~/.go.zsh; [ -f $F ] && . $F
 
 eval "$(zoxide init zsh)"
