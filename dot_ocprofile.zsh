@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 function oc() {
   local profile=""
   local args=()

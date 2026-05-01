@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 VIMME="$HOME/dev/vimme"
 
 abbrev-alias -c cdv="cd $VIMME"

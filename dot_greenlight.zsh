@@ -1,3 +1,5 @@
+#!/usr/bin/env zsh
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 
