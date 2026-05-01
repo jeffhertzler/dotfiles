@@ -4,6 +4,7 @@
   "autoupdate": true,
   "snapshot": false,
   "share": "disabled",
+  "lsp": false,
   "mcp": {},
   "permission": {
     "external_directory": {

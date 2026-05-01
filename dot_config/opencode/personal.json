@@ -3,6 +3,7 @@
   "model": "openai/gpt-5.4",
   "autoupdate": true,
   "snapshot": false,
+  "lsp": false,
   "mcp": {},
   "permission": {
     "external_directory": {
