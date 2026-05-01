@@ -43,9 +43,21 @@ local function matches_process(cmd)
   return false
 end
 
+local function is_real_file_buffer(buf)
+  return buf ~= state.prompt_buffer and vim.bo[buf].buftype == "" and vim.api.nvim_buf_get_name(buf) ~= ""
+end
+
+local function relative_buf_name(buf)
+  local path = vim.api.nvim_buf_get_name(buf)
+  if path == "" then
+    return ""
+  end
+  return vim.fn.fnamemodify(path, ":~:.")
+end
+
 local function target_buf()
   local current = vim.api.nvim_get_current_buf()
-  if current ~= state.prompt_buffer and vim.bo[current].buftype == "" and vim.api.nvim_buf_get_name(current) ~= "" then
+  if is_real_file_buffer(current) then
     return current
   end
 
@@ -53,7 +65,7 @@ local function target_buf()
   local latest_lastused = -1
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     local buf = vim.api.nvim_win_get_buf(win)
-    if buf ~= state.prompt_buffer and vim.bo[buf].buftype == "" and vim.api.nvim_buf_get_name(buf) ~= "" then
+    if is_real_file_buffer(buf) then
       local info = vim.fn.getbufinfo(buf)[1]
       local lastused = info and info.lastused or 0
       if lastused > latest_lastused then
@@ -67,11 +79,7 @@ local function target_buf()
 end
 
 local function current_file(buf)
-  local path = vim.api.nvim_buf_get_name(buf or target_buf())
-  if path == "" then
-    return ""
-  end
-  return vim.fn.fnamemodify(path, ":~:.")
+  return relative_buf_name(buf or target_buf())
 end
 
 local function visual_selection_opts()
@@ -116,16 +124,10 @@ local function build_file_context(opts)
     local current = current_file()
 
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buflisted then
+      if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buflisted and is_real_file_buffer(buf) then
         local name = vim.api.nvim_buf_get_name(buf)
-        local relative = vim.fn.fnamemodify(name, ":~:.")
-        if
-          relative ~= ""
-          and vim.bo[buf].buftype == ""
-          and vim.fn.filereadable(name) == 1
-          and not relative:match("^term://")
-          and not relative:match("^%[")
-        then
+        local relative = relative_buf_name(buf)
+        if vim.fn.filereadable(name) == 1 and not relative:match("^term://") and not relative:match("^%[") then
           if relative == current and opts.range == 2 then
             table.insert(buffers, format_file_context(relative, opts))
           else
@@ -173,9 +175,8 @@ local function build_diagnostics_context(opts)
 
   local grouped = {}
   for _, item in ipairs(diagnostics) do
-    local name = vim.api.nvim_buf_get_name(item.bufnr)
-    local relative = vim.fn.fnamemodify(name, ":~:.")
-    if relative ~= "" and vim.bo[item.bufnr].buftype == "" and item.bufnr ~= state.prompt_buffer then
+    local relative = relative_buf_name(item.bufnr)
+    if relative ~= "" and is_real_file_buffer(item.bufnr) then
       grouped[relative] = grouped[relative] or {}
       table.insert(grouped[relative], item)
     end
@@ -234,6 +235,16 @@ local function copy_to_clipboard(message)
   vim.fn.setreg("+", message)
 end
 
+local function tmux_send_keys(target, ...)
+  local cmd = { "tmux", "send-keys", "-t", target }
+  for i = 1, select("#", ...) do
+    local arg = select(i, ...)
+    table.insert(cmd, arg)
+  end
+  vim.fn.system(cmd)
+  return vim.v.shell_error == 0
+end
+
 local function send_message_to_tmux(message, opts)
   opts = opts or {}
   local submit = opts.submit == true
@@ -259,16 +270,20 @@ local function send_message_to_tmux(message, opts)
   file:write(message)
   file:close()
 
-  local cmd = string.format(
-    "tmux load-buffer %s \\; paste-buffer -p -t %s \\; delete-buffer%s",
+  local paste_cmd = string.format(
+    "tmux load-buffer %s \\; paste-buffer -p -t %s \\; delete-buffer",
     vim.fn.shellescape(temp_file),
-    vim.fn.shellescape(target),
-    submit and (" \\; send-keys -t " .. vim.fn.shellescape(target) .. " Enter") or ""
+    vim.fn.shellescape(target)
   )
-  vim.fn.system(cmd)
+  vim.fn.system(paste_cmd)
   vim.fn.delete(temp_file)
 
-  if vim.v.shell_error ~= 0 then
+  local ok = vim.v.shell_error == 0
+  if ok and submit then
+    ok = tmux_send_keys(target, "Enter")
+  end
+
+  if not ok then
     copy_to_clipboard(message)
     vim.notify("failed to send to " .. target .. ", copied to clipboard", vim.log.levels.WARN)
     return
@@ -279,7 +294,7 @@ local function send_message_to_tmux(message, opts)
     return
   end
 
-  vim.fn.system("tmux select-pane -t " .. vim.fn.shellescape(target))
+  vim.fn.system({ "tmux", "select-pane", "-t", target })
 end
 
 local function clear_prompt_state()
