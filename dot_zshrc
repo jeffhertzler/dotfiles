@@ -15,7 +15,7 @@ export GIT_EDITOR="nvim"
 
 alias au="antidote update"
 alias gou="bash <(curl -sL https://git.io/go-installer)"
-alias piu="volta install @mariozechner/pi-coding-agent"
+alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
 function rcu() {
