@@ -3,10 +3,19 @@
 export BUN_INSTALL="$HOME/.bun"
 export VOLTA_HOME="$HOME/.volta"
 export COMPOSER_BIN="$HOME/.config/composer/vendor/bin"
+export GOPATH="$HOME/go"
 
-export PATH="$VOLTA_HOME/bin:$COMPOSER_BIN:$PATH"
-export PATH="$HOME/.opencode/bin:$PATH"
-export PATH="$HOME/.local/bin:$PATH"
-export PATH="$BUN_INSTALL/bin:$PATH"
-F=~/.cargo/env; [ -f $F ] && . $F
-F=~/.go.zsh; [ -f $F ] && . $F
+path=(
+  "$HOME/.local/bin"
+  "$HOME/.opencode/bin"
+  "$VOLTA_HOME/bin"
+  "$BUN_INSTALL/bin"
+  "$HOME/.cargo/bin"
+  "$HOME/.go/bin"
+  "$GOPATH/bin"
+  "$COMPOSER_BIN"
+  $path
+)
+
+typeset -U path PATH
+export PATH

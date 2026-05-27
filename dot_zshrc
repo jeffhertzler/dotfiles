@@ -14,7 +14,7 @@ export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
 alias au="antidote update"
-alias gou="bash <(curl -sL https://git.io/go-installer)"
+alias gou="SHELL_PROFILE=/tmp/go-installer-profile bash <(curl -sL https://git.io/go-installer)"
 alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
@@ -92,8 +92,6 @@ F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
-F=~/.cargo/env; [ -f $F ] && . $F
-F=~/.go.zsh; [ -f $F ] && . $F
 
 eval "$(zoxide init zsh)"
 eval "$(op completion zsh)"; compdef _op op
