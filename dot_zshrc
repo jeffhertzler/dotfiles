@@ -93,11 +93,11 @@ F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
 
-eval "$(zoxide init zsh)"
 eval "$(op completion zsh)"; compdef _op op
 eval "$(workmux completions zsh)"
 type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
 
 function zvm_after_init() {
   eval "$(atuin init zsh)"
+  eval "$(zoxide init zsh)"
 }
