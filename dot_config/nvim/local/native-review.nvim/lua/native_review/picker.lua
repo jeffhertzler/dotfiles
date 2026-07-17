@@ -86,6 +86,27 @@ function M.open(tabpage)
       title = "Review annotations",
       items = items,
       format = "text",
+      focus = "list",
+      layout = { preset = "select", preview = false },
+      actions = {
+        remove_annotation = function(picker, item)
+          picker:close()
+          if item and require("native_review").remove(item.annotation.id) then
+            vim.schedule(function()
+              if #state.list() > 0 then
+                M.open(tabpage)
+              end
+            end)
+          end
+        end,
+      },
+      win = {
+        list = {
+          keys = {
+            d = { "remove_annotation", desc = "Remove annotation" },
+          },
+        },
+      },
       confirm = function(picker, item)
         picker:close()
         if item then

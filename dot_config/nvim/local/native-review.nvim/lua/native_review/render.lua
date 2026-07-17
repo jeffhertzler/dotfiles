@@ -232,6 +232,22 @@ function M.refresh(tabpage)
   M.refresh_buffer(modified_buf)
 end
 
+function M.remove(annotation)
+  local runtime = annotation and annotation._runtime
+  local bufnr = runtime and runtime.bufnr or nil
+  if runtime and valid_buffer(bufnr) then
+    pcall(vim.api.nvim_buf_del_extmark, bufnr, anchor_ns, runtime.mark_id)
+  end
+  if annotation then
+    annotation._runtime = nil
+  end
+  if valid_buffer(bufnr) then
+    M.refresh_buffer(bufnr)
+  else
+    M.refresh()
+  end
+end
+
 function M.clear_all()
   for _, annotation in ipairs(state.list()) do
     local runtime = annotation._runtime

@@ -22,6 +22,13 @@ return {
         desc = "Annotate selection",
       },
       {
+        "<leader>rd",
+        function()
+          require("native_review").remove()
+        end,
+        desc = "Remove review annotation",
+      },
+      {
         "<leader>rl",
         function()
           require("native_review").list()

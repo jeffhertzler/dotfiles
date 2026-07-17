@@ -403,7 +403,8 @@ optional CodeDiff adapter.
 - [x] Preserve annotations while toggling layouts.
 - [ ] Verify annotations across multi-file CodeDiff selection/refresh.
 - [x] Keep the modified buffer editable throughout.
-- [x] Add a Snacks picker listing annotations.
+- [x] Add a compact Snacks picker for navigation and removal.
+- [x] Remove annotations from the picker, cursor, or public API.
 
 Exit criterion: regular-buffer annotations work independently, and human
 annotations on old/working/new diff sides survive layout toggles and ordinary

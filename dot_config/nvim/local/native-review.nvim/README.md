@@ -21,13 +21,15 @@ navigating working-file annotations does not require a diff view.
 
 ## Usage
 
-| Mapping/command                    | Action                                  |
-| ---------------------------------- | --------------------------------------- |
-| `<leader>ra`                       | Annotate the current line               |
-| visual `<leader>ra`                | Annotate the selected line/column range |
-| `<leader>rl` / `:NativeReviewList` | List annotations                        |
-| `:NativeReviewAdd`                 | Annotate the current line               |
-| `:NativeReviewClear`               | Clear all in-memory annotations         |
+| Mapping/command                             | Action                                  |
+| ------------------------------------------- | --------------------------------------- |
+| `<leader>ra`                                | Annotate the current line               |
+| visual `<leader>ra`                         | Annotate the selected line/column range |
+| `<leader>rd` / `:NativeReviewRemove`        | Remove the annotation at the cursor     |
+| `<leader>rl` / `:NativeReviewList`          | List annotations; `d` removes one       |
+| `:NativeReviewAdd`                          | Annotate the current line               |
+| `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
+| `:NativeReviewClear`                        | Clear all in-memory annotations         |
 
 ## Spike limitations
 
@@ -36,5 +38,5 @@ navigating working-file annotations does not require a diff view.
 - Old-side notes are preserved but not yet rendered in inline layout.
 - Blockwise selections are not implemented.
 - Diff-side picker navigation expects the relevant CodeDiff file to be selected.
-- Editing, deleting, resolving, agent import/export, and durable reanchoring are
-  later phases.
+- Editing, resolving, agent import/export, and durable reanchoring are later
+  phases.

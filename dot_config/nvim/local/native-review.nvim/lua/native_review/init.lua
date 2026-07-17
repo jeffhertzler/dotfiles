@@ -57,6 +57,62 @@ function M.list()
   require("native_review.picker").open()
 end
 
+local function annotation_at_cursor()
+  local bufnr = vim.api.nvim_get_current_buf()
+  render.refresh_buffer(bufnr)
+  local context = target.context_for_buffer(bufnr)
+  if not context then
+    return nil
+  end
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local line = cursor[1]
+  local column = cursor[2] + 1
+
+  local annotations = state.list()
+  for index = #annotations, 1, -1 do
+    local annotation = annotations[index]
+    local item = annotation.target
+    local same_revision = item.side == "working" or annotation.revision.selected_expression == context.selected_revision
+    if (annotation.root or "") == (context.root or "")
+      and item.file == context.path
+      and item.side == context.side
+      and same_revision
+      and line >= item.start_line
+      and line <= item.end_line then
+      local in_columns = true
+      if item.start_col then
+        if line == item.start_line and column < item.start_col then
+          in_columns = false
+        end
+        if line == item.end_line and column > item.end_col then
+          in_columns = false
+        end
+      end
+      if in_columns then
+        return annotation
+      end
+    end
+  end
+end
+
+function M.remove(id)
+  local annotation
+  if id then
+    annotation = state.remove(id)
+  else
+    local current = annotation_at_cursor()
+    annotation = current and state.remove(current.id) or nil
+  end
+  if not annotation then
+    notify("No annotation found", vim.log.levels.WARN)
+    return false
+  end
+
+  render.remove(annotation)
+  notify("Removed annotation " .. annotation.id)
+  return true
+end
+
 function M.clear()
   render.clear_all()
   state.clear()
@@ -123,6 +179,9 @@ function M.setup()
     M.add()
   end, { desc = "Annotate the current CodeDiff line" })
   vim.api.nvim_create_user_command("NativeReviewList", M.list, { desc = "List review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewRemove", function(command)
+    M.remove(command.args ~= "" and command.args or nil)
+  end, { desc = "Remove the annotation at the cursor or by ID", nargs = "?" })
   vim.api.nvim_create_user_command("NativeReviewClear", M.clear, { desc = "Clear review annotations" })
 end
 
