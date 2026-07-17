@@ -53,6 +53,25 @@ function M.send_diagnostics(opts)
   dispatch(context.build_diagnostics, opts or {})
 end
 
+function M.send_text(message, opts, done)
+  opts = opts or {}
+  if type(message) ~= "string" or vim.trim(message) == "" then
+    vim.notify("no message to send", vim.log.levels.WARN)
+    if done then
+      done(false)
+    end
+    return false
+  end
+
+  if opts.interactive_prompt then
+    prompt.open(message)
+    return true
+  end
+
+  transport.send(message, opts, done)
+  return true
+end
+
 function M.resume_prompt()
   prompt.resume()
 end

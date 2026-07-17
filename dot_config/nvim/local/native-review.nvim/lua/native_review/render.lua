@@ -232,6 +232,15 @@ function M.refresh(tabpage)
   M.refresh_buffer(modified_buf)
 end
 
+function M.refresh_annotation(annotation)
+  local runtime = annotation and annotation._runtime
+  if runtime and valid_buffer(runtime.bufnr) then
+    M.refresh_buffer(runtime.bufnr)
+  else
+    M.refresh()
+  end
+end
+
 function M.remove(annotation)
   local runtime = annotation and annotation._runtime
   local bufnr = runtime and runtime.bufnr or nil

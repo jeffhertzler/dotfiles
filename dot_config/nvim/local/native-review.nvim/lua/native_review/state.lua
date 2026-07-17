@@ -14,6 +14,14 @@ function M.list()
   return annotations
 end
 
+function M.get(id)
+  for _, annotation in ipairs(annotations) do
+    if annotation.id == id then
+      return annotation
+    end
+  end
+end
+
 function M.remove(id)
   for index, annotation in ipairs(annotations) do
     if annotation.id == id then

@@ -29,11 +29,25 @@ return {
         desc = "Remove review annotation",
       },
       {
+        "<leader>re",
+        function()
+          require("native_review").edit()
+        end,
+        desc = "Edit review annotation",
+      },
+      {
         "<leader>rl",
         function()
           require("native_review").list()
         end,
         desc = "List review annotations",
+      },
+      {
+        "<leader>rs",
+        function()
+          require("native_review").send()
+        end,
+        desc = "Send review annotations",
       },
     },
   },

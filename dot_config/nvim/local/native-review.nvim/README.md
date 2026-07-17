@@ -26,8 +26,13 @@ navigating working-file annotations does not require a diff view.
 | `<leader>ra`                                | Annotate the current line               |
 | visual `<leader>ra`                         | Annotate the selected line/column range |
 | `<leader>rd` / `:NativeReviewRemove`        | Remove the annotation at the cursor     |
-| `<leader>rl` / `:NativeReviewList`          | List annotations; `d` removes one       |
+| `<leader>re` / `:NativeReviewEdit`          | Edit the annotation at the cursor       |
+| `<leader>rl` / `:NativeReviewList`          | List annotations; `e` edits, `d` removes |
+| `<leader>rs` / `:NativeReviewSend`          | Stage all open notes in the selected agent |
+| `:NativeReviewSend!`                        | Send, submit, and keep focus in Neovim  |
+| `:NativeReviewCompose`                      | Open Agent Prompt with review context   |
 | `:NativeReviewAdd`                          | Annotate the current line               |
+| `:NativeReviewEdit review-3`                | Edit an annotation by ID                |
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
 | `:NativeReviewClear`                        | Clear all in-memory annotations         |
 
@@ -38,5 +43,4 @@ navigating working-file annotations does not require a diff view.
 - Old-side notes are preserved but not yet rendered in inline layout.
 - Blockwise selections are not implemented.
 - Diff-side picker navigation expects the relevant CodeDiff file to be selected.
-- Editing, resolving, agent import/export, and durable reanchoring are later
-  phases.
+- Resolving, agent annotation import, and durable reanchoring are later phases.

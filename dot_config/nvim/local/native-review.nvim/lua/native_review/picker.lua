@@ -89,6 +89,12 @@ function M.open(tabpage)
       focus = "list",
       layout = { preset = "select", preview = false },
       actions = {
+        edit_annotation = function(picker, item)
+          picker:close()
+          if item then
+            require("native_review").edit(item.annotation.id)
+          end
+        end,
         remove_annotation = function(picker, item)
           picker:close()
           if item and require("native_review").remove(item.annotation.id) then
@@ -104,6 +110,7 @@ function M.open(tabpage)
         list = {
           keys = {
             d = { "remove_annotation", desc = "Remove annotation" },
+            e = { "edit_annotation", desc = "Edit annotation" },
           },
         },
       },

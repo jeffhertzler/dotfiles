@@ -15,6 +15,20 @@ Configuration and keymaps live in
 The proposed native, bidirectional diff-review architecture and implementation
 phases are documented in [`REVIEW_PLAN.md`](./REVIEW_PLAN.md).
 
+## Lua API
+
+```lua
+require("agent_bridge").send_text(message, {
+  submit = false,
+  switch_to_target = true,
+  interactive_prompt = false,
+}, callback)
+```
+
+`send_text` is the transport boundary for other local plugins. It uses the same
+Herdr/tmux target resolution, pinned target, clipboard fallback, and optional
+submission behavior as the built-in context actions.
+
 ## Commands
 
 - `:AgentBridge[Interactive]`

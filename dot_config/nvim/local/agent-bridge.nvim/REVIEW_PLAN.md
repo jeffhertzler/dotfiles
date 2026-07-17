@@ -405,6 +405,7 @@ optional CodeDiff adapter.
 - [x] Keep the modified buffer editable throughout.
 - [x] Add a compact Snacks picker for navigation and removal.
 - [x] Remove annotations from the picker, cursor, or public API.
+- [x] Edit annotations from the picker, cursor, or public API.
 
 Exit criterion: regular-buffer annotations work independently, and human
 annotations on old/working/new diff sides survive layout toggles and ordinary
@@ -412,9 +413,9 @@ edits without disrupting CodeDiff or normal Neovim behavior.
 
 ### Phase 2: bridge MVP
 
-- [ ] Expose a public arbitrary-text send API from agent-bridge.
-- [ ] Serialize open annotations into a structured payload.
-- [ ] Send review feedback through existing Herdr/tmux target selection.
+- [x] Expose a public arbitrary-text send API from agent-bridge.
+- [x] Serialize open annotations into a structured payload.
+- [x] Send review feedback through existing Herdr/tmux target selection.
 - [ ] Add RPC `review.list` and batch `review.apply` operations.
 - [ ] Render imported agent annotations with author distinction.
 - [ ] Add resolve/remove/update operations.

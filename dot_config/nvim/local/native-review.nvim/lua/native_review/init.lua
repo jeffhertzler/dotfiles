@@ -57,6 +57,31 @@ function M.list()
   require("native_review.picker").open()
 end
 
+function M.payload(opts)
+  return require("native_review.export").build(state.list(), opts)
+end
+
+function M.send(opts)
+  opts = opts or {}
+  local payload, err = M.payload(opts)
+  if not payload then
+    notify(err, vim.log.levels.WARN)
+    return false
+  end
+
+  local ok, bridge = pcall(require, "agent_bridge")
+  if not ok or type(bridge.send_text) ~= "function" then
+    notify("agent-bridge.nvim does not provide send_text", vim.log.levels.ERROR)
+    return false
+  end
+
+  return bridge.send_text(payload, {
+    interactive_prompt = opts.interactive_prompt == true,
+    submit = opts.submit == true,
+    switch_to_target = opts.switch_to_target,
+  }, opts.done)
+end
+
 local function annotation_at_cursor()
   local bufnr = vim.api.nvim_get_current_buf()
   render.refresh_buffer(bufnr)
@@ -110,6 +135,47 @@ function M.remove(id)
 
   render.remove(annotation)
   notify("Removed annotation " .. annotation.id)
+  return true
+end
+
+local function update_annotation(annotation, body, on_done)
+  body = vim.trim(body or "")
+  if body == "" then
+    notify("Annotation text cannot be empty", vim.log.levels.WARN)
+    return false
+  end
+
+  annotation.body = body
+  annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  render.refresh_annotation(annotation)
+  notify("Updated annotation " .. annotation.id)
+  if on_done then
+    on_done(annotation)
+  end
+  return annotation
+end
+
+function M.edit(id, opts)
+  if type(id) == "table" then
+    opts = id
+    id = nil
+  end
+  opts = opts or {}
+  local annotation = id and state.get(id) or annotation_at_cursor()
+  if not annotation then
+    notify("No annotation found", vim.log.levels.WARN)
+    return false
+  end
+
+  if opts.body ~= nil then
+    return update_annotation(annotation, opts.body, opts.on_done)
+  end
+
+  vim.ui.input({ prompt = "Edit annotation: ", default = annotation.body }, function(body)
+    if body then
+      update_annotation(annotation, body, opts.on_done)
+    end
+  end)
   return true
 end
 
@@ -179,9 +245,18 @@ function M.setup()
     M.add()
   end, { desc = "Annotate the current CodeDiff line" })
   vim.api.nvim_create_user_command("NativeReviewList", M.list, { desc = "List review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewSend", function(command)
+    M.send({ submit = command.bang, switch_to_target = not command.bang })
+  end, { desc = "Send open review annotations to an agent", bang = true })
+  vim.api.nvim_create_user_command("NativeReviewCompose", function()
+    M.send({ interactive_prompt = true })
+  end, { desc = "Compose an agent message with review annotations" })
   vim.api.nvim_create_user_command("NativeReviewRemove", function(command)
     M.remove(command.args ~= "" and command.args or nil)
   end, { desc = "Remove the annotation at the cursor or by ID", nargs = "?" })
+  vim.api.nvim_create_user_command("NativeReviewEdit", function(command)
+    M.edit(command.args ~= "" and command.args or nil)
+  end, { desc = "Edit the annotation at the cursor or by ID", nargs = "?" })
   vim.api.nvim_create_user_command("NativeReviewClear", M.clear, { desc = "Clear review annotations" })
 end
 
