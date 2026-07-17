@@ -16,6 +16,8 @@ export GG_NOTIFICATION_SERVICE="$GG/services/notification"
 export POLICY_DIR="$GG/authz/resources" # for repo svc to know where authz is
 export LOGBACK_APPENDER="pretty"
 
+export PUPPETEER_SKIP_DOWNLOAD=1
+
 abbrev-alias -c cdgg="cd $GG"
 
 gggm() {
