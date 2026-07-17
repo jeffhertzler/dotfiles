@@ -12,6 +12,9 @@ context to coding agents.
 Configuration and keymaps live in
 `~/.config/nvim/lua/plugins/agent-bridge.lua`.
 
+The proposed native, bidirectional diff-review architecture and implementation
+phases are documented in [`REVIEW_PLAN.md`](./REVIEW_PLAN.md).
+
 ## Commands
 
 - `:AgentBridge[Interactive]`
