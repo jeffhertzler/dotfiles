@@ -2,7 +2,6 @@
 -- Default keymaps that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
 -- Add any additional keymaps here
 
-local agent_bridge = require("config.agent_bridge")
 local keymap_helpers = require("config.keymap_helpers")
 local LazyRoot = require("lazyvim.util.root")
 
@@ -52,24 +51,6 @@ end, { desc = "Open Root .env" })
 vim.keymap.set("n", "<leader>fh", function()
   Snacks.image.hover()
 end, { desc = "Image Hover" })
-
-vim.keymap.set("n", "<leader>oa", function()
-  agent_bridge.send_file({ interactive_prompt = true })
-end, { desc = "Compose to agent" })
-vim.keymap.set("x", "<leader>oa", function()
-  agent_bridge.compose_visual()
-end, { desc = "Compose to agent" })
-
-vim.keymap.set("n", "<leader>oA", function()
-  agent_bridge.send_file({})
-end, { desc = "Add context to agent" })
-vim.keymap.set("x", "<leader>oA", function()
-  agent_bridge.send_visual()
-end, { desc = "Add context to agent" })
-
-vim.keymap.set("n", "<leader>or", function()
-  agent_bridge.resume_prompt()
-end, { desc = "Resume agent prompt" })
 
 vim.keymap.set("n", "<leader>ghj", function()
   require("gitsigns").nav_hunk("next")

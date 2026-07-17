@@ -7,13 +7,3 @@
 --
 
 require("config.lazy")
-require("config.agent_bridge").setup({
-  tmux = {
-    process_name = { "pi", "opencode", "cursor-agent", "claude" },
-  },
-  prompt = {
-    width_ratio = 0.5,
-    height_ratio = 0.28,
-    title = " Compose to Agent ",
-  },
-})

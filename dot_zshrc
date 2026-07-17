@@ -18,12 +18,19 @@ alias gou="SHELL_PROFILE=/tmp/go-installer-profile bash <(curl -sL https://git.i
 alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
+alias h="herdr"
+alias opencode="TERM=tmux-256color TERM_PROGRAM=tmux opencode"
+alias rmrf="rm -rf"
+
 function rcu() {
   rustup update
   cargo install-update --all
 }
 
-alias cd="z"
+if [[ "$CLAUDECODE" != "1" ]]; then
+  alias cd="z"
+fi
+
 alias cm="chezmoi"
 
 alias cat="bat"
@@ -95,9 +102,13 @@ F=~/.bun/_bun; [ -f $F ] && . $F
 
 eval "$(op completion zsh)"; compdef _op op
 eval "$(workmux completions zsh)"
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
 type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
 
 function zvm_after_init() {
   eval "$(atuin init zsh)"
-  eval "$(zoxide init zsh)"
+  if [[ "$CLAUDECODE" != "1" ]]; then
+    _ZO_DOCTOR=0
+    eval "$(zoxide init zsh)"
+  fi
 }

@@ -3,14 +3,51 @@
 mode=$1
 shift
 
-native_nvim=0
+log_file="${XDG_RUNTIME_DIR:-/tmp}/lazygit-nvim.log"
 
-if [ -n "$NVIM" ]; then
+log() {
+  printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$log_file"
+}
+
+native_nvim=0
+server=
+target_kind=none
+
+if [ -n "${NVIM:-}" ]; then
   server=$NVIM
   native_nvim=1
+  target_kind=native
 else
-  server=$(~/.local/bin/tmux-nvim-server 2>/dev/null)
+  herdr_pane=${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}
+  if [ -n "$herdr_pane" ]; then
+    if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+      registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
+    else
+      registry_dir=/tmp/herdr-nvim-$(id -u)
+    fi
+    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.:-' '_')
+    registry_file=$registry_dir/$safe_pane.server
+
+    if [ -r "$registry_file" ]; then
+      IFS= read -r server <"$registry_file" || server=
+      if [ -n "$server" ] && [ -S "$server" ]; then
+        target_kind=herdr
+      else
+        server=
+        rm -f "$registry_file"
+      fi
+    fi
+  fi
+
+  if [ -z "$server" ]; then
+    server=$(~/.local/bin/tmux-nvim-server 2>/dev/null)
+    if [ -n "$server" ]; then
+      target_kind=tmux
+    fi
+  fi
 fi
+
+log "mode=$mode server=${server:-<none>} target_kind=$target_kind pane=${TMUX_PANE:-<none>} popup=${TMUX_POPUP_PANE:-<none>} tmux_target=${TMUX_NVM_TARGET:-<none>} herdr_target=${HERDR_ACTIVE_PANE_ID:-<none>} args=$*"
 
 if [ -z "$server" ]; then
   case "$mode" in
@@ -38,16 +75,42 @@ if [ "$native_nvim" -eq 1 ]; then
     nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $1<cr>"
     ;;
   *)
+    log "unknown native mode=$mode"
     exit 1
     ;;
   esac
   exit $?
 fi
 
-close_tmux_popup() {
-  if [ -n "$TMUX_NVM_TARGET" ]; then
-    tmux run-shell -b "sleep 0.1; tmux display-popup -C >/dev/null 2>&1 || true" >/dev/null 2>&1
-  fi
+close_editor_popup() {
+  case "$target_kind" in
+  tmux)
+    log "close tmux popup target=${TMUX_NVM_TARGET:-<none>}"
+    if [ -n "${TMUX_NVM_TARGET:-}" ]; then
+      tmux run-shell -b "sleep 0.1; tmux display-popup -C >/dev/null 2>&1 || true" >/dev/null 2>&1
+    fi
+    ;;
+  herdr)
+    log "close Herdr popup target=${HERDR_ACTIVE_PANE_ID:-<none>}"
+    if [ -n "${HERDR_SOCKET_PATH:-}" ] && command -v python3 >/dev/null 2>&1; then
+      python3 - <<'PY' >/dev/null 2>&1
+import json
+import os
+import socket
+
+request = {
+    "id": "lazygit-editor-close",
+    "method": "popup.close",
+    "params": {},
+}
+with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+    client.settimeout(1)
+    client.connect(os.environ["HERDR_SOCKET_PATH"])
+    client.sendall((json.dumps(request) + "\n").encode())
+PY
+    fi
+    ;;
+  esac
 }
 
 case "$mode" in
@@ -55,12 +118,14 @@ edit)
   nvim --server "$server" --remote "$1"
   ;;
 line | wait)
-  nvim --server "$server" "+$1" --remote "$2"
+  nvim --server "$server" --remote "$2" &&
+    nvim --server "$server" --remote-send "<cmd>$1<cr>"
   ;;
 dir)
   nvim --server "$server" --remote "$1"
   ;;
 *)
+  log "unknown mode=$mode"
   exit 1
   ;;
 esac
@@ -68,7 +133,7 @@ esac
 status=$?
 
 if [ "$status" -eq 0 ]; then
-  close_tmux_popup
+  close_editor_popup
 fi
 
 exit "$status"

@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+set -u
+
+clear_screen() {
+  printf '\033[2J\033[H'
+}
+
+show_main_menu() {
+  clear_screen
+  cat <<'EOF'
+ Herdr popups
+
+   d   lazydocker
+   j   lazyjira
+   t   btop
+   w   workmux dashboard
+   y   yazi
+   g   git / GitHub…
+
+   /   fuzzy find all commands
+   q   close
+EOF
+}
+
+show_git_menu() {
+  clear_screen
+  cat <<'EOF'
+ Herdr popups › git / GitHub
+
+   d   gh dash
+   g   lazygit
+   n   gh news
+
+   /   fuzzy find all commands
+   q   close
+EOF
+}
+
+fuzzy_pick() {
+  local selection
+  selection=$(
+    printf '%s\n' \
+      $'d\tDocker · lazydocker' \
+      $'j\tJira · lazyjira' \
+      $'t\tProcesses · btop' \
+      $'w\tWorkmux dashboard' \
+      $'y\tFiles · yazi' \
+      $'gd\tGitHub dashboard · gh dash' \
+      $'gg\tGit · lazygit' \
+      $'gn\tGitHub notifications · gh news' |
+      fzf \
+        --delimiter=$'\t' \
+        --with-nth=1,2 \
+        --prompt='Popup › ' \
+        --header='Type a chord or command name' \
+        --layout=reverse \
+        --border
+  ) || return 1
+
+  printf '%s' "${selection%%$'\t'*}"
+}
+
+run_choice() {
+  clear_screen
+  case "$1" in
+    d)  exec lazydocker ;;
+    j)  exec lazyjira ;;
+    t)  exec btop ;;
+    w)  exec workmux dashboard ;;
+    y)  exec yazi ;;
+    gd) exec gh dash ;;
+    gg) exec lazygit ;;
+    gn) exec gh news ;;
+    *)  exit 0 ;;
+  esac
+}
+
+show_main_menu
+IFS= read -rsn1 key || exit 0
+
+case "$key" in
+  g)
+    show_git_menu
+    IFS= read -rsn1 subkey || exit 0
+    case "$subkey" in
+      d|g|n) run_choice "g$subkey" ;;
+      /) choice=$(fuzzy_pick) && run_choice "$choice" ;;
+      *) exit 0 ;;
+    esac
+    ;;
+  d|j|t|w|y)
+    run_choice "$key"
+    ;;
+  /)
+    choice=$(fuzzy_pick) && run_choice "$choice"
+    ;;
+  *)
+    exit 0
+    ;;
+esac

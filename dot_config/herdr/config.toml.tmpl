@@ -1,0 +1,120 @@
+onboarding = false
+
+[keys]
+prefix = "ctrl+a"
+previous_tab = "prefix+h"
+next_tab = "prefix+l"
+focus_pane_left = ""
+focus_pane_right = ""
+split_vertical = "prefix+alt+l"
+split_horizontal = "prefix+alt+j"
+
+[[keys.command]]
+key = "prefix+p"
+type = "popup"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-popup-picker"
+description = "open popup launcher"
+width = "90%"
+height = "90%"
+
+[[keys.command]]
+key = "prefix+shift+g"
+type = "plugin_action"
+command = "worktrunk.open"
+description = "worktree: switch / create from default branch"
+
+[[keys.command]]
+key = "prefix+ctrl+g"
+type = "plugin_action"
+command = "worktrunk.open-current"
+description = "worktree: switch / create from current branch"
+
+[[keys.command]]
+key = "prefix+ctrl+x"
+type = "plugin_action"
+command = "worktrunk.remove"
+description = "worktree: remove with hooks"
+
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+description = "navigate left (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+description = "navigate down (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+description = "navigate up (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+description = "navigate right (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+h"
+type = "plugin_action"
+command = "herdr-splits.resize-left"
+description = "resize left (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+j"
+type = "plugin_action"
+command = "herdr-splits.resize-down"
+description = "resize down (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+k"
+type = "plugin_action"
+command = "herdr-splits.resize-up"
+description = "resize up (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+l"
+type = "plugin_action"
+command = "herdr-splits.resize-right"
+description = "resize right (neovim/herdr)"
+
+[[keys.command]]
+key = "prefix+alt+h"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs local left"
+description = "split pane left"
+
+[[keys.command]]
+key = "prefix+alt+k"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs local up"
+description = "split pane up"
+
+[[keys.command]]
+key = "prefix+alt+shift+h"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full left"
+description = "split full-height pane left"
+
+[[keys.command]]
+key = "prefix+alt+shift+j"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full down"
+description = "split full-width pane down"
+
+[[keys.command]]
+key = "prefix+alt+shift+k"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full up"
+description = "split full-width pane up"
+
+[[keys.command]]
+key = "prefix+alt+shift+l"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full right"
+description = "split full-height pane right"

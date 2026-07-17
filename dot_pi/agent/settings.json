@@ -1,0 +1,16 @@
+{
+  "lastChangelogVersion": "0.80.10",
+  "defaultProvider": "openai-codex-personal",
+  "defaultModel": "gpt-5.6-sol",
+  "defaultThinkingLevel": "high",
+  "hideThinkingBlock": false,
+  "theme": "catppuccin-tui-latte/catppuccin-tui-mocha",
+  "packages": [
+    {
+      "source": "npm:pi-catppuccin-tui",
+      "extensions": []
+    },
+    "npm:@sentixx/pi-info",
+    "npm:pi-mcp-adapter"
+  ]
+}
