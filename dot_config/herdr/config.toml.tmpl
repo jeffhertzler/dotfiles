@@ -2,10 +2,25 @@ onboarding = false
 
 [keys]
 prefix = "ctrl+a"
+previous_workspace = "prefix+k"
+next_workspace = "prefix+j"
+switch_workspace = "prefix+shift+1..9"
 previous_tab = "prefix+h"
 next_tab = "prefix+l"
 focus_pane_left = ""
+focus_pane_down = ""
+focus_pane_up = ""
 focus_pane_right = ""
+navigate_workspace_up = "k"
+navigate_workspace_down = "j"
+navigate_pane_left = "ctrl+h"
+navigate_pane_down = "ctrl+j"
+navigate_pane_up = "ctrl+k"
+navigate_pane_right = "ctrl+l"
+swap_pane_left = "prefix+shift+h"
+swap_pane_down = "prefix+shift+j"
+swap_pane_up = "prefix+shift+k"
+swap_pane_right = "prefix+shift+l"
 split_vertical = "prefix+alt+l"
 split_horizontal = "prefix+alt+j"
 
@@ -16,6 +31,30 @@ command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-popup-picker"
 description = "open popup launcher"
 width = "90%"
 height = "90%"
+
+[[keys.command]]
+key = "prefix+ctrl+h"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs tab left"
+description = "move tab left"
+
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs tab right"
+description = "move tab right"
+
+[[keys.command]]
+key = "prefix+ctrl+k"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs workspace up"
+description = "move workspace / worktree group up"
+
+[[keys.command]]
+key = "prefix+ctrl+j"
+type = "shell"
+command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs workspace down"
+description = "move workspace / worktree group down"
 
 [[keys.command]]
 key = "prefix+shift+g"
