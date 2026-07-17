@@ -10,7 +10,9 @@ Current setup:
 - `agent-bridge.nvim` sends file, selection, and diagnostic context to agents
   through Herdr or tmux.
 - Neovim publishes an RPC server address for both Herdr and tmux environments.
-- `codediff.nvim` is installed and is the preferred diff-rendering candidate.
+- `native-review.nvim` now contains a buffer-first, in-memory annotation spike.
+- `codediff.nvim` is installed as an optional diff-view adapter, not as a
+  requirement for creating or rendering annotations.
 - `review.nvim` was evaluated and removed. Its rendering and CodeDiff lifecycle
   code remain useful references, but its readonly mode, focus behavior, broad
   keymaps, and data model do not fit the desired workflow.
@@ -19,9 +21,10 @@ Current setup:
 
 ## Product definition
 
-Build a native, diff-aware Neovim annotation layer where:
+Build a native Neovim annotation layer where:
 
-- the modified side remains an ordinary editable Neovim buffer;
+- annotations work directly in ordinary editable file buffers;
+- diff views add revision and old/new-side context without owning the core;
 - deleted content may be rendered virtually without losing old-side identity;
 - annotations can target files, hunks, lines, or optional line/column ranges;
 - humans and coding agents can both create and manage annotations;
@@ -30,27 +33,23 @@ Build a native, diff-aware Neovim annotation layer where:
 - Git is supported first, but the model and UI are not Git-specific;
 - JJ and GitHub can be added through adapters without rewriting the review UI.
 
-The target is not a complete VCS client. VCS tools select a changeset, CodeDiff
-renders it, the review layer annotates it, and agent-bridge transports review
-requests.
+The annotation model, extmark anchoring, picker, and agent transport must work
+without a diff UI. CodeDiff enriches the same annotations with revision-aware
+old/new rendering when a diff is open.
 
 ```text
-Neogit / jj.nvim / Octo / direct command
-                  |
-                  v
-          changeset provider
-                  |
-                  v
-             CodeDiff
-                  |
-                  v
-       diff-aware review layer
-                  |
-                  v
-        agent-bridge + Neovim RPC
-                  |
-                  v
-          Pi / Claude / OpenCode
+ordinary file buffers -----------------------┐
+                                             v
+Neogit / jj.nvim / Octo -> changeset -> CodeDiff adapter
+                                             |
+                                             v
+                                  native review layer
+                                             |
+                                             v
+                                  agent-bridge + RPC
+                                             |
+                                             v
+                                  Pi / Claude / OpenCode
 ```
 
 ## UX principles
@@ -64,7 +63,7 @@ Neogit / jj.nvim / Octo / direct command
    - Do not override keys such as `i`, `d`, `e`, `q`, `f`, or `<Tab>`.
    - Start with one normal/visual annotation action.
    - Use a picker for list/edit/delete/resolve operations.
-   - Leave layout, hunk, and file navigation to CodeDiff where possible.
+   - Leave layout, hunk, and file navigation to whichever diff/VCS adapter is active.
 
 3. **No duplicate permanent sidebars**
    - Neogit, JJ tools, Octo, and CodeDiff can all provide file lists.
@@ -76,9 +75,17 @@ Neogit / jj.nvim / Octo / direct command
    - Human comments, agent comments, and eventual forge threads use one model.
    - Rendering and transport consume that model independently.
 
-## What CodeDiff owns
+## Buffer-first core
 
-Use CodeDiff for:
+The core owns annotations in regular file buffers using paths, optional
+revisions, content anchors, and extmarks. It must support add, render, navigate,
+edit, resolve, import, export, and persistence without loading CodeDiff. A
+working-file annotation should also appear on the matching working side when a
+diff adapter displays that same buffer.
+
+## CodeDiff adapter
+
+Use CodeDiff only for:
 
 - diff computation and alignment;
 - inline and side-by-side layouts;
@@ -88,14 +95,17 @@ Use CodeDiff for:
 - refreshing after file changes;
 - direct file and directory comparisons.
 
-Do not make the review layer depend on CodeDiff's Git explorer as its permanent
-source of repository state. CodeDiff should be replaceable through a renderer
-adapter if necessary.
+Do not make the review layer depend on CodeDiff's lifecycle, Git explorer, or
+repository state. The adapter translates CodeDiff buffers, revisions, diff
+ranges, layout changes, and virtual deleted lines into the core model. Removing
+CodeDiff must leave regular-buffer annotations fully functional.
 
 ## Core technical problem: old-side annotations
 
-New-side annotations can use ordinary extmarks in the modified buffer. Old-side
-annotations require a diff-aware anchor.
+Working-buffer annotations use ordinary extmarks and are the baseline. New-side
+virtual-revision annotations use the same mechanism when backed by a real
+buffer. Old-side and inline-deletion annotations additionally require a
+diff-aware anchor.
 
 ### Side-by-side layout
 
@@ -146,7 +156,7 @@ Initial model sketch:
   target = {
     file = "lua/example.lua",
     old_file = nil, -- populated for renames
-    side = "new", -- old | new | file | hunk
+    side = "working", -- working | old | new | file | hunk
     start_line = 42,
     start_col = 8, -- optional
     end_line = 45,
@@ -377,21 +387,27 @@ Status: substantially complete.
 
 ### Phase 1: technical spike
 
-Goal: prove that CodeDiff can support the desired annotation model.
+Status: in progress in `local/native-review.nvim`.
 
-- [ ] Create a small local review module with no persistence.
-- [ ] Add one normal/visual annotation action for a new-side line/range.
-- [ ] Preserve optional columns for characterwise visual selections.
-- [ ] Render and highlight line-only and line/column targets with extmarks.
-- [ ] Add an old-side annotation in side-by-side mode, including optional columns.
+Goal: prove the annotation core in regular buffers, then enrich it through an
+optional CodeDiff adapter.
+
+- [x] Create a small local review module with no persistence.
+- [x] Add and render annotations in ordinary file buffers without CodeDiff.
+- [x] Share working-file annotations with the matching CodeDiff working side.
+- [x] Add one normal/visual annotation action for a line/range.
+- [x] Preserve optional columns for characterwise visual selections.
+- [x] Render and highlight line-only and line/column targets with extmarks.
+- [x] Add an old-side annotation in side-by-side mode, including optional columns.
 - [ ] Build the inline virtual-deletion-to-old-line mapping.
-- [ ] Preserve annotations while toggling layouts.
-- [ ] Preserve annotations across CodeDiff file selection/refresh.
-- [ ] Keep the modified buffer editable throughout.
-- [ ] Add a Snacks picker listing annotations.
+- [x] Preserve annotations while toggling layouts.
+- [ ] Verify annotations across multi-file CodeDiff selection/refresh.
+- [x] Keep the modified buffer editable throughout.
+- [x] Add a Snacks picker listing annotations.
 
-Exit criterion: human annotations on old and new sides survive layout toggles and
-ordinary edits without disrupting CodeDiff or normal Neovim behavior.
+Exit criterion: regular-buffer annotations work independently, and human
+annotations on old/working/new diff sides survive layout toggles and ordinary
+edits without disrupting CodeDiff or normal Neovim behavior.
 
 ### Phase 2: bridge MVP
 
@@ -431,13 +447,13 @@ can add several visible annotations back to the same live review.
 
 ## Immediate next steps
 
-1. Keep the current CodeDiff installation and use it normally for a short period.
-2. Decide whether the spike belongs inside `agent-bridge.nvim` initially or in a
-   separate local plugin with agent-bridge as a dependency.
-3. Inspect CodeDiff's stored diff result and inline renderer to design a stable
+1. Exercise annotation add/render/navigation in ordinary working buffers.
+2. Keep `native-review.nvim` separate from transport and diff integrations.
+3. Verify the CodeDiff adapter across multi-file selection and refresh.
+4. Inspect CodeDiff's stored diff result and inline renderer to design a stable
    row/old-line mapping.
-4. Implement only the Phase 1 in-memory proof before designing persistence or
-   adding Neogit/JJ/Octo.
+5. Finish the Phase 1 in-memory proof before designing persistence or adding
+   Neogit/JJ/Octo.
 
 ## Open questions
 
