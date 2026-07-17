@@ -1,5 +1,9 @@
 return {
   {
+    "nvim-mini/mini.move",
+    enabled = vim.env.HERDR_ENV ~= "1",
+  },
+  {
     "alexghergh/nvim-tmux-navigation",
     cond = vim.env.HERDR_ENV ~= "1",
     keys = {
