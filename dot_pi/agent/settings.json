@@ -11,6 +11,7 @@
       "extensions": []
     },
     "npm:@sentixx/pi-info",
-    "npm:pi-mcp-adapter"
+    "npm:pi-mcp-adapter",
+    "npm:pi-web-access"
   ]
 }
