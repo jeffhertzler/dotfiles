@@ -53,6 +53,21 @@ set supports multiple repositories and plain files without creating repository
 artifacts. Invalid or unsupported state files are reported and preserved rather
 than overwritten on exit.
 
+## Reanchoring and freshness
+
+Persisted annotations retain selected text plus nearby lines. When a buffer is
+opened or written, the target is classified as:
+
+- `fresh`: the selected content still matches at its tracked position;
+- `reanchored`: the exact content moved and was uniquely located, using nearby
+  context to disambiguate duplicates;
+- `stale`: the content changed, disappeared, or has an ambiguous new location.
+
+Line ranges and single- or multi-line character ranges are supported. Stale
+annotations stay visible with warning styling at their saved location, are
+rechecked after writes, and are excluded from outbound agent payloads by
+default. Reanchored positions and freshness are persisted.
+
 Tests and isolated instances can override the path with
 `NVIM_NATIVE_REVIEW_STATE` or setup options:
 
@@ -102,6 +117,7 @@ RPC-facing operations are available through `native_review.rpc`:
 - `update({ updates = { ... } })` changes bodies, kinds, or statuses by ID.
 - `resolve({ ids = { ... } })` marks a validated batch resolved.
 - `remove({ ids = { ... } })` deletes a validated batch.
+- `refresh()` revalidates visible annotations after external edits.
 - `dispatch({ operation = ... })` provides a single RPC entry point.
 
 For shell-based agents, write the payload to a JSON file and evaluate
@@ -115,5 +131,5 @@ annotations remain visible but are dimmed and excluded from outbound payloads.
 - Old-side notes are preserved but not yet rendered in inline layout.
 - Blockwise selections are not implemented.
 - Diff-side picker navigation expects the relevant CodeDiff file to be selected.
-- Context-based reanchoring and stale detection are not implemented yet; stored
-  locations currently reopen at their exact saved line/column positions.
+- Reanchoring currently requires the originally selected text to remain exact;
+  fuzzy matching for edited selections is not implemented.

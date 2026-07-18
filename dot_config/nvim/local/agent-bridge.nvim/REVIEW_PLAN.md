@@ -433,7 +433,8 @@ Status: in progress.
 - [x] Automatic restart/session resume across repositories and plain files.
 - [ ] Formal repository/worktree/revision session identity.
 - [x] Store selected and surrounding context anchors.
-- [ ] Fresh/reanchored/stale validation.
+- [x] Exact-content fresh/reanchored/stale validation with context disambiguation.
+- [ ] Optional fuzzy reanchoring when selected content itself was edited.
 - [ ] Session cleanup and selective archival.
 - [ ] Import/export for offline agent workflows.
 

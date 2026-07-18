@@ -151,6 +151,7 @@ local function validate_comment(comment, index, defaults, batch_ids)
     body = vim.trim(comment.body),
     kind = kind,
     status = status,
+    freshness = "fresh",
     root = root,
     host = "rpc",
     revision = {
@@ -204,6 +205,7 @@ local function serialize(annotation)
     body = annotation.body,
     kind = annotation.kind,
     status = annotation.status,
+    freshness = annotation.freshness,
     root = annotation.root,
     revision = {
       backend = annotation.revision.backend,
@@ -393,6 +395,21 @@ function M.remove(payload)
   return { ok = true, count = #ids, ids = ids }
 end
 
+function M.refresh()
+  local seen = {}
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winid) then
+      local bufnr = vim.api.nvim_win_get_buf(winid)
+      if not seen[bufnr] then
+        seen[bufnr] = true
+        render.revalidate_buffer(bufnr)
+      end
+    end
+  end
+  require("native_review.persistence").schedule_save()
+  return { ok = true, count = #state.list() }
+end
+
 function M.list()
   local comments = {}
   for _, annotation in ipairs(state.list()) do
@@ -429,6 +446,8 @@ function M.dispatch(request)
     return M.resolve(request.payload or request)
   elseif request.operation == "remove" then
     return M.remove(request.payload or request)
+  elseif request.operation == "refresh" then
+    return M.refresh()
   elseif request.operation == "list" then
     return M.list()
   elseif request.operation == "context" then

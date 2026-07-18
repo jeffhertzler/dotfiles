@@ -22,6 +22,7 @@ local function create_annotation(capture, body)
     body = body,
     kind = "note",
     status = "open",
+    freshness = "fresh",
     root = capture.root,
     host = capture.host,
     revision = capture.revision,
@@ -245,11 +246,11 @@ function M.setup(opts)
     end,
   })
 
-  vim.api.nvim_create_autocmd("BufWritePost", {
+  vim.api.nvim_create_autocmd({ "BufWritePost", "FileChangedShellPost" }, {
     group = group,
     callback = function(event)
       if #state.list() > 0 then
-        render.refresh_buffer(event.buf)
+        render.revalidate_buffer(event.buf)
         persistence.schedule_save()
       end
     end,

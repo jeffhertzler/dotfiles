@@ -5,6 +5,10 @@ local state = require("native_review.state")
 local function format_location(annotation)
   local target = annotation.target
   local side = ({ old = "~", new = "+", working = " " })[target.side] or " "
+  local state_icon = annotation.status == "resolved" and "✓"
+    or annotation.freshness == "stale" and "!"
+    or annotation.freshness == "reanchored" and "↪"
+    or " "
   local range
   if target.start_col then
     range = string.format("%d:%d", target.start_line, target.start_col)
@@ -17,7 +21,7 @@ local function format_location(annotation)
       range = range .. "-" .. target.end_line
     end
   end
-  return string.format("%s %s:%s", side, target.file, range)
+  return string.format("%s%s %s:%s", state_icon, side, target.file, range)
 end
 
 local function navigate(tabpage, annotation)

@@ -14,7 +14,8 @@ local function line_text(bufnr, line)
   return vim.api.nvim_buf_get_lines(bufnr, line - 1, line, false)[1] or ""
 end
 
-local function clamp_target(bufnr, target)
+local function clamped_target(bufnr, source)
+  local target = vim.deepcopy(source)
   local line_count = math.max(1, vim.api.nvim_buf_line_count(bufnr))
   target.start_line = math.min(math.max(1, target.start_line), line_count)
   target.end_line = math.min(math.max(target.start_line, target.end_line), line_count)
@@ -22,9 +23,13 @@ local function clamp_target(bufnr, target)
     target.start_col = math.min(math.max(1, target.start_col), #line_text(bufnr, target.start_line) + 1)
     target.end_col = math.min(math.max(1, target.end_col), #line_text(bufnr, target.end_line) + 1)
   end
+  return target
 end
 
 local function sync_anchor(annotation)
+  if annotation.freshness == "stale" then
+    return
+  end
   local runtime = annotation._runtime
   if not runtime or not valid_buffer(runtime.bufnr) then
     annotation._runtime = nil
@@ -39,11 +44,13 @@ local function sync_anchor(annotation)
 
   local details = position[3] or {}
   annotation.target.start_line = position[1] + 1
-  annotation.target.end_line = (details.end_row or position[1]) + 1
   if annotation.target.selection == "character" then
+    annotation.target.end_line = (details.end_row or position[1]) + 1
     annotation.target.start_col = position[2] + 1
     annotation.target.end_col =
       target_util.previous_char_col(runtime.bufnr, details.end_row or position[1], details.end_col or position[2])
+  else
+    annotation.target.end_line = annotation.target.start_line + (runtime.line_span or 0)
   end
 end
 
@@ -62,8 +69,23 @@ local function ensure_anchor(annotation, bufnr)
     pcall(vim.api.nvim_buf_del_extmark, runtime.bufnr, anchor_ns, runtime.mark_id)
   end
 
-  local target = annotation.target
-  clamp_target(bufnr, target)
+  local freshness, reanchored = require("native_review.reanchor").resolve(bufnr, annotation)
+  local changed = annotation.freshness ~= freshness
+  if reanchored then
+    annotation.target.start_line = reanchored.start_line
+    annotation.target.start_col = reanchored.start_col
+    annotation.target.end_line = reanchored.end_line
+    annotation.target.end_col = reanchored.end_col
+    annotation.target.selection = reanchored.selection
+    changed = true
+  end
+  annotation.freshness = freshness
+  if changed then
+    annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
+    state.changed()
+  end
+
+  local target = clamped_target(bufnr, annotation.target)
   local start_row = target.start_line - 1
   local start_col = target.start_col and target.start_col - 1 or 0
   local end_row = target.end_line - 1
@@ -75,7 +97,11 @@ local function ensure_anchor(annotation, bufnr)
     end_right_gravity = true,
     invalidate = false,
   })
-  annotation._runtime = { bufnr = bufnr, mark_id = mark_id }
+  annotation._runtime = {
+    bufnr = bufnr,
+    mark_id = mark_id,
+    line_span = target.end_line - target.start_line,
+  }
 end
 
 local function wrapped_lines(text, width)
@@ -119,6 +145,9 @@ local function annotation_highlights(annotation)
   if annotation.status == "resolved" then
     return "NativeReviewResolved", "NativeReviewResolvedRange", "NativeReviewResolvedLine"
   end
+  if annotation.freshness == "stale" then
+    return "NativeReviewStale", "NativeReviewStaleRange", "NativeReviewStaleLine"
+  end
   if annotation.author and annotation.author.kind == "agent" then
     return "NativeReviewAgent", "NativeReviewAgentRange", "NativeReviewAgentLine"
   end
@@ -128,12 +157,19 @@ end
 local function comment_box(annotation, highlight)
   local author = annotation.author or { kind = "human" }
   local author_name = author.kind == "agent" and ("AGENT " .. (author.name or "agent")) or "HUMAN"
-  local status = annotation.status and annotation.status ~= "open" and (" · " .. string.upper(annotation.status)) or ""
+  local state_labels = {}
+  if annotation.status and annotation.status ~= "open" then
+    table.insert(state_labels, string.upper(annotation.status))
+  end
+  if annotation.freshness and annotation.freshness ~= "fresh" then
+    table.insert(state_labels, string.upper(annotation.freshness))
+  end
+  local states = #state_labels > 0 and (" · " .. table.concat(state_labels, " · ")) or ""
   local header = string.format(
     "[%s %s%s · %s]",
     author_name,
     string.upper(annotation.kind or "note"),
-    status,
+    states,
     location(annotation.target)
   )
   local lines = wrapped_lines(annotation.body, 72)
@@ -160,9 +196,8 @@ local function comment_box(annotation, highlight)
 end
 
 local function render_range(bufnr, annotation)
-  local target = annotation.target
+  local target = clamped_target(bufnr, annotation.target)
   local note_highlight, range_highlight, line_highlight = annotation_highlights(annotation)
-  clamp_target(bufnr, target)
 
   if target.selection == "character" then
     pcall(vim.api.nvim_buf_set_extmark, bufnr, render_ns, target.start_line - 1, target.start_col - 1, {
@@ -208,6 +243,28 @@ local function matches_context(annotation, context)
     return true
   end
   return annotation.revision.selected_expression == context.selected_revision
+end
+
+function M.revalidate_buffer(bufnr)
+  if not valid_buffer(bufnr) then
+    return
+  end
+  local context = target_util.context_for_buffer(bufnr)
+  if not context then
+    return
+  end
+
+  for _, annotation in ipairs(state.list()) do
+    if matches_context(annotation, context) then
+      sync_anchor(annotation)
+      local runtime = annotation._runtime
+      if runtime and valid_buffer(runtime.bufnr) then
+        pcall(vim.api.nvim_buf_del_extmark, runtime.bufnr, anchor_ns, runtime.mark_id)
+      end
+      annotation._runtime = nil
+    end
+  end
+  M.refresh_buffer(bufnr)
 end
 
 function M.refresh_buffer(bufnr)
@@ -322,6 +379,9 @@ function M.setup_highlights()
   vim.api.nvim_set_hl(0, "NativeReviewResolved", { default = true, link = "Comment" })
   vim.api.nvim_set_hl(0, "NativeReviewResolvedRange", { default = true, link = "IncSearch" })
   vim.api.nvim_set_hl(0, "NativeReviewResolvedLine", { default = true, link = "CursorLine" })
+  vim.api.nvim_set_hl(0, "NativeReviewStale", { default = true, link = "DiagnosticWarn" })
+  vim.api.nvim_set_hl(0, "NativeReviewStaleRange", { default = true, link = "WarningMsg" })
+  vim.api.nvim_set_hl(0, "NativeReviewStaleLine", { default = true, link = "DiffDelete" })
 end
 
 return M

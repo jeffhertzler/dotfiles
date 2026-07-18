@@ -14,10 +14,12 @@ local function location(target)
   return string.format("@%s#L%d-%d", target.file, target.start_line, target.end_line)
 end
 
-local function sorted_annotations(annotations, include_resolved)
+local function sorted_annotations(annotations, opts)
   local result = {}
   for _, annotation in ipairs(annotations) do
-    if include_resolved or annotation.status ~= "resolved" then
+    local include_status = opts.include_resolved or annotation.status ~= "resolved"
+    local include_freshness = opts.include_stale or annotation.freshness ~= "stale"
+    if include_status and include_freshness then
       table.insert(result, annotation)
     end
   end
@@ -46,9 +48,9 @@ end
 
 function M.build(annotations, opts)
   opts = opts or {}
-  local selected = sorted_annotations(annotations or {}, opts.include_resolved == true)
+  local selected = sorted_annotations(annotations or {}, opts)
   if #selected == 0 then
-    return nil, "no open review annotations"
+    return nil, "no fresh open review annotations"
   end
 
   local out = {
@@ -61,7 +63,7 @@ function M.build(annotations, opts)
     "Neovim RPC server: `" .. (vim.v.servername ~= "" and vim.v.servername or "unavailable") .. "`",
     "Agent findings can be imported with `require(\"native_review.rpc\").apply(payload)` over Neovim RPC.",
     "The apply payload uses `{ schemaVersion = 1, comments = { ... } }` with camelCase target positions.",
-    "After addressing comments, call `.resolve({ ids = { ... } })`; `.update` and `.remove` are also available.",
+    "After editing files, call `.refresh()`, then `.resolve({ ids = { ... } })`; `.update` and `.remove` are also available.",
   }
 
   for _, annotation in ipairs(selected) do
@@ -76,6 +78,7 @@ function M.build(annotations, opts)
     table.insert(out, "- Revision: `" .. tostring(revision or "WORKING") .. "`")
     table.insert(out, "- Kind: `" .. (annotation.kind or "note") .. "`")
     table.insert(out, "- Status: `" .. (annotation.status or "open") .. "`")
+    table.insert(out, "- Freshness: `" .. (annotation.freshness or "fresh") .. "`")
     append_anchor(out, annotation)
     table.insert(out, "")
     table.insert(out, "### Comment")

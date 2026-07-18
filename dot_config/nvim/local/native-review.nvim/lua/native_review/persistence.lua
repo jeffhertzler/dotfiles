@@ -16,6 +16,7 @@ local valid_author_kinds = { human = true, agent = true, forge = true }
 local valid_kinds = { note = true, question = true, suggestion = true, issue = true, praise = true }
 local valid_sides = { working = true, old = true, new = true, file = true, hunk = true }
 local valid_statuses = { open = true, acknowledged = true, resolved = true, stale = true }
+local valid_freshness = { fresh = true, reanchored = true, stale = true }
 
 local function storage_path()
   return config.path
@@ -30,6 +31,7 @@ local function serialize(annotation)
     body = annotation.body,
     kind = annotation.kind,
     status = annotation.status,
+    freshness = annotation.freshness,
     root = annotation.root,
     host = annotation.host,
     revision = {
@@ -81,7 +83,11 @@ local function deserialize(item, index, ids)
   end
   local kind = item.kind or "note"
   local status = item.status or "open"
-  if not valid_kinds[kind] or not valid_statuses[status] then
+  local freshness = item.freshness or (status == "stale" and "stale" or "fresh")
+  if status == "stale" then
+    status = "open"
+  end
+  if not valid_kinds[kind] or not valid_statuses[status] or not valid_freshness[freshness] then
     return nil, "annotation " .. item.id .. " has an invalid kind or status"
   end
 
@@ -123,6 +129,7 @@ local function deserialize(item, index, ids)
     body = item.body,
     kind = kind,
     status = status,
+    freshness = freshness,
     root = root and vim.fs.normalize(root) or nil,
     host = item.host or "persistence",
     revision = {
