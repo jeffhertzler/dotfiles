@@ -1,6 +1,7 @@
 local M = {}
 
 local state = require("native_review.state")
+local sessions = require("native_review.sessions")
 
 local config = {
   enabled = true,
@@ -11,6 +12,7 @@ local initialized = false
 local generation = 0
 local last_error = nil
 local can_save = true
+local needs_migration = false
 
 local valid_author_kinds = { human = true, agent = true, forge = true }
 local valid_kinds = { note = true, question = true, suggestion = true, issue = true, praise = true }
@@ -27,6 +29,7 @@ end
 local function serialize(annotation)
   return {
     id = annotation.id,
+    sessionId = annotation.session_id,
     author = vim.deepcopy(annotation.author),
     body = annotation.body,
     kind = annotation.kind,
@@ -125,6 +128,7 @@ local function deserialize(item, index, ids)
   ids[item.id] = true
   return {
     id = item.id,
+    session_id = item.sessionId,
     author = { kind = author.kind, name = author.name },
     body = item.body,
     kind = kind,
@@ -154,25 +158,136 @@ local function deserialize(item, index, ids)
   }
 end
 
+local function serialize_session(session)
+  return {
+    id = session.id,
+    name = session.name,
+    workspace = session.workspace,
+    root = session.root,
+    file = session.file,
+    backend = session.backend,
+    baseRevision = session.base_revision,
+    targetRevision = session.target_revision,
+    status = session.status,
+    createdAt = session.created_at,
+    updatedAt = session.updated_at,
+    archivedAt = session.archived_at,
+  }
+end
+
+local function deserialize_session(item, index, ids)
+  if type(item) ~= "table"
+    or type(item.id) ~= "string"
+    or item.id == ""
+    or type(item.name) ~= "string"
+    or item.name == ""
+    or type(item.workspace) ~= "string"
+    or item.workspace == ""
+    or (item.status ~= "active" and item.status ~= "archived") then
+    return nil, string.format("session %d is invalid", index)
+  end
+  if ids[item.id] then
+    return nil, "duplicate session id: " .. item.id
+  end
+  if item.root ~= nil and type(item.root) ~= "string" then
+    return nil, "session " .. item.id .. " has an invalid root"
+  end
+  if item.file ~= nil and type(item.file) ~= "string" then
+    return nil, "session " .. item.id .. " has an invalid file"
+  end
+
+  ids[item.id] = true
+  return {
+    id = item.id,
+    name = item.name,
+    workspace = item.workspace,
+    root = item.root and vim.fs.normalize(item.root) or nil,
+    file = item.file and vim.fs.normalize(item.file) or nil,
+    backend = item.backend or "files",
+    base_revision = item.baseRevision,
+    target_revision = item.targetRevision or "WORKING",
+    status = item.status,
+    created_at = item.createdAt,
+    updated_at = item.updatedAt,
+    archived_at = item.archivedAt,
+  }
+end
+
 local function decode(contents)
   local ok, document = pcall(vim.json.decode, contents)
   if not ok then
     return nil, "failed to decode review state: " .. tostring(document)
   end
-  if type(document) ~= "table" or document.schemaVersion ~= 1 or not vim.islist(document.annotations) then
+  if type(document) ~= "table"
+    or (document.schemaVersion ~= 1 and document.schemaVersion ~= 2)
+    or not vim.islist(document.annotations) then
     return nil, "review state has an unsupported or invalid schema"
   end
 
   local annotations = {}
-  local ids = {}
+  local annotation_ids = {}
   for index, item in ipairs(document.annotations) do
-    local annotation, err = deserialize(item, index, ids)
+    local annotation, err = deserialize(item, index, annotation_ids)
     if not annotation then
       return nil, err
     end
     table.insert(annotations, annotation)
   end
-  return annotations
+
+  if document.schemaVersion == 1 then
+    return {
+      annotations = annotations,
+      sessions = {},
+      active = {},
+      migrated = true,
+    }
+  end
+  if not vim.islist(document.sessions) or type(document.activeSessions) ~= "table" then
+    return nil, "review state has invalid session metadata"
+  end
+
+  local loaded_sessions = {}
+  local session_ids = {}
+  local session_by_id = {}
+  for index, item in ipairs(document.sessions) do
+    local session, err = deserialize_session(item, index, session_ids)
+    if not session then
+      return nil, err
+    end
+    table.insert(loaded_sessions, session)
+    session_by_id[session.id] = session
+  end
+
+  local scope = require("native_review.scope")
+  for _, annotation in ipairs(annotations) do
+    local session = annotation.session_id and session_by_id[annotation.session_id] or nil
+    if not session then
+      return nil, "annotation " .. annotation.id .. " references an unknown session"
+    end
+    if session.workspace ~= scope.for_annotation(annotation) then
+      return nil, "annotation " .. annotation.id .. " does not match its session workspace"
+    end
+  end
+
+  local active = {}
+  for workspace, id in pairs(document.activeSessions) do
+    local session = session_by_id[id]
+    if type(workspace) ~= "string"
+      or type(id) ~= "string"
+      or not session
+      or session.workspace ~= workspace
+      or session.status == "archived" then
+      return nil, "review state has an invalid active session"
+    end
+    active[workspace] = id
+  end
+
+  return {
+    annotations = annotations,
+    sessions = loaded_sessions,
+    active = active,
+    migrated = false,
+  }
 end
 
 function M.load()
@@ -182,6 +297,8 @@ function M.load()
   local path = storage_path()
   if vim.fn.filereadable(path) ~= 1 then
     state.replace({})
+    sessions.replace({}, {})
+    needs_migration = false
     can_save = true
     return true, 0
   end
@@ -192,17 +309,23 @@ function M.load()
     can_save = false
     return false, last_error
   end
-  local annotations, err = decode(table.concat(lines, "\n"))
-  if not annotations then
+  local decoded, err = decode(table.concat(lines, "\n"))
+  if not decoded then
     last_error = err
     can_save = false
     return false, err
   end
 
-  state.replace(annotations)
+  state.replace(decoded.annotations)
+  if decoded.migrated then
+    sessions.migrate_annotations(decoded.annotations)
+  else
+    sessions.replace(decoded.sessions, decoded.active)
+  end
+  needs_migration = decoded.migrated
   last_error = nil
   can_save = true
-  return true, #annotations
+  return true, #decoded.annotations
 end
 
 function M.save_now()
@@ -219,10 +342,17 @@ function M.save_now()
   for _, annotation in ipairs(state.list()) do
     table.insert(annotations, serialize(annotation))
   end
+  local stored_sessions, active_sessions = sessions.serialize()
+  local serialized_sessions = {}
+  for _, session in ipairs(stored_sessions) do
+    table.insert(serialized_sessions, serialize_session(session))
+  end
   local document = {
-    schemaVersion = 1,
+    schemaVersion = 2,
     columnConvention = "one-based-inclusive-utf-8-byte",
     savedAt = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+    sessions = serialized_sessions,
+    activeSessions = active_sessions,
     annotations = annotations,
   }
   local ok, encoded = pcall(vim.json.encode, document)
@@ -249,6 +379,7 @@ function M.save_now()
     return false, last_error
   end
   vim.fn.setfperm(path, "rw-------")
+  needs_migration = false
   last_error = nil
   return true
 end
@@ -283,6 +414,7 @@ function M.status()
     enabled = config.enabled,
     path = storage_path(),
     count = #state.list(),
+    sessions = #sessions.list(nil, { include_archived = true }),
     last_error = last_error,
   }
 end
@@ -302,6 +434,9 @@ function M.setup(opts)
     can_save = true
     M.schedule_save()
   end)
+  if needs_migration then
+    M.schedule_save()
+  end
   return M
 end
 

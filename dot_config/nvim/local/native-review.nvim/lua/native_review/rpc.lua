@@ -141,9 +141,15 @@ local function validate_comment(comment, index, defaults, batch_ids)
     return nil, failure("author name must be a non-empty string", index, "author.name")
   end
 
+  local requested_session = comment.sessionId or defaults.session_id
+  if requested_session ~= nil and (type(requested_session) ~= "string" or requested_session == "") then
+    return nil, failure("sessionId must be a non-empty string", index, "sessionId")
+  end
+
   local now = os.date("!%Y-%m-%dT%H:%M:%SZ")
   local annotation = {
     id = comment.id,
+    _requested_session_id = requested_session,
     author = {
       kind = "agent",
       name = author_name,
@@ -175,6 +181,16 @@ local function validate_comment(comment, index, defaults, batch_ids)
     updated_at = now,
   }
 
+  if requested_session then
+    local session = require("native_review.sessions").get(requested_session)
+    if not session then
+      return nil, failure("session not found: " .. requested_session, index, "sessionId")
+    end
+    if session.workspace ~= require("native_review.scope").for_annotation(annotation) then
+      return nil, failure("session does not match the annotation workspace", index, "sessionId")
+    end
+  end
+
   local bufnr = find_target_buffer(annotation)
   if bufnr then
     local line_count = vim.api.nvim_buf_line_count(bufnr)
@@ -201,6 +217,7 @@ end
 local function serialize(annotation)
   return {
     id = annotation.id,
+    sessionId = annotation.session_id,
     author = vim.deepcopy(annotation.author),
     body = annotation.body,
     kind = annotation.kind,
@@ -247,6 +264,7 @@ function M.apply(payload)
     root = payload.root or (context and context.root),
     backend = payload.backend or (context and context.backend) or "files",
     author = payload.author or "agent",
+    session_id = payload.sessionId,
   }
   local pending = {}
   local batch_ids = {}
@@ -260,6 +278,11 @@ function M.apply(payload)
 
   local ids = {}
   for _, annotation in ipairs(pending) do
+    local session, session_err = require("native_review.sessions").assign(annotation, annotation._requested_session_id)
+    if not session then
+      return failure(session_err)
+    end
+    annotation._requested_session_id = nil
     state.add(annotation)
     table.insert(ids, annotation.id)
   end
@@ -420,10 +443,18 @@ end
 
 function M.context()
   local context = default_context()
+  local session = require("native_review.sessions").current()
   return {
     ok = true,
     schemaVersion = 1,
     server = vim.v.servername,
+    session = session and {
+      id = session.id,
+      name = session.name,
+      status = session.status,
+      baseRevision = session.base_revision,
+      targetRevision = session.target_revision,
+    } or vim.NIL,
     current = context and {
       root = context.root,
       backend = context.backend,

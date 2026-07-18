@@ -233,6 +233,12 @@ local function same_root(first, second)
 end
 
 local function matches_context(annotation, context)
+  if annotation.session_id then
+    local active = require("native_review.sessions").current(require("native_review.scope").for_annotation(annotation))
+    if not active or active.id ~= annotation.session_id then
+      return false
+    end
+  end
   if not same_root(annotation.root, context.root) then
     return false
   end

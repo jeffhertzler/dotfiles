@@ -29,8 +29,8 @@ navigating working-file annotations does not require a diff view.
 | visual `<leader>ra`                         | Annotate the selected line/column range |
 | `<leader>rd` / `:NativeReviewRemove`        | Remove the annotation at the cursor     |
 | `<leader>re` / `:NativeReviewEdit`          | Edit the annotation at the cursor       |
-| `<leader>rl` / `:NativeReviewList`          | List current-workspace annotations       |
-| `<leader>rs` / `:NativeReviewSend`          | Stage current-workspace open notes       |
+| `<leader>rl` / `:NativeReviewList`          | List active-session annotations          |
+| `<leader>rs` / `:NativeReviewSend`          | Stage active-session open notes          |
 | `:NativeReviewSend!`                        | Send, submit, and keep focus in Neovim  |
 | `:NativeReviewCompose`                      | Open Agent Prompt with review context   |
 | `:NativeReviewAdd`                          | Annotate the current line               |
@@ -38,6 +38,11 @@ navigating working-file annotations does not require a diff view.
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
 | `:NativeReviewListAll`                      | List annotations across all workspaces  |
 | `:NativeReviewWorkspaces`                   | Browse workspace annotation groups      |
+| `:NativeReviewSessions`                     | Browse and switch review sessions       |
+| `:NativeReviewSessionNew [name]`            | Create and activate a named session     |
+| `:NativeReviewSessionSwitch <id>`           | Activate a session by ID                |
+| `:NativeReviewSessionArchive [id]`          | Archive the active session or an ID     |
+| `:NativeReviewSessionClear`                 | Clear active-session annotations        |
 | `:NativeReviewSendAll[!]`                   | Send annotations across all workspaces  |
 | `:NativeReviewPrune[!]`                     | Prune resolved; bang also prunes stale  |
 | `:NativeReviewClearCurrent`                 | Clear the current workspace             |
@@ -52,10 +57,23 @@ Plain files without a detected Git or JJ root use a file-specific scope. This
 prevents annotations from unrelated projects from being sent together.
 
 `:NativeReviewWorkspaces` opens a compact picker showing open, resolved, and
-stale counts for each scope. Selecting one opens its annotations. Resolved
+stale counts for each scope. Selecting one opens its sessions. Resolved
 annotations can be pruned from only the current workspace; `:NativeReviewPrune!`
 also removes stale annotations. Explicit `All` commands remain available when a
 cross-workspace operation is intentional.
+
+## Named sessions and archival
+
+Each workspace has one active review session. New annotations and normal
+list/send operations belong to that session. `:NativeReviewSessionNew My pass`
+starts a separate review without deleting earlier notes. Sessions capture the
+workspace, backend, and base/target revision expressions present at creation.
+
+`:NativeReviewSessions` shows active (`●`), inactive (`○`), and archived (`□`)
+sessions with annotation counts. `<CR>` activates a session and `a` archives or
+restores it. Archived sessions and annotations remain persisted but are hidden
+from normal rendering and outbound payloads. They can be restored without data
+loss.
 
 ## Persistence
 
@@ -65,10 +83,11 @@ State uses a versioned JSON document at:
 stdpath("state")/native-review/annotations.json
 ```
 
-Writes are debounced, atomic, and permissioned `0600`. The complete annotation
-set supports multiple repositories and plain files without creating repository
-artifacts. Invalid or unsupported state files are reported and preserved rather
-than overwritten on exit.
+Writes are debounced, atomic, and permissioned `0600`. Persistence schema v2
+stores sessions, active-session selections, and annotations across multiple
+repositories and plain files without creating repository artifacts. Schema v1
+annotation files migrate automatically. Invalid or unsupported state files are
+reported and preserved rather than overwritten on exit.
 
 ## Reanchoring and freshness
 
@@ -107,6 +126,7 @@ can validate and atomically import a batch with:
 require("native_review.rpc").apply({
   schemaVersion = 1,
   author = "pi",
+  sessionId = "session-2", -- optional; defaults to the active session
   comments = {
     {
       id = "agent-finding-1",

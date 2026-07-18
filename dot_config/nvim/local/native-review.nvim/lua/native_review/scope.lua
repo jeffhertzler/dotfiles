@@ -10,6 +10,8 @@ local function key(root, file)
   return "file:" .. vim.fs.normalize(file or "unknown")
 end
 
+M.key = key
+
 function M.for_annotation(annotation)
   return key(annotation.root, annotation.target and annotation.target.file)
 end

@@ -74,6 +74,9 @@ function M.build(annotations, opts)
     if annotation.root then
       table.insert(out, "- Repository: `" .. annotation.root .. "`")
     end
+    if annotation.session_id then
+      table.insert(out, "- Session: `" .. annotation.session_id .. "`")
+    end
     table.insert(out, "- Target: `" .. location(annotation.target) .. "`")
     table.insert(out, "- Revision: `" .. tostring(revision or "WORKING") .. "`")
     table.insert(out, "- Kind: `" .. (annotation.kind or "note") .. "`")

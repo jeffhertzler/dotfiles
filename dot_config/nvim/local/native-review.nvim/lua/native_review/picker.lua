@@ -73,11 +73,14 @@ function M.open(opts)
   opts = opts or {}
   local tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
   local scope = require("native_review.scope")
+  local sessions = require("native_review.sessions")
   local scope_key = opts.all and nil or (opts.scope or scope.current())
-  local annotations = opts.annotations or (opts.all and scope.list() or scope.list(scope_key))
-  if not opts.all and not scope_key and not opts.annotations then
-    annotations = {}
-  end
+  local active_session = opts.session and sessions.get(opts.session) or (not opts.all and not opts.scope and sessions.current(scope_key))
+  local annotations = opts.annotations
+    or (opts.all and scope.list())
+    or (active_session and sessions.annotations(active_session.id))
+    or (opts.scope and scope.list(scope_key))
+    or {}
   if #annotations == 0 then
     vim.notify("No annotations in this review", vim.log.levels.INFO, { title = "Native Review" })
     return
@@ -94,7 +97,10 @@ function M.open(opts)
   local ok, snacks = pcall(require, "snacks")
   if ok then
     snacks.picker({
-      title = opts.title or (opts.all and "All review annotations" or "Review annotations"),
+      title = opts.title
+        or (opts.all and "All review annotations")
+        or (active_session and active_session.name)
+        or "Review annotations",
       items = items,
       format = "text",
       focus = "list",
@@ -110,7 +116,8 @@ function M.open(opts)
           picker:close()
           if item and require("native_review").remove(item.annotation.id) then
             vim.schedule(function()
-              if #scope.list(scope_key) > 0 then
+              local remaining = active_session and sessions.annotations(active_session.id) or scope.list(scope_key)
+              if #remaining > 0 then
                 M.open(opts)
               end
             end)
@@ -147,6 +154,97 @@ function M.open(opts)
   end)
 end
 
+function M.sessions(opts)
+  opts = opts or {}
+  local store = require("native_review.sessions")
+  local workspace = opts.workspace or require("native_review.scope").current()
+  if not workspace then
+    vim.notify("No current review workspace", vim.log.levels.INFO, { title = "Native Review" })
+    return
+  end
+  local available = store.list(workspace, { include_archived = true })
+  if #available == 0 then
+    vim.notify("No review sessions in this workspace", vim.log.levels.INFO, { title = "Native Review" })
+    return
+  end
+
+  local active = store.current(workspace)
+  local items = {}
+  for _, session in ipairs(available) do
+    local counts = store.counts(session.id)
+    local marker = session.status == "archived" and "□" or (active and active.id == session.id and "●" or "○")
+    table.insert(items, {
+      session = session,
+      text = string.format(
+        "%s %s  %d open · %d resolved · %d stale  [%s → %s]",
+        marker,
+        session.name,
+        counts.open,
+        counts.resolved,
+        counts.stale,
+        session.base_revision or "working",
+        session.target_revision or "WORKING"
+      ),
+    })
+  end
+
+  local ok, snacks = pcall(require, "snacks")
+  if ok then
+    snacks.picker({
+      title = opts.title or "Review sessions",
+      items = items,
+      format = "text",
+      focus = "list",
+      layout = { preset = "select", preview = false },
+      actions = {
+        toggle_archive = function(picker, item)
+          picker:close()
+          if item then
+            if item.session.status == "archived" then
+              store.activate(item.session.id)
+            else
+              store.archive(item.session.id)
+            end
+            require("native_review.render").refresh_visible()
+            vim.schedule(function()
+              M.sessions(opts)
+            end)
+          end
+        end,
+      },
+      win = {
+        list = {
+          keys = {
+            a = { "toggle_archive", desc = "Archive or restore session" },
+          },
+        },
+      },
+      confirm = function(picker, item)
+        picker:close()
+        if item then
+          store.activate(item.session.id)
+          require("native_review.render").refresh_visible()
+          M.open({ session = item.session.id, title = item.session.name })
+        end
+      end,
+    })
+    return
+  end
+
+  vim.ui.select(items, {
+    prompt = "Review sessions",
+    format_item = function(item)
+      return item.text
+    end,
+  }, function(choice)
+    if choice then
+      store.activate(choice.session.id)
+      require("native_review.render").refresh_visible()
+      M.open({ session = choice.session.id, title = choice.session.name })
+    end
+  end)
+end
+
 function M.workspaces()
   local groups = require("native_review.scope").groups()
   if #groups == 0 then
@@ -173,7 +271,7 @@ function M.workspaces()
       confirm = function(picker, item)
         picker:close()
         if item then
-          M.open({ scope = item.group.key, title = item.group.label })
+          M.sessions({ workspace = item.group.key, title = item.group.label })
         end
       end,
     })
@@ -187,7 +285,7 @@ function M.workspaces()
     end,
   }, function(choice)
     if choice then
-      M.open({ scope = choice.group.key, title = choice.group.label })
+      M.sessions({ workspace = choice.group.key, title = choice.group.label })
     end
   end)
 end

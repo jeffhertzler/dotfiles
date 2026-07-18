@@ -16,8 +16,15 @@ local function create_annotation(capture, body)
     return nil
   end
 
+  local session, session_err = require("native_review.sessions").ensure_for_capture(capture)
+  if not session then
+    notify(session_err, vim.log.levels.ERROR)
+    return nil
+  end
+
   local now = os.date("!%Y-%m-%dT%H:%M:%SZ")
   local annotation = state.add({
+    session_id = session.id,
     author = { kind = "human", name = vim.env.USER or "human" },
     body = body,
     kind = "note",
@@ -62,9 +69,61 @@ function M.workspaces()
   require("native_review.picker").workspaces()
 end
 
+function M.sessions()
+  require("native_review.picker").sessions()
+end
+
+function M.session_new(name)
+  local context = target.context_for_buffer(vim.api.nvim_get_current_buf())
+  if not context or not context.path then
+    notify("Open a regular file or CodeDiff buffer first", vim.log.levels.WARN)
+    return nil
+  end
+  local session, err = require("native_review.sessions").create({
+    name = name,
+    workspace = require("native_review.scope").key(context.root, context.path),
+    root = context.root,
+    file = context.root and nil or context.path,
+    backend = context.backend,
+    base_revision = context.base_revision,
+    target_revision = context.target_revision,
+  })
+  if not session then
+    notify(err, vim.log.levels.ERROR)
+    return nil
+  end
+  render.refresh_visible()
+  notify("Created review session " .. session.name)
+  return session
+end
+
+function M.session_switch(id)
+  local session, err = require("native_review.sessions").activate(id)
+  if not session then
+    notify(err, vim.log.levels.WARN)
+    return nil
+  end
+  render.refresh_visible()
+  notify("Active review session: " .. session.name)
+  return session
+end
+
+function M.session_archive(id)
+  local sessions = require("native_review.sessions")
+  local session = id and sessions.get(id) or sessions.current()
+  if not session then
+    notify("No active review session", vim.log.levels.WARN)
+    return nil
+  end
+  session = sessions.archive(session.id)
+  render.refresh_visible()
+  notify("Archived review session " .. session.name)
+  return session
+end
+
 function M.payload(opts)
   opts = opts or {}
-  local annotations = opts.all and state.list() or require("native_review.scope").current_annotations()
+  local annotations = opts.all and state.list() or require("native_review.sessions").current_annotations()
   return require("native_review.export").build(annotations, opts)
 end
 
@@ -205,6 +264,17 @@ local function remove_annotations(annotations)
   return #annotations
 end
 
+function M.clear_session()
+  local session = require("native_review.sessions").current()
+  if not session then
+    notify("No active review session", vim.log.levels.WARN)
+    return 0
+  end
+  local count = remove_annotations(require("native_review.sessions").annotations(session.id))
+  notify(string.format("Cleared %d annotation%s from %s", count, count == 1 and "" or "s", session.name))
+  return count
+end
+
 function M.clear_current()
   local annotations = require("native_review.scope").current_annotations()
   local count = remove_annotations(annotations)
@@ -317,6 +387,16 @@ function M.setup(opts)
     M.list({ all = true })
   end, { desc = "List annotations across all workspaces" })
   vim.api.nvim_create_user_command("NativeReviewWorkspaces", M.workspaces, { desc = "List review workspaces" })
+  vim.api.nvim_create_user_command("NativeReviewSessions", M.sessions, { desc = "List review sessions" })
+  vim.api.nvim_create_user_command("NativeReviewSessionNew", function(command)
+    M.session_new(command.args)
+  end, { desc = "Create and activate a named review session", nargs = "*" })
+  vim.api.nvim_create_user_command("NativeReviewSessionSwitch", function(command)
+    M.session_switch(command.args)
+  end, { desc = "Activate a review session by ID", nargs = 1 })
+  vim.api.nvim_create_user_command("NativeReviewSessionArchive", function(command)
+    M.session_archive(command.args ~= "" and command.args or nil)
+  end, { desc = "Archive the active review session or an ID", nargs = "?" })
   vim.api.nvim_create_user_command("NativeReviewSend", function(command)
     M.send({ submit = command.bang, switch_to_target = not command.bang })
   end, { desc = "Send current-workspace annotations to an agent", bang = true })
@@ -332,6 +412,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("NativeReviewEdit", function(command)
     M.edit(command.args ~= "" and command.args or nil)
   end, { desc = "Edit the annotation at the cursor or by ID", nargs = "?" })
+  vim.api.nvim_create_user_command("NativeReviewSessionClear", M.clear_session, { desc = "Clear active-session annotations" })
   vim.api.nvim_create_user_command("NativeReviewClearCurrent", M.clear_current, { desc = "Clear current-workspace annotations" })
   vim.api.nvim_create_user_command("NativeReviewPrune", function(command)
     M.prune({ include_stale = command.bang })

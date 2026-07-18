@@ -432,12 +432,12 @@ Status: in progress.
 - [x] Atomic debounced autosave for human and RPC mutations.
 - [x] Automatic restart/session resume across repositories and plain files.
 - [x] Repository-root and plain-file workspace scoping for list/send/cleanup.
-- [ ] Named and revision-specific review sessions within a workspace.
+- [x] Named sessions with captured backend and base/target revision context.
 - [x] Store selected and surrounding context anchors.
 - [x] Exact-content fresh/reanchored/stale validation with context disambiguation.
 - [ ] Optional fuzzy reanchoring when selected content itself was edited.
 - [x] Selective current-workspace cleanup and resolved/stale pruning.
-- [ ] Session archival rather than deletion.
+- [x] Non-destructive session archival and restoration.
 - [ ] Import/export for offline agent workflows.
 
 ### Phase 4: VCS integration
