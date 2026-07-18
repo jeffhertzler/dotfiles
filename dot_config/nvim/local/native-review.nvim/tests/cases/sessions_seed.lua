@@ -1,0 +1,13 @@
+local file = assert(vim.env.NATIVE_REVIEW_TEST_FILE)
+vim.cmd("edit " .. vim.fn.fnameescape(file))
+local review = require("native_review")
+vim.api.nvim_win_set_cursor(0, { 1, 0 })
+local first = assert(review.add({ body = "first pass" }))
+local first_session = first.session_id
+local second_session = assert(review.session_new("Second pass"))
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+local second = assert(review.add({ body = "second pass" }))
+assert(second.session_id == second_session.id)
+assert(review.session_archive(first_session))
+assert(require("native_review.sessions").current().id == second_session.id)
+assert(require("native_review.persistence").save_now())

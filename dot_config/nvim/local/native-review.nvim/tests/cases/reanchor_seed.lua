@@ -1,0 +1,8 @@
+local file = assert(vim.env.NATIVE_REVIEW_TEST_FILE)
+vim.cmd("edit " .. vim.fn.fnameescape(file))
+local review = require("native_review")
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+assert(review.add({ body = "moves" }).id == "review-1")
+vim.api.nvim_win_set_cursor(0, { 4, 0 })
+assert(review.add({ body = "becomes stale" }).id == "review-2")
+assert(require("native_review.persistence").save_now())
