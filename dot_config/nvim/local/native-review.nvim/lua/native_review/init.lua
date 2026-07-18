@@ -155,6 +155,7 @@ local function update_annotation(annotation, body, on_done)
 
   annotation.body = body
   annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  state.changed()
   render.refresh_annotation(annotation)
   notify("Updated annotation " .. annotation.id)
   if on_done then
@@ -201,14 +202,23 @@ function M.refresh(tabpage)
   render.refresh(tabpage)
 end
 
-function M.setup()
+function M.setup(opts)
   if initialized then
     return
   end
   initialized = true
+  opts = opts or {}
 
   render.setup_highlights()
+  local persistence = require("native_review.persistence").setup(opts.persistence)
   local group = vim.api.nvim_create_augroup("NativeReview", { clear = true })
+
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    group = group,
+    callback = function()
+      persistence.save_now()
+    end,
+  })
 
   vim.api.nvim_create_autocmd("ColorScheme", {
     group = group,
@@ -235,6 +245,16 @@ function M.setup()
     end,
   })
 
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = group,
+    callback = function(event)
+      if #state.list() > 0 then
+        render.refresh_buffer(event.buf)
+        persistence.schedule_save()
+      end
+    end,
+  })
+
   vim.api.nvim_create_autocmd("User", {
     group = group,
     pattern = "CodeDiffClose",
@@ -248,6 +268,8 @@ function M.setup()
       end, 50)
     end,
   })
+
+  vim.schedule(render.refresh_visible)
 
   vim.api.nvim_create_user_command("NativeReviewAdd", function()
     M.add()
@@ -266,6 +288,14 @@ function M.setup()
     M.edit(command.args ~= "" and command.args or nil)
   end, { desc = "Edit the annotation at the cursor or by ID", nargs = "?" })
   vim.api.nvim_create_user_command("NativeReviewClear", M.clear, { desc = "Clear review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewSave", function()
+    local ok, err = persistence.save_now()
+    notify(ok and "Saved review annotations" or err, ok and vim.log.levels.INFO or vim.log.levels.ERROR)
+  end, { desc = "Save review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewReload", function()
+    local ok, result = persistence.reload()
+    notify(ok and string.format("Reloaded %d review annotations", result) or result, ok and vim.log.levels.INFO or vim.log.levels.ERROR)
+  end, { desc = "Reload review annotations from disk" })
 end
 
 return M

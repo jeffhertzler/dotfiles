@@ -230,6 +230,12 @@ function M.refresh_buffer(bufnr)
   end
 end
 
+function M.sync()
+  for _, annotation in ipairs(state.list()) do
+    sync_anchor(annotation)
+  end
+end
+
 function M.refresh_visible()
   local seen = {}
   for _, winid in ipairs(vim.api.nvim_list_wins()) do

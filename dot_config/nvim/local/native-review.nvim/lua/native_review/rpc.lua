@@ -350,6 +350,7 @@ function M.update(payload)
     update.annotation.updated_at = now
     table.insert(ids, update.annotation.id)
   end
+  state.changed()
   render.refresh_visible()
   vim.notify(string.format("Updated %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Native Review" })
   return { ok = true, count = #ids, ids = ids }
@@ -368,6 +369,7 @@ function M.resolve(payload)
     annotation.updated_at = now
     table.insert(ids, annotation.id)
   end
+  state.changed()
   render.refresh_visible()
   vim.notify(string.format("Resolved %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Native Review" })
   return { ok = true, count = #ids, ids = ids }

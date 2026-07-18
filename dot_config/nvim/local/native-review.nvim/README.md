@@ -17,6 +17,8 @@ navigating working-file annotations does not require a diff view.
 - Notes render as virtual-line boxes with signs and target highlighting.
 - Extmark anchors follow ordinary edits during the live Neovim session.
 - Notes are restored on buffer entry and CodeDiff lifecycle events.
+- Human and agent annotations persist across Neovim restarts.
+- Add/edit/resolve/remove/import operations are autosaved atomically.
 - Working buffers remain editable.
 
 ## Usage
@@ -34,7 +36,35 @@ navigating working-file annotations does not require a diff view.
 | `:NativeReviewAdd`                          | Annotate the current line               |
 | `:NativeReviewEdit review-3`                | Edit an annotation by ID                |
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
-| `:NativeReviewClear`                        | Clear all in-memory annotations         |
+| `:NativeReviewClear`                        | Clear all persisted annotations         |
+| `:NativeReviewSave`                         | Flush annotations to disk               |
+| `:NativeReviewReload`                       | Reload annotations from disk            |
+
+## Persistence
+
+State uses a versioned JSON document at:
+
+```text
+stdpath("state")/native-review/annotations.json
+```
+
+Writes are debounced, atomic, and permissioned `0600`. The complete annotation
+set supports multiple repositories and plain files without creating repository
+artifacts. Invalid or unsupported state files are reported and preserved rather
+than overwritten on exit.
+
+Tests and isolated instances can override the path with
+`NVIM_NATIVE_REVIEW_STATE` or setup options:
+
+```lua
+require("native_review").setup({
+  persistence = {
+    enabled = true,
+    path = "/custom/annotations.json",
+    debounce_ms = 100,
+  },
+})
+```
 
 ## Agent RPC import
 
@@ -81,9 +111,9 @@ annotations remain visible but are dimmed and excluded from outbound payloads.
 
 ## Spike limitations
 
-- State is intentionally in memory and is lost when Neovim exits.
 - Annotation input is single-line for now.
 - Old-side notes are preserved but not yet rendered in inline layout.
 - Blockwise selections are not implemented.
 - Diff-side picker navigation expects the relevant CodeDiff file to be selected.
-- Resolving, agent annotation import, and durable reanchoring are later phases.
+- Context-based reanchoring and stale detection are not implemented yet; stored
+  locations currently reopen at their exact saved line/column positions.

@@ -10,7 +10,8 @@ Current setup:
 - `agent-bridge.nvim` sends file, selection, and diagnostic context to agents
   through Herdr or tmux.
 - Neovim publishes an RPC server address for both Herdr and tmux environments.
-- `native-review.nvim` now contains a buffer-first, in-memory annotation spike.
+- `native-review.nvim` now contains a buffer-first annotation core with versioned
+  persistence and bidirectional agent RPC.
 - `codediff.nvim` is installed as an optional diff-view adapter, not as a
   requirement for creating or rendering annotations.
 - `review.nvim` was evaluated and removed. Its rendering and CodeDiff lifecycle
@@ -425,11 +426,15 @@ can add several visible annotations back to the same live review.
 
 ### Phase 3: durable sessions
 
-- [ ] Versioned persistence format.
-- [ ] Repository/worktree/revision session identity.
-- [ ] Context fingerprints.
+Status: in progress.
+
+- [x] Versioned persistence format outside repositories.
+- [x] Atomic debounced autosave for human and RPC mutations.
+- [x] Automatic restart/session resume across repositories and plain files.
+- [ ] Formal repository/worktree/revision session identity.
+- [x] Store selected and surrounding context anchors.
 - [ ] Fresh/reanchored/stale validation.
-- [ ] Session resume and cleanup.
+- [ ] Session cleanup and selective archival.
 - [ ] Import/export for offline agent workflows.
 
 ### Phase 4: VCS integration
