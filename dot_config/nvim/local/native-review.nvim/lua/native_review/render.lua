@@ -115,8 +115,22 @@ local function location(target)
   return string.format("%s %s", side, range)
 end
 
-local function comment_box(annotation)
-  local header = string.format("[HUMAN NOTE · %s]", location(annotation.target))
+local function annotation_highlights(annotation)
+  if annotation.author and annotation.author.kind == "agent" then
+    return "NativeReviewAgent", "NativeReviewAgentRange", "NativeReviewAgentLine"
+  end
+  return "NativeReviewNote", "NativeReviewRange", "NativeReviewLine"
+end
+
+local function comment_box(annotation, highlight)
+  local author = annotation.author or { kind = "human" }
+  local author_name = author.kind == "agent" and ("AGENT " .. (author.name or "agent")) or "HUMAN"
+  local header = string.format(
+    "[%s %s · %s]",
+    author_name,
+    string.upper(annotation.kind or "note"),
+    location(annotation.target)
+  )
   local lines = wrapped_lines(annotation.body, 72)
   local content_width = vim.fn.strdisplaywidth(header)
   for _, text in ipairs(lines) do
@@ -128,33 +142,34 @@ local function comment_box(annotation)
     {
       {
         "╭─" .. header .. string.rep("─", content_width - vim.fn.strdisplaywidth(header) + 1) .. "╮",
-        "NativeReviewNote",
+        highlight,
       },
     },
   }
   for _, text in ipairs(lines) do
     local padding = content_width - vim.fn.strdisplaywidth(text)
-    table.insert(virtual_lines, { { "│ " .. text .. string.rep(" ", padding) .. " │", "NativeReviewNote" } })
+    table.insert(virtual_lines, { { "│ " .. text .. string.rep(" ", padding) .. " │", highlight } })
   end
-  table.insert(virtual_lines, { { "╰" .. string.rep("─", content_width + 2) .. "╯", "NativeReviewNote" } })
+  table.insert(virtual_lines, { { "╰" .. string.rep("─", content_width + 2) .. "╯", highlight } })
   return virtual_lines
 end
 
 local function render_range(bufnr, annotation)
   local target = annotation.target
+  local note_highlight, range_highlight, line_highlight = annotation_highlights(annotation)
   clamp_target(bufnr, target)
 
   if target.selection == "character" then
     pcall(vim.api.nvim_buf_set_extmark, bufnr, render_ns, target.start_line - 1, target.start_col - 1, {
       end_row = target.end_line - 1,
       end_col = target_util.end_col_exclusive(bufnr, target),
-      hl_group = "NativeReviewRange",
+      hl_group = range_highlight,
       priority = 220,
     })
   else
     for line = target.start_line, target.end_line do
       pcall(vim.api.nvim_buf_set_extmark, bufnr, render_ns, line - 1, 0, {
-        line_hl_group = "NativeReviewLine",
+        line_hl_group = line_highlight,
         priority = 220,
       })
     end
@@ -162,11 +177,11 @@ local function render_range(bufnr, annotation)
 
   pcall(vim.api.nvim_buf_set_extmark, bufnr, render_ns, target.start_line - 1, 0, {
     sign_text = "●",
-    sign_hl_group = "NativeReviewNote",
+    sign_hl_group = note_highlight,
     priority = 230,
   })
   pcall(vim.api.nvim_buf_set_extmark, bufnr, render_ns, target.end_line - 1, 0, {
-    virt_lines = comment_box(annotation),
+    virt_lines = comment_box(annotation, note_highlight),
     virt_lines_above = false,
     virt_lines_overflow = "scroll",
     priority = 230,
@@ -206,6 +221,19 @@ function M.refresh_buffer(bufnr)
       ensure_anchor(annotation, bufnr)
       sync_anchor(annotation)
       render_range(bufnr, annotation)
+    end
+  end
+end
+
+function M.refresh_visible()
+  local seen = {}
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winid) then
+      local bufnr = vim.api.nvim_win_get_buf(winid)
+      if not seen[bufnr] then
+        seen[bufnr] = true
+        M.refresh_buffer(bufnr)
+      end
     end
   end
 end
@@ -277,6 +305,9 @@ function M.setup_highlights()
   vim.api.nvim_set_hl(0, "NativeReviewNote", { default = true, link = "DiagnosticInfo" })
   vim.api.nvim_set_hl(0, "NativeReviewRange", { default = true, link = "Visual" })
   vim.api.nvim_set_hl(0, "NativeReviewLine", { default = true, link = "CursorLine" })
+  vim.api.nvim_set_hl(0, "NativeReviewAgent", { default = true, link = "DiagnosticHint" })
+  vim.api.nvim_set_hl(0, "NativeReviewAgentRange", { default = true, link = "Search" })
+  vim.api.nvim_set_hl(0, "NativeReviewAgentLine", { default = true, link = "DiffChange" })
 end
 
 return M

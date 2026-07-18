@@ -416,8 +416,8 @@ edits without disrupting CodeDiff or normal Neovim behavior.
 - [x] Expose a public arbitrary-text send API from agent-bridge.
 - [x] Serialize open annotations into a structured payload.
 - [x] Send review feedback through existing Herdr/tmux target selection.
-- [ ] Add RPC `review.list` and batch `review.apply` operations.
-- [ ] Render imported agent annotations with author distinction.
+- [x] Add RPC `review.list` and atomically validated batch `review.apply` operations.
+- [x] Render imported agent annotations with author distinction.
 - [ ] Add resolve/remove/update operations.
 
 Exit criterion: a human can send several annotations to an agent, and the agent

@@ -168,6 +168,13 @@ local function surrounding_context(bufnr, target)
   }
 end
 
+function M.anchor_for_buffer(bufnr, target)
+  if not (bufnr and vim.api.nvim_buf_is_valid(bufnr)) then
+    return nil
+  end
+  return surrounding_context(bufnr, target)
+end
+
 function M.capture(opts)
   opts = opts or {}
   local bufnr = vim.api.nvim_get_current_buf()

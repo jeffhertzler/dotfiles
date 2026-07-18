@@ -61,6 +61,14 @@ function M.payload(opts)
   return require("native_review.export").build(state.list(), opts)
 end
 
+function M.apply(payload)
+  return require("native_review.rpc").apply(payload)
+end
+
+function M.rpc(request)
+  return require("native_review.rpc").dispatch(request)
+end
+
 function M.send(opts)
   opts = opts or {}
   local payload, err = M.payload(opts)

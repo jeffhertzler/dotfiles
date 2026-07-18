@@ -4,8 +4,12 @@ local annotations = {}
 local next_id = 1
 
 function M.add(annotation)
-  annotation.id = annotation.id or string.format("review-%d", next_id)
-  next_id = next_id + 1
+  if not annotation.id then
+    repeat
+      annotation.id = string.format("review-%d", next_id)
+      next_id = next_id + 1
+    until not M.get(annotation.id)
+  end
   table.insert(annotations, annotation)
   return annotation
 end

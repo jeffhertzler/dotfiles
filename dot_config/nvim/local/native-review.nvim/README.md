@@ -36,6 +36,45 @@ navigating working-file annotations does not require a diff view.
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
 | `:NativeReviewClear`                        | Clear all in-memory annotations         |
 
+## Agent RPC import
+
+The outbound review payload includes this Neovim instance's RPC server. Agents
+can validate and atomically import a batch with:
+
+```lua
+require("native_review.rpc").apply({
+  schemaVersion = 1,
+  author = "pi",
+  comments = {
+    {
+      id = "agent-finding-1",
+      body = "This branch loses the original error.",
+      kind = "issue",
+      target = {
+        file = "lua/example.lua",
+        side = "working",
+        startLine = 42,
+        startCol = 8, -- optional; requires endCol
+        endLine = 42,
+        endCol = 19,
+        columnEncoding = "utf-8-byte",
+      },
+    },
+  },
+})
+```
+
+RPC-facing operations are available through `native_review.rpc`:
+
+- `context()` returns the current buffer/repository and server address.
+- `list()` returns annotations in the versioned wire format.
+- `apply(payload)` validates the full batch before adding anything.
+- `dispatch({ operation = ... })` provides a single RPC entry point.
+
+For shell-based agents, write the payload to a JSON file and evaluate
+`native_review.rpc.apply` through `nvim --server <socket> --remote-expr`. Imported
+annotations are marked as agent-authored and use distinct rendering.
+
 ## Spike limitations
 
 - State is intentionally in memory and is lost when Neovim exits.

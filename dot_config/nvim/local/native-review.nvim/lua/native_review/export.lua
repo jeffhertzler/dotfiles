@@ -58,6 +58,9 @@ function M.build(annotations, opts)
     "Targets use one-based lines and UTF-8 byte columns. Old/new targets may refer to a non-working revision.",
     "",
     "Schema: `native-review/v1`",
+    "Neovim RPC server: `" .. (vim.v.servername ~= "" and vim.v.servername or "unavailable") .. "`",
+    "Agent findings can be imported with `require(\"native_review.rpc\").apply(payload)` over Neovim RPC.",
+    "The apply payload uses `{ schemaVersion = 1, comments = { ... } }` with camelCase target positions.",
   }
 
   for _, annotation in ipairs(selected) do
