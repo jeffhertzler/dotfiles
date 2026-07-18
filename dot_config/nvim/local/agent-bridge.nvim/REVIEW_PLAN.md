@@ -418,7 +418,7 @@ edits without disrupting CodeDiff or normal Neovim behavior.
 - [x] Send review feedback through existing Herdr/tmux target selection.
 - [x] Add RPC `review.list` and atomically validated batch `review.apply` operations.
 - [x] Render imported agent annotations with author distinction.
-- [ ] Add resolve/remove/update operations.
+- [x] Add atomically validated RPC resolve/remove/update operations.
 
 Exit criterion: a human can send several annotations to an agent, and the agent
 can add several visible annotations back to the same live review.

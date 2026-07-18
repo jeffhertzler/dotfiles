@@ -69,11 +69,15 @@ RPC-facing operations are available through `native_review.rpc`:
 - `context()` returns the current buffer/repository and server address.
 - `list()` returns annotations in the versioned wire format.
 - `apply(payload)` validates the full batch before adding anything.
+- `update({ updates = { ... } })` changes bodies, kinds, or statuses by ID.
+- `resolve({ ids = { ... } })` marks a validated batch resolved.
+- `remove({ ids = { ... } })` deletes a validated batch.
 - `dispatch({ operation = ... })` provides a single RPC entry point.
 
 For shell-based agents, write the payload to a JSON file and evaluate
 `native_review.rpc.apply` through `nvim --server <socket> --remote-expr`. Imported
-annotations are marked as agent-authored and use distinct rendering.
+annotations are marked as agent-authored and use distinct rendering. Resolved
+annotations remain visible but are dimmed and excluded from outbound payloads.
 
 ## Spike limitations
 

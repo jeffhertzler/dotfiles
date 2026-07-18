@@ -266,6 +266,131 @@ function M.apply(payload)
   return { ok = true, count = #ids, ids = ids }
 end
 
+local function validate_ids(payload)
+  if type(payload) ~= "table" or not vim.islist(payload.ids) or #payload.ids == 0 then
+    return nil, failure("ids must be a non-empty array", nil, "ids")
+  end
+  if #payload.ids > 500 then
+    return nil, failure("a batch may contain at most 500 ids", nil, "ids")
+  end
+
+  local annotations = {}
+  local seen = {}
+  for index, id in ipairs(payload.ids) do
+    if type(id) ~= "string" or id == "" then
+      return nil, failure("id must be a non-empty string", index, "ids")
+    end
+    if seen[id] then
+      return nil, failure("duplicate id in batch: " .. id, index, "ids")
+    end
+    local annotation = state.get(id)
+    if not annotation then
+      return nil, failure("annotation not found: " .. id, index, "ids")
+    end
+    seen[id] = true
+    table.insert(annotations, annotation)
+  end
+  return annotations
+end
+
+function M.update(payload)
+  if type(payload) ~= "table" or not vim.islist(payload.updates) or #payload.updates == 0 then
+    return failure("updates must be a non-empty array", nil, "updates")
+  end
+  if #payload.updates > 500 then
+    return failure("a batch may contain at most 500 updates", nil, "updates")
+  end
+
+  local pending = {}
+  local seen = {}
+  for index, update in ipairs(payload.updates) do
+    if type(update) ~= "table" then
+      return failure("update must be an object", index, "updates")
+    end
+    if type(update.id) ~= "string" or update.id == "" then
+      return failure("update.id must be a non-empty string", index, "id")
+    end
+    if seen[update.id] then
+      return failure("duplicate id in batch: " .. update.id, index, "id")
+    end
+    local annotation = state.get(update.id)
+    if not annotation then
+      return failure("annotation not found: " .. update.id, index, "id")
+    end
+    if update.body == nil and update.kind == nil and update.status == nil then
+      return failure("update must include body, kind, or status", index, "updates")
+    end
+
+    if update.body ~= nil and type(update.body) ~= "string" then
+      return failure("body must be a string", index, "body")
+    end
+    local body = update.body ~= nil and vim.trim(update.body) or annotation.body
+    local kind = update.kind ~= nil and update.kind or annotation.kind
+    local status = update.status ~= nil and update.status or annotation.status
+    if body == "" or #body > 100000 then
+      return failure("body must contain between 1 and 100000 bytes", index, "body")
+    end
+    if type(kind) ~= "string" or not valid_kinds[kind] then
+      return failure("unsupported kind: " .. tostring(kind), index, "kind")
+    end
+    if type(status) ~= "string" or not valid_statuses[status] then
+      return failure("unsupported status: " .. tostring(status), index, "status")
+    end
+
+    seen[update.id] = true
+    table.insert(pending, { annotation = annotation, body = body, kind = kind, status = status })
+  end
+
+  local ids = {}
+  local now = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  for _, update in ipairs(pending) do
+    update.annotation.body = update.body
+    update.annotation.kind = update.kind
+    update.annotation.status = update.status
+    update.annotation.updated_at = now
+    table.insert(ids, update.annotation.id)
+  end
+  render.refresh_visible()
+  vim.notify(string.format("Updated %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Native Review" })
+  return { ok = true, count = #ids, ids = ids }
+end
+
+function M.resolve(payload)
+  local annotations, err = validate_ids(payload)
+  if not annotations then
+    return err
+  end
+
+  local ids = {}
+  local now = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  for _, annotation in ipairs(annotations) do
+    annotation.status = "resolved"
+    annotation.updated_at = now
+    table.insert(ids, annotation.id)
+  end
+  render.refresh_visible()
+  vim.notify(string.format("Resolved %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Native Review" })
+  return { ok = true, count = #ids, ids = ids }
+end
+
+function M.remove(payload)
+  local annotations, err = validate_ids(payload)
+  if not annotations then
+    return err
+  end
+
+  local ids = {}
+  for _, annotation in ipairs(annotations) do
+    state.remove(annotation.id)
+    table.insert(ids, annotation.id)
+  end
+  for _, annotation in ipairs(annotations) do
+    render.remove(annotation)
+  end
+  vim.notify(string.format("Removed %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Native Review" })
+  return { ok = true, count = #ids, ids = ids }
+end
+
 function M.list()
   local comments = {}
   for _, annotation in ipairs(state.list()) do
@@ -296,6 +421,12 @@ function M.dispatch(request)
   end
   if request.operation == "apply" then
     return M.apply(request.payload or request)
+  elseif request.operation == "update" then
+    return M.update(request.payload or request)
+  elseif request.operation == "resolve" then
+    return M.resolve(request.payload or request)
+  elseif request.operation == "remove" then
+    return M.remove(request.payload or request)
   elseif request.operation == "list" then
     return M.list()
   elseif request.operation == "context" then

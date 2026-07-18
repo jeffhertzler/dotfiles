@@ -61,6 +61,7 @@ function M.build(annotations, opts)
     "Neovim RPC server: `" .. (vim.v.servername ~= "" and vim.v.servername or "unavailable") .. "`",
     "Agent findings can be imported with `require(\"native_review.rpc\").apply(payload)` over Neovim RPC.",
     "The apply payload uses `{ schemaVersion = 1, comments = { ... } }` with camelCase target positions.",
+    "After addressing comments, call `.resolve({ ids = { ... } })`; `.update` and `.remove` are also available.",
   }
 
   for _, annotation in ipairs(selected) do

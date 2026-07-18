@@ -116,6 +116,9 @@ local function location(target)
 end
 
 local function annotation_highlights(annotation)
+  if annotation.status == "resolved" then
+    return "NativeReviewResolved", "NativeReviewResolvedRange", "NativeReviewResolvedLine"
+  end
   if annotation.author and annotation.author.kind == "agent" then
     return "NativeReviewAgent", "NativeReviewAgentRange", "NativeReviewAgentLine"
   end
@@ -125,10 +128,12 @@ end
 local function comment_box(annotation, highlight)
   local author = annotation.author or { kind = "human" }
   local author_name = author.kind == "agent" and ("AGENT " .. (author.name or "agent")) or "HUMAN"
+  local status = annotation.status and annotation.status ~= "open" and (" · " .. string.upper(annotation.status)) or ""
   local header = string.format(
-    "[%s %s · %s]",
+    "[%s %s%s · %s]",
     author_name,
     string.upper(annotation.kind or "note"),
+    status,
     location(annotation.target)
   )
   local lines = wrapped_lines(annotation.body, 72)
@@ -308,6 +313,9 @@ function M.setup_highlights()
   vim.api.nvim_set_hl(0, "NativeReviewAgent", { default = true, link = "DiagnosticHint" })
   vim.api.nvim_set_hl(0, "NativeReviewAgentRange", { default = true, link = "Search" })
   vim.api.nvim_set_hl(0, "NativeReviewAgentLine", { default = true, link = "DiffChange" })
+  vim.api.nvim_set_hl(0, "NativeReviewResolved", { default = true, link = "Comment" })
+  vim.api.nvim_set_hl(0, "NativeReviewResolvedRange", { default = true, link = "IncSearch" })
+  vim.api.nvim_set_hl(0, "NativeReviewResolvedLine", { default = true, link = "CursorLine" })
 end
 
 return M
