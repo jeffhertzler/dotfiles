@@ -54,12 +54,18 @@ function M.add(opts)
   end)
 end
 
-function M.list()
-  require("native_review.picker").open()
+function M.list(opts)
+  require("native_review.picker").open(opts)
+end
+
+function M.workspaces()
+  require("native_review.picker").workspaces()
 end
 
 function M.payload(opts)
-  return require("native_review.export").build(state.list(), opts)
+  opts = opts or {}
+  local annotations = opts.all and state.list() or require("native_review.scope").current_annotations()
+  return require("native_review.export").build(annotations, opts)
 end
 
 function M.apply(payload)
@@ -189,10 +195,41 @@ function M.edit(id, opts)
   return true
 end
 
+local function remove_annotations(annotations)
+  for _, annotation in ipairs(annotations) do
+    state.remove(annotation.id)
+  end
+  for _, annotation in ipairs(annotations) do
+    render.remove(annotation)
+  end
+  return #annotations
+end
+
+function M.clear_current()
+  local annotations = require("native_review.scope").current_annotations()
+  local count = remove_annotations(annotations)
+  notify(string.format("Cleared %d annotation%s from the current workspace", count, count == 1 and "" or "s"))
+  return count
+end
+
+function M.prune(opts)
+  opts = opts or {}
+  local source = opts.all and state.list() or require("native_review.scope").current_annotations()
+  local removable = {}
+  for _, annotation in ipairs(source) do
+    if annotation.status == "resolved" or (opts.include_stale and annotation.freshness == "stale") then
+      table.insert(removable, annotation)
+    end
+  end
+  local count = remove_annotations(removable)
+  notify(string.format("Pruned %d annotation%s", count, count == 1 and "" or "s"))
+  return count
+end
+
 function M.clear()
   render.clear_all()
   state.clear()
-  notify("Cleared review annotations")
+  notify("Cleared all review annotations")
 end
 
 function M.annotations()
@@ -275,10 +312,17 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("NativeReviewAdd", function()
     M.add()
   end, { desc = "Annotate the current CodeDiff line" })
-  vim.api.nvim_create_user_command("NativeReviewList", M.list, { desc = "List review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewList", M.list, { desc = "List annotations in the current workspace" })
+  vim.api.nvim_create_user_command("NativeReviewListAll", function()
+    M.list({ all = true })
+  end, { desc = "List annotations across all workspaces" })
+  vim.api.nvim_create_user_command("NativeReviewWorkspaces", M.workspaces, { desc = "List review workspaces" })
   vim.api.nvim_create_user_command("NativeReviewSend", function(command)
     M.send({ submit = command.bang, switch_to_target = not command.bang })
-  end, { desc = "Send open review annotations to an agent", bang = true })
+  end, { desc = "Send current-workspace annotations to an agent", bang = true })
+  vim.api.nvim_create_user_command("NativeReviewSendAll", function(command)
+    M.send({ all = true, submit = command.bang, switch_to_target = not command.bang })
+  end, { desc = "Send annotations from every workspace", bang = true })
   vim.api.nvim_create_user_command("NativeReviewCompose", function()
     M.send({ interactive_prompt = true })
   end, { desc = "Compose an agent message with review annotations" })
@@ -288,7 +332,11 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("NativeReviewEdit", function(command)
     M.edit(command.args ~= "" and command.args or nil)
   end, { desc = "Edit the annotation at the cursor or by ID", nargs = "?" })
-  vim.api.nvim_create_user_command("NativeReviewClear", M.clear, { desc = "Clear review annotations" })
+  vim.api.nvim_create_user_command("NativeReviewClearCurrent", M.clear_current, { desc = "Clear current-workspace annotations" })
+  vim.api.nvim_create_user_command("NativeReviewPrune", function(command)
+    M.prune({ include_stale = command.bang })
+  end, { desc = "Prune resolved annotations; bang also prunes stale annotations", bang = true })
+  vim.api.nvim_create_user_command("NativeReviewClear", M.clear, { desc = "Clear all review annotations" })
   vim.api.nvim_create_user_command("NativeReviewSave", function()
     local ok, err = persistence.save_now()
     notify(ok and "Saved review annotations" or err, ok and vim.log.levels.INFO or vim.log.levels.ERROR)

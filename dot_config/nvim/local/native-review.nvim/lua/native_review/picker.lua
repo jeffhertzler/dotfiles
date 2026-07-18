@@ -1,7 +1,5 @@
 local M = {}
 
-local state = require("native_review.state")
-
 local function format_location(annotation)
   local target = annotation.target
   local side = ({ old = "~", new = "+", working = " " })[target.side] or " "
@@ -68,9 +66,18 @@ local function navigate(tabpage, annotation)
   })
 end
 
-function M.open(tabpage)
-  tabpage = tabpage or vim.api.nvim_get_current_tabpage()
-  local annotations = state.list()
+function M.open(opts)
+  if type(opts) == "number" then
+    opts = { tabpage = opts }
+  end
+  opts = opts or {}
+  local tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
+  local scope = require("native_review.scope")
+  local scope_key = opts.all and nil or (opts.scope or scope.current())
+  local annotations = opts.annotations or (opts.all and scope.list() or scope.list(scope_key))
+  if not opts.all and not scope_key and not opts.annotations then
+    annotations = {}
+  end
   if #annotations == 0 then
     vim.notify("No annotations in this review", vim.log.levels.INFO, { title = "Native Review" })
     return
@@ -87,7 +94,7 @@ function M.open(tabpage)
   local ok, snacks = pcall(require, "snacks")
   if ok then
     snacks.picker({
-      title = "Review annotations",
+      title = opts.title or (opts.all and "All review annotations" or "Review annotations"),
       items = items,
       format = "text",
       focus = "list",
@@ -103,8 +110,8 @@ function M.open(tabpage)
           picker:close()
           if item and require("native_review").remove(item.annotation.id) then
             vim.schedule(function()
-              if #state.list() > 0 then
-                M.open(tabpage)
+              if #scope.list(scope_key) > 0 then
+                M.open(opts)
               end
             end)
           end
@@ -136,6 +143,51 @@ function M.open(tabpage)
   }, function(choice)
     if choice then
       navigate(tabpage, choice.annotation)
+    end
+  end)
+end
+
+function M.workspaces()
+  local groups = require("native_review.scope").groups()
+  if #groups == 0 then
+    vim.notify("No persisted review workspaces", vim.log.levels.INFO, { title = "Native Review" })
+    return
+  end
+
+  local items = {}
+  for _, group in ipairs(groups) do
+    table.insert(items, {
+      group = group,
+      text = string.format("%s  %d open · %d resolved · %d stale", group.label, group.open, group.resolved, group.stale),
+    })
+  end
+
+  local ok, snacks = pcall(require, "snacks")
+  if ok then
+    snacks.picker({
+      title = "Review workspaces",
+      items = items,
+      format = "text",
+      focus = "list",
+      layout = { preset = "select", preview = false },
+      confirm = function(picker, item)
+        picker:close()
+        if item then
+          M.open({ scope = item.group.key, title = item.group.label })
+        end
+      end,
+    })
+    return
+  end
+
+  vim.ui.select(items, {
+    prompt = "Review workspaces",
+    format_item = function(item)
+      return item.text
+    end,
+  }, function(choice)
+    if choice then
+      M.open({ scope = choice.group.key, title = choice.group.label })
     end
   end)
 end

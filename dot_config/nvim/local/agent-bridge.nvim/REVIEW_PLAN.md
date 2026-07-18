@@ -431,11 +431,13 @@ Status: in progress.
 - [x] Versioned persistence format outside repositories.
 - [x] Atomic debounced autosave for human and RPC mutations.
 - [x] Automatic restart/session resume across repositories and plain files.
-- [ ] Formal repository/worktree/revision session identity.
+- [x] Repository-root and plain-file workspace scoping for list/send/cleanup.
+- [ ] Named and revision-specific review sessions within a workspace.
 - [x] Store selected and surrounding context anchors.
 - [x] Exact-content fresh/reanchored/stale validation with context disambiguation.
 - [ ] Optional fuzzy reanchoring when selected content itself was edited.
-- [ ] Session cleanup and selective archival.
+- [x] Selective current-workspace cleanup and resolved/stale pruning.
+- [ ] Session archival rather than deletion.
 - [ ] Import/export for offline agent workflows.
 
 ### Phase 4: VCS integration

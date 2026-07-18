@@ -29,16 +29,33 @@ navigating working-file annotations does not require a diff view.
 | visual `<leader>ra`                         | Annotate the selected line/column range |
 | `<leader>rd` / `:NativeReviewRemove`        | Remove the annotation at the cursor     |
 | `<leader>re` / `:NativeReviewEdit`          | Edit the annotation at the cursor       |
-| `<leader>rl` / `:NativeReviewList`          | List annotations; `e` edits, `d` removes |
-| `<leader>rs` / `:NativeReviewSend`          | Stage all open notes in the selected agent |
+| `<leader>rl` / `:NativeReviewList`          | List current-workspace annotations       |
+| `<leader>rs` / `:NativeReviewSend`          | Stage current-workspace open notes       |
 | `:NativeReviewSend!`                        | Send, submit, and keep focus in Neovim  |
 | `:NativeReviewCompose`                      | Open Agent Prompt with review context   |
 | `:NativeReviewAdd`                          | Annotate the current line               |
 | `:NativeReviewEdit review-3`                | Edit an annotation by ID                |
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
+| `:NativeReviewListAll`                      | List annotations across all workspaces  |
+| `:NativeReviewWorkspaces`                   | Browse workspace annotation groups      |
+| `:NativeReviewSendAll[!]`                   | Send annotations across all workspaces  |
+| `:NativeReviewPrune[!]`                     | Prune resolved; bang also prunes stale  |
+| `:NativeReviewClearCurrent`                 | Clear the current workspace             |
 | `:NativeReviewClear`                        | Clear all persisted annotations         |
 | `:NativeReviewSave`                         | Flush annotations to disk               |
 | `:NativeReviewReload`                       | Reload annotations from disk            |
+
+## Workspace scoping
+
+Normal list/send/cleanup operations are scoped to the current repository root.
+Plain files without a detected Git or JJ root use a file-specific scope. This
+prevents annotations from unrelated projects from being sent together.
+
+`:NativeReviewWorkspaces` opens a compact picker showing open, resolved, and
+stale counts for each scope. Selecting one opens its annotations. Resolved
+annotations can be pruned from only the current workspace; `:NativeReviewPrune!`
+also removes stale annotations. Explicit `All` commands remain available when a
+cross-workspace operation is intentional.
 
 ## Persistence
 
