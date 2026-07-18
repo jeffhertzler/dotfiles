@@ -106,6 +106,20 @@ function M.open(opts)
       focus = "list",
       layout = { preset = "select", preview = false },
       actions = {
+        toggle_resolved = function(picker, item)
+          picker:close()
+          if item then
+            local review = require("native_review")
+            if item.annotation.status == "resolved" then
+              review.reopen(item.annotation.id)
+            else
+              review.resolve(item.annotation.id)
+            end
+            vim.schedule(function()
+              M.open(opts)
+            end)
+          end
+        end,
         edit_annotation = function(picker, item)
           picker:close()
           if item then
@@ -129,6 +143,7 @@ function M.open(opts)
           keys = {
             d = { "remove_annotation", desc = "Remove annotation" },
             e = { "edit_annotation", desc = "Edit annotation" },
+            r = { "toggle_resolved", desc = "Resolve or reopen annotation" },
           },
         },
       },

@@ -407,6 +407,7 @@ optional CodeDiff adapter.
 - [x] Add a compact Snacks picker for navigation and removal.
 - [x] Remove annotations from the picker, cursor, or public API.
 - [x] Edit annotations from the picker, cursor, or public API.
+- [x] Resolve and reopen annotations from the picker, cursor, or public API.
 
 Exit criterion: regular-buffer annotations work independently, and human
 annotations on old/working/new diff sides survive layout toggles and ordinary

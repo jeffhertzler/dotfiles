@@ -230,6 +230,33 @@ local function update_annotation(annotation, body, on_done)
   return annotation
 end
 
+function M.set_status(id, status)
+  local annotation = id and state.get(id) or annotation_at_cursor()
+  if not annotation then
+    notify("No annotation found", vim.log.levels.WARN)
+    return false
+  end
+  if status ~= "open" and status ~= "acknowledged" and status ~= "resolved" then
+    notify("Unsupported annotation status: " .. tostring(status), vim.log.levels.WARN)
+    return false
+  end
+
+  annotation.status = status
+  annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
+  state.changed()
+  render.refresh_annotation(annotation)
+  notify(string.format("%s annotation %s", status == "resolved" and "Resolved" or "Reopened", annotation.id))
+  return annotation
+end
+
+function M.resolve(id)
+  return M.set_status(id, "resolved")
+end
+
+function M.reopen(id)
+  return M.set_status(id, "open")
+end
+
 function M.edit(id, opts)
   if type(id) == "table" then
     opts = id
@@ -412,6 +439,12 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("NativeReviewEdit", function(command)
     M.edit(command.args ~= "" and command.args or nil)
   end, { desc = "Edit the annotation at the cursor or by ID", nargs = "?" })
+  vim.api.nvim_create_user_command("NativeReviewResolve", function(command)
+    M.resolve(command.args ~= "" and command.args or nil)
+  end, { desc = "Resolve the annotation at the cursor or by ID", nargs = "?" })
+  vim.api.nvim_create_user_command("NativeReviewReopen", function(command)
+    M.reopen(command.args ~= "" and command.args or nil)
+  end, { desc = "Reopen the annotation at the cursor or by ID", nargs = "?" })
   vim.api.nvim_create_user_command("NativeReviewSessionClear", M.clear_session, { desc = "Clear active-session annotations" })
   vim.api.nvim_create_user_command("NativeReviewClearCurrent", M.clear_current, { desc = "Clear current-workspace annotations" })
   vim.api.nvim_create_user_command("NativeReviewPrune", function(command)

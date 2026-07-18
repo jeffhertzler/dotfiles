@@ -29,13 +29,15 @@ navigating working-file annotations does not require a diff view.
 | visual `<leader>ra`                         | Annotate the selected line/column range |
 | `<leader>rd` / `:NativeReviewRemove`        | Remove the annotation at the cursor     |
 | `<leader>re` / `:NativeReviewEdit`          | Edit the annotation at the cursor       |
-| `<leader>rl` / `:NativeReviewList`          | List active-session annotations          |
+| `<leader>rl` / `:NativeReviewList`          | List notes; `e` edits, `r` resolves, `d` removes |
 | `<leader>rs` / `:NativeReviewSend`          | Stage active-session open notes          |
 | `:NativeReviewSend!`                        | Send, submit, and keep focus in Neovim  |
 | `:NativeReviewCompose`                      | Open Agent Prompt with review context   |
 | `:NativeReviewAdd`                          | Annotate the current line               |
 | `:NativeReviewEdit review-3`                | Edit an annotation by ID                |
 | `:NativeReviewRemove review-3`              | Remove an annotation by ID              |
+| `:NativeReviewResolve [review-3]`            | Resolve by cursor or ID                  |
+| `:NativeReviewReopen [review-3]`             | Reopen by cursor or ID                   |
 | `:NativeReviewListAll`                      | List annotations across all workspaces  |
 | `:NativeReviewWorkspaces`                   | Browse workspace annotation groups      |
 | `:NativeReviewSessions`                     | Browse and switch review sessions       |
