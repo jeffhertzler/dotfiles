@@ -19,7 +19,7 @@ make_repo() {
   printf 'second new\n' >"$repo/second.txt"
 }
 
-for case in lifecycle gitsigns neogit; do
+for case in lifecycle gitsigns neogit revisions large_diff; do
   repo="$tmp/$case"
   make_repo "$repo"
   (

@@ -52,10 +52,41 @@ end, 20), "Neogit du did not open a multi-file changeset")
 local multi = require("agent_diff").get_session()
 assert(multi.parking_win and vim.api.nvim_win_is_valid(multi.parking_win))
 assert(vim.api.nvim_win_get_config(multi.parking_win).hide)
+assert(vim.wait(3000, function()
+  return multi.index_watcher ~= nil and multi.modified_buf ~= nil
+end, 20), "changeset watchers were not installed")
 local redraw_ok, redraw_err = pcall(function()
   require("neogit.buffers.status").instance():redraw()
 end)
 assert(redraw_ok, redraw_err)
+local staged_externally = vim.system({ "git", "add", "second.txt" }, { text = true }):wait()
+assert(staged_externally.code == 0, staged_externally.stderr)
+assert(vim.wait(10000, function()
+  return #multi.files == 1 and multi.files[1].path == "sample.lua"
+end, 20), "external staging did not refresh the unstaged changeset: " .. vim.inspect(multi.files))
+local reset_externally = vim.system({ "git", "reset", "--", "second.txt" }, { text = true }):wait()
+assert(reset_externally.code == 0, reset_externally.stderr)
+assert(vim.wait(10000, function()
+  return #multi.files == 2
+end, 20), "external index reset did not refresh the changeset")
+require("agent_diff").next_file()
+assert(vim.wait(10000, function()
+  local context = multi.modified_buf and vim.b[multi.modified_buf].agent_diff_context
+  return context and context.path == "second.txt"
+end, 20))
+vim.fn.writefile({ "second external" }, vim.fs.dirname(path) .. "/second.txt")
+assert(vim.wait(10000, function()
+  return multi.modified_lines and multi.modified_lines[1] == "second external"
+end, 20), "external working-tree edit did not refresh the changeset")
+vim.fn.writefile({ "second new" }, vim.fs.dirname(path) .. "/second.txt")
+assert(vim.wait(10000, function()
+  return multi.modified_lines and multi.modified_lines[1] == "second new"
+end, 20))
+require("agent_diff").prev_file()
+assert(vim.wait(10000, function()
+  local context = multi.modified_buf and vim.b[multi.modified_buf].agent_diff_context
+  return context and context.path == "sample.lua"
+end, 20))
 require("agent_diff").toggle_sidebar()
 assert(not multi.explorer_win)
 require("agent_diff").toggle_sidebar()

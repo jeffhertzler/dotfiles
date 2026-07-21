@@ -414,7 +414,8 @@ Status: substantially complete.
 - [x] Verify arbitrary file comparison.
 - [x] Identify explorer/sidebar overlap.
 - [x] Evaluate review.nvim and reject it as a direct dependency.
-- [ ] Continue using CodeDiff long enough to identify refresh/editing edge cases.
+- [x] Cover refresh/editing edge cases: external working-file changes, external
+  index changes, scratch revision replacement, and bounded pathological diffs.
 
 ### Phase 1: technical spike
 
@@ -488,8 +489,19 @@ Status: in progress; do not assume Agent Review needs to own a VCS provider.
 - [x] Restore Neogit's full `d` popup through a no-tab changeset adapter. Show
   the file sidebar by default only when an action resolves multiple files; keep
   it toggleable in every diff view.
-- [ ] Evaluate native status, staging, commits, branches, diff toggling, and
-  refresh after agent edits.
+- [x] Add a compact diff winbar showing layout, revisions, path, file position,
+  close, sidebar, and navigation controls.
+- [x] Exercise `dd`, `du`, `ds`, `dh`, `dr`, `dw`, `dc`, and `dt` against real
+  temporary repositories, including commits, ranges, a stash, staging, hidden
+  Neogit redraws, and one-tab restoration.
+- [x] Automatically refresh working buffers and Neogit changeset file lists
+  after external file/index edits without overwriting unsaved local changes.
+- [x] Verify durable old/new Agent Review annotations while navigating, closing,
+  and reopening a multi-file revision changeset.
+- [x] Verify bounded timeout behavior and live refresh on a pathological
+  2,500-line rewrite.
+- [ ] Evaluate native status, commits, branches, and the tested diff actions in
+  sustained interactive use.
 - [ ] Observe whether Agent Review needs no VCS API, thin host launch adapters,
   or a full provider boundary.
 - [ ] Formalize a provider only if real workflow limitations require it.
@@ -504,12 +516,15 @@ Status: in progress; do not assume Agent Review needs to own a VCS provider.
 
 ## Immediate next steps
 
-1. Use Neogit as the native Git dashboard, Agent Diff as the thin visual host,
-   Gitsigns for ambient buffer state, CodeDiff only as the shared computation
-   engine, and Agent Review for durable feedback.
-2. Record actual friction around staging, layout toggling, large-diff timeouts,
-   and refresh after agent edits before adding any VCS API to Agent Review.
-3. Keep the Herdr/tmux Lazygit popup available as the familiar fallback.
+1. Use the now-automated Neogit/Agent Diff/Agent Review path in sustained daily
+   work and record friction that cannot be inferred from fixtures.
+2. Observe the adaptive large-rewrite fallback in real files. The pathological
+   2,500-line fixture remains bounded by skipping Tree-sitter parsing for
+   virtual old text after refinement times out; ordinary sparse edits retain
+   syntax-colored virtual text.
+3. Keep the Herdr/tmux Lazygit popup available as the familiar fallback. Do not
+   add a VCS provider, JJ adapter, or forge coupling until real use exposes a
+   concrete boundary the buffer-first core cannot handle.
 
 ## Resolved design decisions
 

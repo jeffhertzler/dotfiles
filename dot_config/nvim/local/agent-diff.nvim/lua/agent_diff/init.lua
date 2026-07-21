@@ -2,6 +2,8 @@ local M = {}
 
 local git = require("agent_diff.git")
 local render = require("agent_diff.render")
+local ui = require("agent_diff.ui")
+local watch = require("agent_diff.watch")
 
 local config = {
   debounce_ms = 180,
@@ -71,6 +73,7 @@ local function compute(session, timeout)
   else
     render.inline(session)
   end
+  ui.update(session)
   emit("AgentDiffUpdated", session)
   return true
 end
@@ -107,6 +110,46 @@ local function open_side(session)
   vim.api.nvim_win_set_buf(session.original_win, session.original_buf)
   session.layout = "side-by-side"
   render.side_by_side(session)
+  ui.update(session)
+end
+
+local function check_working_file(session, warn)
+  if not valid_buf(session.modified_buf) then
+    return false
+  end
+  if vim.bo[session.modified_buf].modified then
+    if warn and not session.external_change_notified then
+      session.external_change_notified = true
+      notify("The file changed on disk while this buffer has unsaved edits", vim.log.levels.WARN)
+    end
+    return false
+  end
+  vim.api.nvim_buf_call(session.modified_buf, function()
+    pcall(vim.cmd, "silent! checktime")
+  end)
+  return true
+end
+
+local function start_disk_watchers(session)
+  local function refresh_working()
+    if session ~= active then
+      return
+    end
+    if not check_working_file(session, true) then
+      return
+    end
+    session.external_change_notified = false
+    compute(session, config.live_timeout_ms)
+  end
+  session.file_watcher = watch.file(session.root .. "/" .. session.path, refresh_working)
+  local git_dir = git.git_dir(session.root)
+  if session.revision == "INDEX" and git_dir then
+    session.index_watcher = watch.directory(git_dir, function()
+      if session == active then
+        M.refresh({ reload = true })
+      end
+    end)
+  end
 end
 
 local function start_autocmds(session)
@@ -195,6 +238,8 @@ function M.open(opts)
     generation = 1,
   }
   active = session
+  ui.capture(session, session.modified_win)
+  ui.update(session)
   vim.b[original_buf].agent_diff_context = {
     root = context.root,
     path = context.relative_path,
@@ -220,6 +265,7 @@ function M.open(opts)
     })
   end
   start_autocmds(session)
+  start_disk_watchers(session)
 
   git.load(context, revision, function(load_err, lines)
     if session ~= active then
@@ -302,10 +348,14 @@ function M.toggle()
 end
 
 function M.refresh(opts)
+  if changeset().get_session() then
+    return changeset().refresh(opts)
+  end
   if not active then
     return M.open(opts)
   end
   opts = opts or {}
+  check_working_file(active)
   if opts.reload then
     local context = { root = active.root, path = active.root .. "/" .. active.path, relative_path = active.path }
     git.load(context, active.revision, function(err, lines)
@@ -341,6 +391,8 @@ function M.close()
   if session.group then
     pcall(vim.api.nvim_del_augroup_by_id, session.group)
   end
+  watch.stop(session.file_watcher)
+  watch.stop(session.index_watcher)
   close_side(session)
   render.clear(session.modified_buf)
   render.clear(session.original_buf)
@@ -352,6 +404,7 @@ function M.close()
   if valid_buf(session.original_buf) then
     pcall(vim.api.nvim_buf_delete, session.original_buf, { force = true })
   end
+  ui.restore(session)
   emit("AgentDiffClose", session)
 end
 
@@ -435,6 +488,7 @@ function M.setup(opts)
   initialized = true
   config = vim.tbl_deep_extend("force", config, opts or {})
   render.setup()
+  ui.setup()
   pcall(vim.api.nvim_del_user_command, "CodeDiff")
 
   vim.api.nvim_create_user_command("AgentDiff", function(command)

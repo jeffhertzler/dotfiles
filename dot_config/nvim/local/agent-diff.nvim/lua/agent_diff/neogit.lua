@@ -36,11 +36,22 @@ local function union_files(...)
   return result
 end
 
-local function launch(root, files, original, modified, focus, opts)
+local function launch(root, files, original, modified, focus, opts, reload_files)
   if opts and opts.only and focus then
-    files = vim.tbl_filter(function(file)
-      return file.path == focus
-    end, files)
+    local unfiltered_reload = reload_files
+    local function only_focused(items)
+      return vim.tbl_filter(function(file)
+        return file.path == focus
+      end, items or {})
+    end
+    files = only_focused(files)
+    if unfiltered_reload then
+      reload_files = function(callback)
+        unfiltered_reload(function(err, items)
+          callback(err, not err and only_focused(items) or nil)
+        end)
+      end
+    end
   end
   if #files == 0 then
     notify("No changed files")
@@ -56,34 +67,53 @@ local function launch(root, files, original, modified, focus, opts)
     explorer = #files > 1,
     on_close = opts and opts.on_close and opts.on_close.fn or nil,
     park_owner = opts and opts.park_owner or nil,
+    reload_files = reload_files,
   })
 end
 
 local function revision_files(root, original, modified, focus, opts)
-  core_git.get_diff_revisions(original, modified, root, function(err, result)
+  local function load(callback)
+    core_git.get_diff_revisions(original, modified, root, function(err, result)
+      callback(err, not err and copy_files(result.unstaged) or nil)
+    end)
+  end
+  load(function(err, files)
     vim.schedule(function()
       if err then
         notify(err, vim.log.levels.ERROR)
       else
-        launch(root, copy_files(result.unstaged), original, modified, focus, opts)
+        launch(root, files, original, modified, focus, opts, load)
       end
     end)
   end)
 end
 
 local function status_files(root, section, focus, opts)
-  core_git.get_status(root, function(err, result)
+  local function load(callback)
+    core_git.get_status(root, function(err, result)
+      if err then
+        callback(err)
+      elseif section == "unstaged" then
+        callback(nil, copy_files(result.unstaged))
+      elseif section == "staged" then
+        callback(nil, copy_files(result.staged))
+      else
+        callback(nil, union_files(result.staged, result.unstaged))
+      end
+    end)
+  end
+  load(function(err, files)
     vim.schedule(function()
       if err then
         notify(err, vim.log.levels.ERROR)
         return
       end
       if section == "unstaged" then
-        launch(root, copy_files(result.unstaged), "INDEX", "WORKING", focus, opts)
+        launch(root, files, "INDEX", "WORKING", focus, opts, load)
       elseif section == "staged" then
-        launch(root, copy_files(result.staged), "HEAD", "INDEX", focus, opts)
+        launch(root, files, "HEAD", "INDEX", focus, opts, load)
       else
-        launch(root, union_files(result.staged, result.unstaged), "HEAD", "WORKING", focus, opts)
+        launch(root, files, "HEAD", "WORKING", focus, opts, load)
       end
     end)
   end)
@@ -116,8 +146,13 @@ function M.open(section, item, opts)
     or section == "merge"
     or section == "worktree"
     or section == "conflict"
-  if status_instance and status_instance.buffer and from_status then
-    opts.park_owner = status_instance.buffer
+  local status_buffer = status_instance and status_instance.buffer or nil
+  local status_visible = status_buffer
+    and status_buffer.win_handle
+    and vim.api.nvim_win_is_valid(status_buffer.win_handle)
+    and vim.api.nvim_win_get_buf(status_buffer.win_handle) == status_buffer.handle
+  if status_buffer and (from_status or status_visible) then
+    opts.park_owner = status_buffer
   end
   local root = require("neogit.lib.git").repo.worktree_root
   if not root then

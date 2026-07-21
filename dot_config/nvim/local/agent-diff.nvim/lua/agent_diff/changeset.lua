@@ -2,6 +2,8 @@ local M = {}
 
 local git = require("agent_diff.git")
 local render = require("agent_diff.render")
+local ui = require("agent_diff.ui")
+local watch = require("agent_diff.watch")
 local active
 
 local function valid_buf(buf)
@@ -73,6 +75,7 @@ local function render_explorer(session)
   if valid_win(session.explorer_win) then
     vim.api.nvim_win_set_cursor(session.explorer_win, { math.max(1, session.index), 0 })
   end
+  ui.update(session)
 end
 
 local function open_sidebar(session)
@@ -95,6 +98,7 @@ local function open_sidebar(session)
   if valid_win(session.modified_win) then
     vim.api.nvim_set_current_win(session.modified_win)
   end
+  ui.update(session)
 end
 
 local function close_sidebar(session)
@@ -153,7 +157,59 @@ local function compute(session, timeout)
     render.inline(session)
   end
   render_explorer(session)
+  ui.update(session)
   emit("AgentDiffUpdated", session)
+end
+
+local function check_working_file(session, warn)
+  if session.modified_revision ~= "WORKING" or not valid_buf(session.modified_buf) then
+    return true
+  end
+  if vim.bo[session.modified_buf].modified then
+    if warn and not session.external_change_notified then
+      session.external_change_notified = true
+      vim.notify("The file changed on disk while this buffer has unsaved edits", vim.log.levels.WARN, {
+        title = "Agent Diff",
+      })
+    end
+    return false
+  end
+  session.external_change_notified = false
+  vim.api.nvim_buf_call(session.modified_buf, function()
+    pcall(vim.cmd, "silent! checktime")
+  end)
+  return true
+end
+
+local function setup_external_refresh(session)
+  watch.stop(session.file_watcher)
+  session.file_watcher = nil
+  local generation = session.generation
+  local function refresh_file()
+    if session ~= active or generation ~= session.generation then
+      return
+    end
+    check_working_file(session, true)
+    M.refresh({ files = true, external = true })
+  end
+  if session.modified_revision == "WORKING" then
+    local file = session.files[session.index]
+    if file then
+      session.file_watcher = watch.file(session.root .. "/" .. file.path, refresh_file)
+    end
+  end
+  local git_dir = git.git_dir(session.root)
+  local dynamic_revisions = session.original_revision == "INDEX"
+    or session.original_revision == "WORKING"
+    or session.modified_revision == "INDEX"
+    or session.modified_revision == "WORKING"
+  if not session.index_watcher and git_dir and dynamic_revisions then
+    session.index_watcher = watch.directory(git_dir, function()
+      if session == active then
+        M.refresh({ files = true, external = true })
+      end
+    end, 200)
+  end
 end
 
 local function setup_live_refresh(session)
@@ -183,6 +239,8 @@ local function setup_live_refresh(session)
 end
 
 local function dispose_file_buffers(session)
+  watch.stop(session.file_watcher)
+  session.file_watcher = nil
   clear_context(session)
   if valid_buf(session.original_buf) then
     pcall(vim.api.nvim_buf_delete, session.original_buf, { force = true })
@@ -215,6 +273,13 @@ function M.select(index)
     if pending > 0 or session ~= active or generation ~= session.generation then
       return
     end
+    -- Keep the layout alive while replacing scratch revision buffers. Deleting
+    -- a scratch buffer that is the only buffer in a split can close that split.
+    for _, win in ipairs({ session.original_win, session.modified_win }) do
+      if valid_win(win) and valid_buf(session.explorer_buf) then
+        vim.api.nvim_win_set_buf(win, session.explorer_buf)
+      end
+    end
     dispose_file_buffers(session)
     local filetype = vim.filetype.match({ filename = new_path }) or ""
     session.original_lines = old_lines or {}
@@ -238,6 +303,9 @@ function M.select(index)
       session.modified_scratch = true
     end
     session.modified_lines = new_lines or {}
+    if not valid_win(session.modified_win) then
+      return
+    end
     vim.api.nvim_win_set_buf(session.modified_win, session.modified_buf)
     vim.b[session.original_buf].agent_diff_context = {
       root = session.root,
@@ -259,6 +327,7 @@ function M.select(index)
     install_diff_maps(session, session.original_buf)
     install_diff_maps(session, session.modified_buf)
     setup_live_refresh(session)
+    setup_external_refresh(session)
     compute(session, 500)
     emit("AgentDiffFile", session)
   end
@@ -290,6 +359,58 @@ end
 function M.prev_file()
   if active then
     M.select(active.index - 1)
+  end
+end
+
+function M.refresh(opts)
+  local session = active
+  if not session then
+    return
+  end
+  opts = opts or {}
+  check_working_file(session)
+
+  local function update(files)
+    if session ~= active then
+      return
+    end
+    if files then
+      if #files == 0 then
+        vim.notify("No changed files", vim.log.levels.INFO, { title = "Agent Diff" })
+        M.close()
+        return
+      end
+      local current = session.files[session.index]
+      local current_path = current and current.path
+      session.files = files
+      session.index = 1
+      for index, file in ipairs(files) do
+        if file.path == current_path then
+          session.index = index
+          break
+        end
+      end
+    end
+    M.select(session.index)
+  end
+
+  if opts.files and session.reload_files then
+    session.refresh_request = (session.refresh_request or 0) + 1
+    local request = session.refresh_request
+    session.reload_files(function(err, files)
+      vim.schedule(function()
+        if session ~= active or request ~= session.refresh_request then
+          return
+        end
+        if err then
+          vim.notify(err, vim.log.levels.ERROR, { title = "Agent Diff" })
+        else
+          update(files)
+        end
+      end)
+    end)
+  else
+    update()
   end
 end
 
@@ -376,11 +497,14 @@ function M.open(opts)
     parking_win = parking_win,
     park_owner = opts.park_owner,
     on_close = opts.on_close,
+    reload_files = opts.reload_files,
     explorer_buf = explorer_buf,
     generation = 0,
     diff_result = { changes = {}, moves = {} },
   }
   local session = active
+  ui.capture(session, host_win)
+  ui.update(session)
   vim.keymap.set("n", "<cr>", function()
     M.select(vim.api.nvim_win_get_cursor(0)[1])
   end, { buffer = explorer_buf, silent = true, desc = "Open diff file" })
@@ -408,6 +532,8 @@ function M.close()
   if session.refresh_group then
     pcall(vim.api.nvim_del_augroup_by_id, session.refresh_group)
   end
+  watch.stop(session.index_watcher)
+  session.index_watcher = nil
   close_side(session)
   close_sidebar(session)
   dispose_file_buffers(session)
@@ -419,6 +545,7 @@ function M.close()
     end
     vim.api.nvim_set_current_win(session.host_win)
   end
+  ui.restore(session)
   if valid_win(session.parking_win) then
     pcall(vim.api.nvim_win_close, session.parking_win, true)
   end

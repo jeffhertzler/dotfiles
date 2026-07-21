@@ -73,6 +73,25 @@ function M.load_revision(root, relative_path, revision, callback)
   end)
 end
 
+function M.git_dir(root)
+  local dotgit = root .. "/.git"
+  local stat = vim.uv.fs_stat(dotgit)
+  if stat and stat.type == "directory" then
+    return dotgit
+  end
+  if stat and stat.type == "file" then
+    local lines = vim.fn.readfile(dotgit, "", 1)
+    local value = lines[1] and lines[1]:match("^gitdir:%s*(.+)$")
+    if value then
+      if not vim.startswith(value, "/") then
+        value = root .. "/" .. value
+      end
+      return vim.fs.normalize(value)
+    end
+  end
+  return nil
+end
+
 function M.load(context, revision, callback)
   M.load_revision(context.root, context.relative_path, revision or "HEAD", callback)
 end

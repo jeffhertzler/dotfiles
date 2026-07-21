@@ -27,7 +27,12 @@ function M.inline(session)
     session.diff_result,
     session.original_lines,
     session.modified_lines,
-    { filetype = vim.bo[session.modified_buf].filetype }
+    {
+      -- Parsing thousands of virtual deletion lines can dominate the bounded C
+      -- diff itself. When refinement times out, retain the line diff but skip
+      -- syntax parsing for its virtual old text.
+      filetype = session.diff_result.hit_timeout and "" or vim.bo[session.modified_buf].filetype,
+    }
   )
 end
 
