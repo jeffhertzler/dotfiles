@@ -1,4 +1,4 @@
-# Native agent review plan
+# Agent Review plan
 
 ## Status
 
@@ -10,7 +10,7 @@ Current setup:
 - `agent-bridge.nvim` sends file, selection, and diagnostic context to agents
   through Herdr or tmux.
 - Neovim publishes an RPC server address for both Herdr and tmux environments.
-- `native-review.nvim` now contains a buffer-first annotation core with versioned
+- `agent-review.nvim` now contains a buffer-first annotation core with versioned
   persistence and bidirectional agent RPC.
 - `codediff.nvim` is installed as an optional diff-view adapter, not as a
   requirement for creating or rendering annotations.
@@ -44,7 +44,7 @@ ordinary file buffers -----------------------┐
 Neogit / jj.nvim / Octo -> changeset -> CodeDiff adapter
                                              |
                                              v
-                                  native review layer
+                                   Agent Review layer
                                              |
                                              v
                                   agent-bridge + RPC
@@ -75,6 +75,12 @@ Neogit / jj.nvim / Octo -> changeset -> CodeDiff adapter
 4. **Comments are structured state, not prompt text**
    - Human comments, agent comments, and eventual forge threads use one model.
    - Rendering and transport consume that model independently.
+
+5. **Shared native input, distinct lifecycles**
+   - AgentBridge owns one bordered, multiline native input primitive.
+   - Agent composing uses a large persistent instance; annotation add/edit uses
+     a compact auto-growing transient instance.
+   - Leaving insert mode must preserve the draft and normal Neovim editing.
 
 ## Buffer-first core
 
@@ -223,10 +229,10 @@ annotations remain visible but should not silently be sent as current feedback.
 The review layer builds structured review context and asks `agent-bridge.nvim`
 to deliver a concise trigger to the selected Herdr/tmux agent.
 
-Potential public bridge API:
+Public bridge transport API:
 
 ```lua
-require("agent_bridge").send_text(payload, {
+require("agent_bridge").send(payload, {
   submit = true,
   switch_to_target = false,
 })
@@ -375,6 +381,30 @@ Use as inspiration, not mandatory dependencies:
 
 ## Phased implementation
 
+### Stabilization checkpoint
+
+- [x] Freeze the validated annotation/RPC surface in `agent-review.nvim/STABILITY.md`.
+- [x] Move core, persistence, migration, reanchoring, session, bridge, and
+  CodeDiff smoke tests into a repeatable isolated test suite.
+- [x] Defer additional annotation UI until real usage identifies a need.
+
+### UX consolidation checkpoint
+
+Status: complete.
+
+- [x] Rename the product and public Lua namespace to Agent Review without legacy
+  Native Review command/module aliases.
+- [x] Collapse user commands into `:Agent` and `:AgentReview` subcommands.
+- [x] Preserve the `<leader>o…` immediate-agent and `<leader>r…` durable-review
+  keymap split.
+- [x] Extract AgentBridge's shared multiline, bordered, auto-growing input and
+  use it for both composing and annotation add/edit.
+- [x] Publish/discover the Neovim RPC socket through AgentBridge.
+- [x] Add the `agent-review` CLI and an agent skill.
+- [x] Make agent refresh run `checktime` and anchor unopened working files from
+  disk.
+- [x] Document and test the clean namespaced Lua API and workflows.
+
 ### Phase 0: renderer evaluation
 
 Status: substantially complete.
@@ -388,7 +418,7 @@ Status: substantially complete.
 
 ### Phase 1: technical spike
 
-Status: in progress in `local/native-review.nvim`.
+Status: complete; multi-file selection and external refresh were manually verified.
 
 Goal: prove the annotation core in regular buffers, then enrich it through an
 optional CodeDiff adapter.
@@ -400,9 +430,10 @@ optional CodeDiff adapter.
 - [x] Preserve optional columns for characterwise visual selections.
 - [x] Render and highlight line-only and line/column targets with extmarks.
 - [x] Add an old-side annotation in side-by-side mode, including optional columns.
-- [ ] Build the inline virtual-deletion-to-old-line mapping.
+- [x] Map inline virtual deletion blocks to old lines for rendering and explicit
+  `:AgentReview add old` selection.
 - [x] Preserve annotations while toggling layouts.
-- [ ] Verify annotations across multi-file CodeDiff selection/refresh.
+- [x] Verify annotations across multi-file CodeDiff selection and external refresh.
 - [x] Keep the modified buffer editable throughout.
 - [x] Add a compact Snacks picker for navigation and removal.
 - [x] Remove annotations from the picker, cursor, or public API.
@@ -414,6 +445,8 @@ annotations on old/working/new diff sides survive layout toggles and ordinary
 edits without disrupting CodeDiff or normal Neovim behavior.
 
 ### Phase 2: bridge MVP
+
+Status: complete.
 
 - [x] Expose a public arbitrary-text send API from agent-bridge.
 - [x] Serialize open annotations into a structured payload.
@@ -427,7 +460,7 @@ can add several visible annotations back to the same live review.
 
 ### Phase 3: durable sessions
 
-Status: in progress.
+Status: core complete; fuzzy matching and offline bundles are explicitly deferred.
 
 - [x] Versioned persistence format outside repositories.
 - [x] Atomic debounced autosave for human and RPC mutations.
@@ -458,25 +491,29 @@ Status: in progress.
 
 ## Immediate next steps
 
-1. Exercise annotation add/render/navigation in ordinary working buffers.
-2. Keep `native-review.nvim` separate from transport and diff integrations.
-3. Verify the CodeDiff adapter across multi-file selection and refresh.
-4. Inspect CodeDiff's stored diff result and inline renderer to design a stable
-   row/old-line mapping.
-5. Finish the Phase 1 in-memory proof before designing persistence or adding
-   Neogit/JJ/Octo.
+1. Use the consolidated Agent/Agent Review workflow in real reviews and fix
+   only observed regressions.
+2. Begin Phase 4 only after selecting a bounded Git workflow milestone; the
+   likely first slice is a neutral provider boundary followed by Neogit launch.
+
+## Resolved design decisions
+
+- AgentReview depends one-way on AgentBridge for input, composing, transport,
+  target selection, and socket publication. AgentBridge does not own review
+  state or depend on AgentReview.
+- `:Agent` owns immediate communication; `:AgentReview` owns durable feedback.
+- Inline old-side selection uses explicit `:AgentReview add old` plus an old-line
+  picker because virtual deletion rows cannot receive the cursor.
+- Stored/RPC positions use one-based lines and UTF-8 byte columns; renderer
+  boundaries normalize to Neovim extmark conventions.
+- Live agent integration uses the published Neovim RPC socket. Offline bundles
+  remain optional deferred work.
+- Flat annotations are sufficient for the current local MVP.
 
 ## Open questions
 
-- Should review sessions initially live inside agent-bridge or a separate plugin?
-- What is the least intrusive interaction for selecting virtual deleted lines
-  and, optionally, a column range within them?
-- Should persisted/RPC columns use Neovim byte offsets or Unicode codepoints,
-  with conversion at the renderer boundary?
-- Should annotation kinds be fixed or user-configurable?
-- Is a comment thread/reply model needed in the MVP, or are flat annotations
-  sufficient until GitHub integration?
-- Should agents connect only through Neovim RPC, or should an offline CLI/shared
-  file protocol be part of the first durable version?
-- When an agent edits annotated code, should a successfully reanchored human
-  comment remain open automatically or require explicit resolution?
+- Should annotation kinds remain fixed or become user-configurable?
+- Are threads/replies needed when forge integration begins?
+- Should a successfully reanchored human comment remain open automatically or
+  require explicit resolution?
+- Is fuzzy reanchoring worth the risk of attaching feedback to edited content?

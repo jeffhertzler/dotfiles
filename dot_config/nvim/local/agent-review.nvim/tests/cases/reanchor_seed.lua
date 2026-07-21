@@ -1,0 +1,8 @@
+local file = assert(vim.env.AGENT_REVIEW_TEST_FILE)
+vim.cmd("edit " .. vim.fn.fnameescape(file))
+local review = require("agent_review")
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+assert(review.annotation.add({ body = "moves" }).id == "review-1")
+vim.api.nvim_win_set_cursor(0, { 4, 0 })
+assert(review.annotation.add({ body = "becomes stale" }).id == "review-2")
+assert(require("agent_review.persistence").save_now())

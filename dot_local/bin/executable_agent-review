@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: agent-review [--server SOCKET] COMMAND [ARGS]
+
+Commands:
+  context                       Show active Neovim review context
+  list [--all]                  List current-session annotations
+  apply [FILE|-]                Atomically import annotation JSON
+  update [FILE|-]               Update annotations from JSON
+  resolve ID...                 Resolve annotations
+  remove ID...                  Remove annotations
+  refresh                       Reload externally changed files and reanchor
+EOF
+}
+
+server=${NVIM_SERVER:-}
+if [[ ${1:-} == --server ]]; then
+  server=${2:?--server requires a socket}
+  shift 2
+fi
+
+live_server() {
+  [[ -n $1 ]] && nvim --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
+}
+
+discover_server() {
+  if live_server "$server"; then
+    printf '%s' "$server"
+    return
+  fi
+
+  local runtime=${XDG_RUNTIME_DIR:-/tmp}
+  local registry="$runtime/herdr-nvim"
+  if [[ -n ${HERDR_PANE_ID:-} ]]; then
+    local pane=${HERDR_PANE_ID//[^[:alnum:]_.:-]/_}
+    local file="$registry/$pane.server"
+    if [[ -r $file ]]; then
+      local candidate
+      candidate=$(head -n1 "$file")
+      if live_server "$candidate"; then
+        printf '%s' "$candidate"
+        return
+      fi
+    fi
+  fi
+
+  if [[ -n ${TMUX:-} ]]; then
+    local candidate
+    candidate=$(tmux show-options -wv @nvim_server 2>/dev/null || true)
+    if live_server "$candidate"; then
+      printf '%s' "$candidate"
+      return
+    fi
+  fi
+
+  local candidates=()
+  if [[ -d $registry ]]; then
+    while IFS= read -r file; do
+      local candidate
+      candidate=$(head -n1 "$file" 2>/dev/null || true)
+      if live_server "$candidate"; then
+        candidates+=("$candidate")
+      fi
+    done < <(find "$registry" -maxdepth 1 -type f -name '*.server' -print)
+  fi
+  mapfile -t candidates < <(printf '%s\n' "${candidates[@]:-}" | awk 'NF && !seen[$0]++')
+  if [[ ${#candidates[@]} -eq 1 ]]; then
+    printf '%s' "${candidates[0]}"
+    return
+  fi
+  if [[ ${#candidates[@]} -gt 1 ]]; then
+    printf 'agent-review: multiple Neovim servers found; use --server\n' >&2
+  else
+    printf 'agent-review: no published Neovim server found\n' >&2
+  fi
+  return 1
+}
+
+rpc() {
+  local request=$1 encoded expression
+  encoded=$(printf '%s' "$request" | base64 -w0)
+  expression="luaeval(\"vim.json.encode(require([[agent_review.rpc]]).dispatch(vim.json.decode(vim.base64.decode([[$encoded]]))))\")"
+  local response
+  response=$(nvim --server "$server" --remote-expr "$expression")
+  printf '%s' "$response"
+  if printf '%s' "$response" | jq -e 'type == "object" and has("ok") and (.ok == false)' >/dev/null 2>&1; then
+    return 1
+  fi
+}
+
+json_input() {
+  local source=${1:--}
+  if [[ $source == - || $source == --stdin ]]; then
+    cat
+  else
+    cat "$source"
+  fi
+}
+
+command=${1:-help}
+[[ $# -gt 0 ]] && shift
+if [[ $command == help || $command == --help || $command == -h ]]; then
+  usage
+  exit 0
+fi
+server=$(discover_server)
+
+case "$command" in
+  context)
+    rpc '{"operation":"context"}'
+    ;;
+  list)
+    if [[ ${1:-} == --all ]]; then
+      rpc '{"operation":"list","payload":{"all":true}}'
+    else
+      rpc '{"operation":"list"}'
+    fi
+    ;;
+  apply|update)
+    payload=$(json_input "${1:--}")
+    request=$(jq -cn --arg operation "$command" --argjson payload "$payload" '{operation:$operation,payload:$payload}')
+    rpc "$request"
+    ;;
+  resolve|remove)
+    [[ $# -gt 0 ]] || { printf 'agent-review: %s requires at least one ID\n' "$command" >&2; exit 2; }
+    ids=$(printf '%s\n' "$@" | jq -R . | jq -s .)
+    request=$(jq -cn --arg operation "$command" --argjson ids "$ids" '{operation:$operation,payload:{ids:$ids}}')
+    rpc "$request"
+    ;;
+  refresh)
+    rpc '{"operation":"refresh"}'
+    ;;
+  *)
+    printf 'agent-review: unknown command: %s\n' "$command" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+printf '\n'

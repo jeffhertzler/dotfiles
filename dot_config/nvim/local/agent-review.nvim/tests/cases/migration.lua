@@ -1,0 +1,12 @@
+local file = assert(vim.env.AGENT_REVIEW_TEST_FILE)
+vim.cmd("edit " .. vim.fn.fnameescape(file))
+local annotations = require("agent_review").annotation.list({ all = true })
+assert(#annotations == 1 and annotations[1].session_id)
+local sessions = require("agent_review.sessions").list(nil, { include_archived = true })
+assert(#sessions == 1 and sessions[1].name == "Migrated review")
+assert(require("agent_review.persistence").save_now())
+
+local document = vim.json.decode(table.concat(vim.fn.readfile(vim.env.NVIM_AGENT_REVIEW_STATE), "\n"))
+assert(document.schemaVersion == 2)
+assert(#document.sessions == 1)
+assert(document.annotations[1].sessionId == sessions[1].id)

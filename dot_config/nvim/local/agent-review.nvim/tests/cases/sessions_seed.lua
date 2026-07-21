@@ -1,0 +1,13 @@
+local file = assert(vim.env.AGENT_REVIEW_TEST_FILE)
+vim.cmd("edit " .. vim.fn.fnameescape(file))
+local review = require("agent_review")
+vim.api.nvim_win_set_cursor(0, { 1, 0 })
+local first = assert(review.annotation.add({ body = "first pass" }))
+local first_session = first.session_id
+local second_session = assert(review.session.create("Second pass"))
+vim.api.nvim_win_set_cursor(0, { 2, 0 })
+local second = assert(review.annotation.add({ body = "second pass" }))
+assert(second.session_id == second_session.id)
+assert(review.session.archive(first_session))
+assert(require("agent_review.sessions").current().id == second_session.id)
+assert(require("agent_review.persistence").save_now())

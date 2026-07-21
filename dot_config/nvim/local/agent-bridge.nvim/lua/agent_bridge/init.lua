@@ -1,6 +1,6 @@
 local M = {}
 
-local context = require("agent_bridge.context")
+local context_builder = require("agent_bridge.context")
 local prompt = require("agent_bridge.prompt")
 local targets = require("agent_bridge.targets")
 local transport = require("agent_bridge.transport")
@@ -14,140 +14,174 @@ local config = {
   },
   prompt = {
     width_ratio = 0.6,
-    height_ratio = 0.35,
+    min_height = 8,
+    max_height = 18,
     title = " Compose to Agent ",
   },
 }
 
 local setup_done = false
 
+local function notify(message, level)
+  vim.notify(message, level or vim.log.levels.INFO, { title = "Agent" })
+end
+
 local function dispatch(builder, opts)
   local payload, err = builder(opts)
   if not payload or payload == "" then
-    vim.notify(err or "no context available", vim.log.levels.WARN)
-    return
+    notify(err or "no context available", vim.log.levels.WARN)
+    return false
   end
-
   if opts and opts.interactive_prompt then
     prompt.open(payload)
-  else
-    transport.send(payload)
+    return true
   end
+  transport.send(payload, opts)
+  return true
 end
 
-function M.send_file(opts)
-  dispatch(context.build_file, opts or {})
+local function send_context(kind, opts)
+  opts = vim.deepcopy(opts or {})
+  if kind == "buffers" then
+    opts.use_all_buffers = true
+    return dispatch(context_builder.build_file, opts)
+  elseif kind == "diagnostics" or kind == "errors" then
+    if kind == "errors" then
+      opts.severity = vim.diagnostic.severity.ERROR
+    end
+    return dispatch(context_builder.build_diagnostics, opts)
+  elseif kind ~= nil and kind ~= "file" and kind ~= "selection" then
+    notify("Unknown context kind: " .. tostring(kind), vim.log.levels.WARN)
+    return false
+  end
+  return dispatch(context_builder.build_file, opts)
 end
 
-function M.compose_visual()
-  local opts = context.visual_selection_opts()
-  opts.interactive_prompt = true
-  M.send_file(opts)
-end
-
-function M.send_visual()
-  M.send_file(context.visual_selection_opts())
-end
-
-function M.send_diagnostics(opts)
-  dispatch(context.build_diagnostics, opts or {})
-end
-
-function M.send_text(message, opts, done)
+function M.send(message, opts, done)
   opts = opts or {}
   if type(message) ~= "string" or vim.trim(message) == "" then
-    vim.notify("no message to send", vim.log.levels.WARN)
+    notify("no message to send", vim.log.levels.WARN)
     if done then
       done(false)
     end
     return false
   end
-
   if opts.interactive_prompt then
     prompt.open(message)
     return true
   end
-
   transport.send(message, opts, done)
   return true
 end
 
-function M.resume_prompt()
-  prompt.resume()
+function M.compose(message)
+  prompt.open(message or "")
+  return true
 end
 
-function M.select_target()
-  targets.select()
+M.context = {}
+
+function M.context.send(kind, opts)
+  return send_context(kind or "file", opts)
 end
 
-function M.clear_target()
-  targets.clear()
+function M.context.compose(kind, opts)
+  opts = vim.tbl_extend("force", opts or {}, { interactive_prompt = true })
+  return send_context(kind or "file", opts)
 end
 
-local function create_commands()
-  vim.api.nvim_create_user_command("AgentBridge", function(opts)
-    M.send_file(opts)
-  end, { range = true })
+function M.context.send_visual()
+  return send_context("selection", context_builder.visual_selection_opts())
+end
 
-  vim.api.nvim_create_user_command("AgentBridgeInteractive", function(opts)
-    opts.interactive_prompt = true
-    M.send_file(opts)
-  end, { range = true })
+function M.context.compose_visual()
+  local opts = context_builder.visual_selection_opts()
+  opts.interactive_prompt = true
+  return send_context("selection", opts)
+end
 
-  vim.api.nvim_create_user_command("AgentBridgeAll", function(opts)
-    opts.use_all_buffers = true
-    M.send_file(opts)
-  end, { range = true })
+M.prompt = {
+  resume = prompt.resume,
+}
 
-  vim.api.nvim_create_user_command("AgentBridgeAllInteractive", function(opts)
-    opts.use_all_buffers = true
-    opts.interactive_prompt = true
-    M.send_file(opts)
-  end, { range = true })
+M.target = {
+  select = targets.select,
+  clear = targets.clear,
+}
 
-  vim.api.nvim_create_user_command("AgentBridgeDiagnostics", function(opts)
-    M.send_diagnostics(opts)
-  end, {})
+local function command_opts(command)
+  local opts = {}
+  if command.range == 2 then
+    opts.range = 2
+    opts.line1 = command.line1
+    opts.line2 = command.line2
+    opts.selection_kind = "line"
+  end
+  return opts
+end
 
-  vim.api.nvim_create_user_command("AgentBridgeDiagnosticsAll", function(opts)
-    opts.use_all_buffers = true
-    M.send_diagnostics(opts)
-  end, {})
+local function command_dispatch(command)
+  local words = vim.split(vim.trim(command.args), "%s+", { trimempty = true })
+  local action = words[1] or "compose"
+  if action == "compose" or action == "send" then
+    local kind = words[2] or "file"
+    local opts = command_opts(command)
+    opts.interactive_prompt = action == "compose"
+    send_context(kind, opts)
+  elseif action == "resume" then
+    prompt.resume()
+  elseif action == "target" then
+    if words[2] == "clear" then
+      targets.clear()
+    elseif words[2] == nil or words[2] == "select" then
+      targets.select()
+    else
+      notify("Usage: :Agent target [select|clear]", vim.log.levels.WARN)
+    end
+  elseif action == "help" then
+    notify("compose [file|buffers|diagnostics|errors] · send [...] · resume · target [select|clear]")
+  else
+    notify("Unknown :Agent subcommand: " .. action, vim.log.levels.WARN)
+  end
+end
 
-  vim.api.nvim_create_user_command("AgentBridgeDiagnosticsErrors", function(opts)
-    opts.severity = vim.diagnostic.severity.ERROR
-    M.send_diagnostics(opts)
-  end, {})
+local function complete(arglead, cmdline, cursorpos)
+  local before = cmdline:sub(1, cursorpos)
+  local args = before:gsub("^%s*Agent!?%s*", "")
+  local words = vim.split(args, "%s+", { trimempty = true })
+  local trailing = before:sub(-1):match("%s") ~= nil
+  local choices
+  if #words == 0 or (#words == 1 and not trailing) then
+    choices = { "compose", "send", "resume", "target", "help" }
+  elseif (words[1] == "compose" or words[1] == "send") and (#words == 1 or (#words == 2 and not trailing)) then
+    choices = { "file", "buffers", "diagnostics", "errors" }
+  elseif words[1] == "target" and (#words == 1 or (#words == 2 and not trailing)) then
+    choices = { "select", "clear" }
+  else
+    choices = {}
+  end
+  return vim.tbl_filter(function(item) return vim.startswith(item, arglead) end, choices)
+end
 
-  vim.api.nvim_create_user_command("AgentBridgeDiagnosticsErrorsAll", function(opts)
-    opts.severity = vim.diagnostic.severity.ERROR
-    opts.use_all_buffers = true
-    M.send_diagnostics(opts)
-  end, {})
-
-  vim.api.nvim_create_user_command("AgentBridgeResume", function()
-    M.resume_prompt()
-  end, {})
-
-  vim.api.nvim_create_user_command("AgentBridgeTarget", function()
-    M.select_target()
-  end, {})
-
-  vim.api.nvim_create_user_command("AgentBridgeTargetClear", function()
-    M.clear_target()
-  end, {})
+local function create_command()
+  vim.api.nvim_create_user_command("Agent", command_dispatch, {
+    desc = "Compose and send context to an agent",
+    nargs = "*",
+    range = true,
+    complete = complete,
+  })
 end
 
 function M.setup(opts)
   if setup_done then
     return M
   end
-
   config = vim.tbl_deep_extend("force", config, opts or {})
   targets.setup(vim.tbl_deep_extend("force", {}, config.targets, { tmux = config.tmux }))
   prompt.setup(config.prompt, transport.send)
-  context.setup({ prompt_buffer = prompt.buffer })
-  create_commands()
+  context_builder.setup({ prompt_buffer = prompt.buffer })
+  require("agent_bridge.server").setup()
+  create_command()
   setup_done = true
   return M
 end
