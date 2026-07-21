@@ -76,7 +76,20 @@ function fitCwd(styledText, maxWidth) {
 export function renderBar(bar) {
   if (bar.position !== "footer") return null;
 
-  const parts = bar.parts;
+  const activeProfile = globalThis[Symbol.for("pi.active-profile")];
+  const profilePart =
+    typeof activeProfile === "string" && activeProfile.length > 0
+      ? {
+          key: "profile",
+          text:
+            typeof bar.theme?.fg === "function"
+              ? bar.theme.fg("accent", activeProfile)
+              : activeProfile,
+        }
+      : null;
+  const parts = profilePart
+    ? [profilePart, ...bar.parts.filter((part) => part.key !== "profile")]
+    : bar.parts;
 
   if (bar.width <= 0 || parts.length === 0) return [""];
 

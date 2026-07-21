@@ -5,11 +5,6 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
 import type { Api, Model, Provider } from "@earendil-works/pi-ai";
-// Import pi-info's managed copy so both extensions share its segment registry.
-import {
-  registerSegment,
-  unregisterSegment,
-} from "../npm/node_modules/@sentixx/pi-info/extensions/statusline.js";
 import {
   existsSync,
   mkdirSync,
@@ -34,6 +29,7 @@ interface ProfilesConfig {
 type ProfileEntry = [name: string, definition: ProfileDefinition];
 
 const CONFIG_PATH = join(getAgentDir(), "profiles.json");
+const PROFILE_STATE = Symbol.for("pi.active-profile");
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -128,17 +124,11 @@ function cloneProvider(pi: ExtensionAPI, name: string, profile: ProfileDefinitio
   pi.registerProvider(provider);
 }
 
-function registerProfileSegment(entries: ProfileEntry[]): void {
-  registerSegment({
-    name: "profile",
-    label: "Profile",
-    data(ctx) {
-      const entry = entries.find(([, profile]) => profile.provider === ctx.model?.provider);
-      return entry ? { name: entry[1].footer ?? entry[0] } : null;
-    },
-    defaultFormat: "{name}",
-    color: () => "accent",
-  });
+function updateProfileState(entries: ProfileEntry[], provider: string | undefined): void {
+  const state = globalThis as Record<PropertyKey, unknown>;
+  const entry = entries.find(([, profile]) => profile.provider === provider);
+  if (entry) state[PROFILE_STATE] = entry[1].footer ?? entry[0];
+  else delete state[PROFILE_STATE];
 }
 
 function findProfileModel(
@@ -227,7 +217,6 @@ export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const entries = Object.entries(config.profiles);
   for (const [name, profile] of entries) cloneProvider(pi, name, profile);
-  registerProfileSegment(entries);
 
   pi.registerCommand("profile", {
     description: "Switch profiles; add --project to save the choice for this repository",
@@ -251,5 +240,11 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  pi.on("session_shutdown", () => unregisterSegment("profile"));
+  pi.on("session_start", (_event, ctx) => {
+    updateProfileState(entries, ctx.model?.provider);
+  });
+  pi.on("model_select", (event) => updateProfileState(entries, event.model.provider));
+  pi.on("session_shutdown", (event) => {
+    if (event.reason === "quit") updateProfileState(entries, undefined);
+  });
 }

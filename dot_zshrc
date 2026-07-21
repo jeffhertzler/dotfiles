@@ -21,6 +21,13 @@ alias uvu="uv tool upgrade --all"
 alias h="herdr"
 alias rmrf="rm -rf"
 
+# Put the named Herdr session in each workspace's sidebar metadata.
+if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]]; then
+  command herdr workspace report-metadata "$HERDR_WORKSPACE_ID" \
+    --source shell:session --token "session=$HERDR_SESSION" \
+    --seq "$(date +%s%N)" >/dev/null 2>&1 &!
+fi
+
 function rcu() {
   rustup update
   cargo install-update --all
