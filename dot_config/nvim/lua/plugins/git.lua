@@ -64,21 +64,6 @@ return {
         diffview = false,
         snacks = true,
       },
-      mappings = {
-        status = {
-          ["q"] = false,
-          ["Q"] = "Close",
-          ["!"] = "Command",
-        },
-        commit_editor = {
-          ["q"] = false,
-          ["Q"] = "Close",
-        },
-        rebase_editor = {
-          ["q"] = false,
-          ["Q"] = "Close",
-        },
-      },
     },
     config = function(_, opts)
       require("neogit").setup(opts)
