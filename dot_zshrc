@@ -19,7 +19,6 @@ alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
 alias h="herdr"
-alias opencode="TERM=tmux-256color TERM_PROGRAM=tmux opencode"
 alias rmrf="rm -rf"
 
 function rcu() {
