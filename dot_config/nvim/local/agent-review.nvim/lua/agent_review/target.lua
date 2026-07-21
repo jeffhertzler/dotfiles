@@ -27,6 +27,29 @@ local function repository_context(path)
   return root, backend
 end
 
+local function agent_diff_context(bufnr)
+  if not (bufnr and vim.api.nvim_buf_is_valid(bufnr)) then
+    return nil
+  end
+  local metadata = vim.b[bufnr].agent_diff_context
+  if type(metadata) ~= "table" or not metadata.path then
+    return nil
+  end
+  return {
+    bufnr = bufnr,
+    tabpage = vim.api.nvim_get_current_tabpage(),
+    host = "agent_diff",
+    view_side = metadata.side,
+    root = metadata.root,
+    backend = "git",
+    path = metadata.path,
+    side = metadata.side,
+    selected_revision = metadata.selected_revision,
+    base_revision = metadata.base_revision,
+    target_revision = metadata.target_revision,
+  }
+end
+
 local function codediff_context(bufnr)
   local ok, lifecycle = pcall(require, "codediff.ui.lifecycle")
   if not ok then
@@ -103,7 +126,7 @@ local function buffer_context(bufnr)
 end
 
 function M.context_for_buffer(bufnr)
-  return codediff_context(bufnr) or buffer_context(bufnr)
+  return agent_diff_context(bufnr) or codediff_context(bufnr) or buffer_context(bufnr)
 end
 
 local function ordered_positions(first, last)
@@ -203,7 +226,7 @@ function M.capture(opts)
   local bufnr = vim.api.nvim_get_current_buf()
   local context = M.context_for_buffer(bufnr)
   if not context or not context.path then
-    notify("Annotations require a regular file or an old/new CodeDiff buffer")
+    notify("Annotations require a regular file or a supported diff buffer")
     return nil
   end
 

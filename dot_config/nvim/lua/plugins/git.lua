@@ -1,43 +1,69 @@
 return {
   {
     "esmuellert/codediff.nvim",
-    cmd = "CodeDiff",
+    lazy = true,
+  },
+  {
+    dir = vim.fn.stdpath("config") .. "/local/agent-diff.nvim",
+    name = "agent-diff.nvim",
+    main = "agent_diff",
+    lazy = false,
+    dependencies = {
+      "esmuellert/codediff.nvim",
+      "lewis6991/gitsigns.nvim",
+    },
     opts = {
-      diff = {
-        layout = "inline",
-      },
-      explorer = {
-        hidden = true,
-        initial_focus = "modified",
-      },
-      keymaps = {
-        view = {
-          quit = "Q",
-          close_on_open_in_prev_tab = true,
-        },
-      },
+      default_revision = "HEAD",
+      initial_timeout_ms = 500,
+      live_timeout_ms = 100,
     },
     keys = {
-      { "<leader>gd", "<cmd>CodeDiff<cr>", desc = "Git Diff (CodeDiff)" },
+      {
+        "<leader>gd",
+        function()
+          require("agent_diff").inline()
+        end,
+        desc = "Git Diff Inline",
+      },
+      {
+        "<leader>gD",
+        function()
+          require("agent_diff").side_by_side()
+        end,
+        desc = "Git Diff Side-by-Side",
+      },
     },
+  },
+  {
+    "lewis6991/gitsigns.nvim",
+    opts = function(_, opts)
+      local on_attach = opts.on_attach
+      opts.on_attach = function(bufnr)
+        if on_attach then
+          on_attach(bufnr)
+        end
+        require("agent_diff.gitsigns").setup_buffer(bufnr)
+      end
+    end,
   },
   {
     "NeogitOrg/neogit",
     cmd = "Neogit",
     dependencies = {
       "nvim-lua/plenary.nvim",
-      "esmuellert/codediff.nvim",
       "folke/snacks.nvim",
+      "esmuellert/codediff.nvim",
     },
     opts = {
       kind = "replace",
       treesitter_diff_highlight = true,
+      word_diff_highlight = false,
+      diff_viewer = "codediff",
       integrations = {
         codediff = true,
         diffview = false,
         snacks = true,
       },
-      diff_viewer = "codediff",
       mappings = {
         status = {
           ["q"] = false,
@@ -54,6 +80,10 @@ return {
         },
       },
     },
+    config = function(_, opts)
+      require("neogit").setup(opts)
+      require("agent_diff.neogit").setup()
+    end,
     keys = {
       { "<leader>gg", "<cmd>Neogit<cr>", desc = "Neogit Status" },
       { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "Neogit Commit" },

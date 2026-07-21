@@ -478,12 +478,18 @@ Status: core complete; fuzzy matching and offline bundles are explicitly deferre
 
 Status: in progress; do not assume Agent Review needs to own a VCS provider.
 
-- [x] Install Neogit with CodeDiff as its diff viewer while retaining external
-  Lazygit as a fallback.
-- [ ] Evaluate native status, staging, commits, branches, and refresh after agent
-  edits.
-- [ ] Evaluate Neogit → CodeDiff with inline layout and the explorer initially
-  hidden.
+- [x] Install Neogit while retaining external Lazygit as a fallback.
+- [x] Replace CodeDiff's tab-based UI with a thin `agent-diff.nvim` host that
+  reuses its C engine in editable inline and current-tab split layouts.
+- [x] Reuse the same engine for Gitsigns hunk previews and Neogit character
+  refinement while preserving their Git-generated operational hunks. Neogit
+  keeps its line backgrounds and Tree-sitter foregrounds while exact changed
+  characters use Agent Diff's stronger inner red/green groups.
+- [x] Restore Neogit's full `d` popup through a no-tab changeset adapter. Show
+  the file sidebar by default only when an action resolves multiple files; keep
+  it toggleable in every diff view.
+- [ ] Evaluate native status, staging, commits, branches, diff toggling, and
+  refresh after agent edits.
 - [ ] Observe whether Agent Review needs no VCS API, thin host launch adapters,
   or a full provider boundary.
 - [ ] Formalize a provider only if real workflow limitations require it.
@@ -498,10 +504,11 @@ Status: in progress; do not assume Agent Review needs to own a VCS provider.
 
 ## Immediate next steps
 
-1. Use Neogit as the native Git dashboard, CodeDiff for visual comparison,
-   Gitsigns for ambient buffer state, and Agent Review for durable feedback.
-2. Record actual friction—especially duplicate Neogit/CodeDiff file lists and
-   status refresh after agent edits—before adding any VCS API to Agent Review.
+1. Use Neogit as the native Git dashboard, Agent Diff as the thin visual host,
+   Gitsigns for ambient buffer state, CodeDiff only as the shared computation
+   engine, and Agent Review for durable feedback.
+2. Record actual friction around staging, layout toggling, large-diff timeouts,
+   and refresh after agent edits before adding any VCS API to Agent Review.
 3. Keep the Herdr/tmux Lazygit popup available as the familiar fallback.
 
 ## Resolved design decisions

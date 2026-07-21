@@ -38,8 +38,8 @@ local function create_annotation(capture, body)
     created_at = now,
     updated_at = now,
   })
-  if capture.host == "codediff" and capture.target.side == "old" then
-    render.refresh(capture.tabpage)
+  if capture.target.side == "old" and (capture.host == "codediff" or capture.host == "agent_diff") then
+    render.refresh_visible()
   else
     render.refresh_buffer(capture.bufnr)
   end
@@ -72,15 +72,19 @@ function M.add_old(opts)
   opts = opts or {}
   local tabpage = vim.api.nvim_get_current_tabpage()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-  local adapter = require("agent_review.codediff")
-  local candidates = adapter.old_lines_at_cursor(tabpage, cursor_line)
+  local agent_session = package.loaded.agent_diff and require("agent_diff").get_session(vim.api.nvim_get_current_buf()) or nil
+  local is_agent_diff = agent_session and agent_session.layout == "inline"
+  local adapter = require(is_agent_diff and "agent_review.agent_diff" or "agent_review.codediff")
+  local candidates = is_agent_diff and adapter.old_lines_at_cursor(cursor_line)
+    or adapter.old_lines_at_cursor(tabpage, cursor_line)
   if #candidates == 0 then
     notify("No inline old lines are associated with the cursor", vim.log.levels.WARN)
     return nil
   end
 
   local function add(candidate)
-    local capture, err = adapter.capture_old_line(tabpage, candidate.line)
+    local capture, err = is_agent_diff and adapter.capture_old_line(candidate.line)
+      or adapter.capture_old_line(tabpage, candidate.line)
     if not capture then
       notify(err, vim.log.levels.WARN)
       return nil
@@ -412,6 +416,14 @@ function M.setup(opts)
       vim.defer_fn(function()
         render.refresh(tabpage)
       end, 100)
+    end,
+  })
+
+  vim.api.nvim_create_autocmd("User", {
+    group = group,
+    pattern = { "AgentDiffOpen", "AgentDiffUpdated", "AgentDiffLayout", "AgentDiffClose" },
+    callback = function()
+      vim.schedule(render.refresh_visible)
     end,
   })
 

@@ -9,9 +9,14 @@ for _, dependency in ipairs({ "snacks.nvim", "codediff.nvim", "plenary.nvim" }) 
   end
 end
 
-local bridge_root = vim.fs.dirname(plugin_root) .. "/agent-bridge.nvim"
+local local_root = vim.fs.dirname(plugin_root)
+local bridge_root = local_root .. "/agent-bridge.nvim"
 if vim.uv.fs_stat(bridge_root) then
   vim.opt.runtimepath:prepend(bridge_root)
+end
+local diff_root = local_root .. "/agent-diff.nvim"
+if vim.uv.fs_stat(diff_root) then
+  vim.opt.runtimepath:prepend(diff_root)
 end
 
 vim.g.mapleader = " "

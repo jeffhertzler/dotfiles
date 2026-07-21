@@ -251,6 +251,42 @@ local function matches_context(annotation, context)
   return annotation.revision.selected_expression == context.selected_revision
 end
 
+local function render_agent_diff_inline(modified_buf)
+  local ok, agent_diff = pcall(require, "agent_diff")
+  local session = ok and agent_diff.get_session(modified_buf) or nil
+  if not session or session.layout ~= "inline" or not session.diff_result then
+    return
+  end
+  local original_buf = session.original_buf
+  if not (valid_buffer(original_buf) and valid_buffer(modified_buf)) then
+    return
+  end
+  local original_context = target_util.context_for_buffer(original_buf)
+  if not original_context then
+    return
+  end
+  local modified_line_count = vim.api.nvim_buf_line_count(modified_buf)
+  local adapter = require("agent_review.agent_diff")
+  for _, annotation in ipairs(state.list()) do
+    if matches_context(annotation, original_context) then
+      ensure_anchor(annotation, original_buf)
+      sync_anchor(annotation)
+      local descriptor = adapter.old_line_descriptor(session.diff_result, annotation.target.end_line, modified_line_count)
+      if descriptor then
+        local note_highlight = annotation_highlights(annotation)
+        pcall(vim.api.nvim_buf_set_extmark, modified_buf, render_ns, descriptor.row, 0, {
+          sign_text = "~",
+          sign_hl_group = note_highlight,
+          virt_lines = comment_box(annotation, note_highlight),
+          virt_lines_above = descriptor.above,
+          virt_lines_overflow = "scroll",
+          priority = 240,
+        })
+      end
+    end
+  end
+end
+
 local function render_inline_old(tabpage, original_buf, modified_buf)
   local lifecycle = require("codediff.ui.lifecycle")
   local session = lifecycle.get_session(tabpage)
@@ -340,6 +376,8 @@ function M.refresh_buffer(bufnr)
       local original_buf, modified_buf = lifecycle.get_buffers(tabpage)
       render_inline_old(tabpage, original_buf, modified_buf)
     end
+  elseif context.host == "agent_diff" and (context.side == "working" or context.side == "new") then
+    render_agent_diff_inline(bufnr)
   end
 end
 

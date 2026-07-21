@@ -27,7 +27,7 @@ make_file() {
   printf 'header\nlocal value = 200\ntarget line\nchange me\nfooter\n' >"$path"
 }
 
-for name in core columns input commands rpc rpc_unopened bridge codediff_mapping; do
+for name in core columns input commands rpc rpc_unopened bridge codediff_mapping agent_diff; do
   file="$tmp/$name.lua"
   state="$tmp/$name.json"
   make_file "$file"

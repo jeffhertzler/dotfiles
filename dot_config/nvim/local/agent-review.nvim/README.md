@@ -57,9 +57,13 @@ All command interactions live under one command with completion:
 
 `:AgentReview` with no arguments opens the active review picker.
 
-## CodeDiff
+## Diff hosts
 
-Working and revision-side annotations render in side-by-side CodeDiff views.
+Agent Diff is the primary buffer-first host. It uses CodeDiff's C engine while
+keeping the working buffer editable and toggling inline/current-tab split
+layouts without tab pages. Working and revision-side annotations render in both
+layouts. The full CodeDiff host remains supported as an optional adapter.
+
 Old-side annotations project beside the corresponding virtual deletion block in
 inline views. To create one inline, put the cursor on the real line beside the
 block and run `:AgentReview add old`; select an old line when prompted.
