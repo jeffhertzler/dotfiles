@@ -1,100 +1,358 @@
 #!/usr/bin/env bash
-set -u
+set -euo pipefail
 
-clear_screen() {
-  printf '\033[2J\033[H'
+self=$(realpath "$0")
+
+root_ids=(docker jira processes workmux files git-menu)
+git_ids=(github-dashboard git github-news)
+all_ids=(docker jira processes workmux files github-dashboard git github-news)
+
+declare -A title=(
+  [docker]='Docker'
+  [jira]='Jira'
+  [processes]='Processes'
+  [workmux]='Workmux dashboard'
+  [files]='Files'
+  [git-menu]='Git and GitHub'
+  [github-dashboard]='GitHub dashboard'
+  [git]='Git'
+  [github-news]='GitHub notifications'
+)
+declare -A category=(
+  [docker]='Development'
+  [jira]='Development'
+  [processes]='System'
+  [workmux]='Workspace'
+  [files]='Files'
+  [git-menu]='Git and GitHub'
+  [github-dashboard]='Git and GitHub'
+  [git]='Git and GitHub'
+  [github-news]='Git and GitHub'
+)
+declare -A shortcut=(
+  [docker]='d'
+  [jira]='j'
+  [processes]='t'
+  [workmux]='w'
+  [files]='y'
+  [git-menu]='g'
+  [github-dashboard]='g d'
+  [git]='g g'
+  [github-news]='g n'
+)
+declare -A icon=(
+  [docker]='󰡨'
+  [jira]='󰌃'
+  [processes]='󰍛'
+  [workmux]=''
+  [files]='󰉋'
+  [git-menu]='󰊢'
+  [github-dashboard]='󰊤'
+  [git]='󰊢'
+  [github-news]=''
+)
+declare -A description=(
+  [docker]='Inspect containers, images, volumes, and Compose services.'
+  [jira]='Browse and update Jira issues from the terminal.'
+  [processes]='Monitor processes, CPU, memory, disks, and network activity.'
+  [workmux]='Open the dashboard for worktrees managed by Workmux.'
+  [files]='Browse files and open selections in the originating Neovim pane.'
+  [git-menu]='Open Git and GitHub tools.'
+  [github-dashboard]='Review pull requests, issues, and repository activity.'
+  [git]='Inspect and modify the current Git repository with Lazygit.'
+  [github-news]='Read GitHub notifications and repository news.'
+)
+declare -A command_line=(
+  [docker]='lazydocker'
+  [jira]='lazyjira'
+  [processes]='btop'
+  [workmux]='workmux dashboard'
+  [files]='yazi'
+  [git-menu]=''
+  [github-dashboard]='gh dash'
+  [git]='lazygit'
+  [github-news]='gh news'
+)
+declare -A executable=(
+  [docker]='lazydocker'
+  [jira]='lazyjira'
+  [processes]='btop'
+  [workmux]='workmux'
+  [files]='yazi'
+  [git-menu]=''
+  [github-dashboard]='gh'
+  [git]='lazygit'
+  [github-news]='gh'
+)
+
+background=${COLORFGBG##*;}
+if [[ $background =~ ^[0-9]+$ && $background -ge 7 ]]; then
+  theme=light
+  accent='\033[38;2;136;57;239m'
+  muted='\033[38;2;108;111;133m'
+  good='\033[38;2;64;160;43m'
+  bad='\033[38;2;210;15;57m'
+  fzf_colors='light,fg:#4c4f69,bg:#eff1f5,selected-fg:#4c4f69,selected-bg:#dce0e8,hl:#d20f39,selected-hl:#d20f39,query:#8839ef,disabled:#9ca0b0,info:#7c7f93,pointer:#8839ef,marker:#40a02b,border:#9ca0b0,label:#6c6f85'
+else
+  theme=dark
+  accent='\033[38;2;203;166;247m'
+  muted='\033[38;2;166;173;200m'
+  good='\033[38;2;166;227;161m'
+  bad='\033[38;2;243;139;168m'
+  fzf_colors='dark,fg:#cdd6f4,bg:#1e1e2e,selected-fg:#cdd6f4,selected-bg:#313244,hl:#f38ba8,selected-hl:#f38ba8,query:#cba6f7,disabled:#6c7086,info:#a6adc8,pointer:#cba6f7,marker:#a6e3a1,border:#6c7086,label:#bac2de'
+fi
+reset='\033[0m'
+
+known_id() {
+  [[ -n ${title[$1]+x} ]]
 }
 
-show_main_menu() {
-  clear_screen
-  cat <<'EOF'
- Herdr popups
-
-   d   lazydocker
-   j   lazyjira
-   t   btop
-   w   workmux dashboard
-   y   yazi
-   g   git / GitHub…
-
-   /   fuzzy find all commands
-   q   close
-EOF
+is_available() {
+  local binary=${executable[$1]}
+  [[ -z $binary ]] || command -v "$binary" >/dev/null 2>&1
 }
 
-show_git_menu() {
-  clear_screen
-  cat <<'EOF'
- Herdr popups › git / GitHub
+emit_item() {
+  local id=$1 view=$2 shown_shortcut status display
+  shown_shortcut=${shortcut[$id]}
+  if [[ $view == git ]]; then
+    shown_shortcut=${shown_shortcut#g }
+  fi
 
-   d   gh dash
-   g   lazygit
-   n   gh news
+  if is_available "$id"; then
+    status=''
+  else
+    status="  ${bad}not installed${reset}"
+  fi
 
-   /   fuzzy find all commands
-   q   close
-EOF
+  printf -v display '  %s  %-24s  %b%-16s%b  %b%-3s%b  %b%-18s%b%b' \
+    "${icon[$id]}" "${title[$id]}" "$muted" "${category[$id]}" "$reset" \
+    "$accent" "$shown_shortcut" "$reset" "$muted" "${command_line[$id]}" "$reset" "$status"
+  printf '%s\t%b\t%s\t%s\t%s\t%s\n' \
+    "$id" "$display" "${description[$id]}" "${command_line[$id]}" \
+    "${category[$id]}" "${shortcut[$id]}"
 }
 
-fuzzy_pick() {
-  local selection
-  selection=$(
-    printf '%s\n' \
-      $'d\tDocker · lazydocker' \
-      $'j\tJira · lazyjira' \
-      $'t\tProcesses · btop' \
-      $'w\tWorkmux dashboard' \
-      $'y\tFiles · yazi' \
-      $'gd\tGitHub dashboard · gh dash' \
-      $'gg\tGit · lazygit' \
-      $'gn\tGitHub notifications · gh news' |
-      fzf \
-        --delimiter=$'\t' \
-        --with-nth=1,2 \
-        --prompt='Popup › ' \
-        --header='Type a chord or command name' \
-        --layout=reverse \
-        --border
-  ) || return 1
-
-  printf '%s' "${selection%%$'\t'*}"
-}
-
-run_choice() {
-  clear_screen
-  case "$1" in
-    d)  exec lazydocker ;;
-    j)  exec lazyjira ;;
-    t)  exec btop ;;
-    w)  exec workmux dashboard ;;
-    y)  exec yazi ;;
-    gd) exec gh dash ;;
-    gg) exec lazygit ;;
-    gn) exec gh news ;;
-    *)  exit 0 ;;
+emit_items() {
+  local view=$1 id
+  case $view in
+    root)
+      for id in "${root_ids[@]}"; do emit_item "$id" root; done
+      ;;
+    git)
+      for id in "${git_ids[@]}"; do emit_item "$id" git; done
+      ;;
+    all)
+      for id in "${all_ids[@]}"; do emit_item "$id" all; done
+      ;;
+    *) return 2 ;;
   esac
 }
 
-show_main_menu
-IFS= read -rsn1 key || exit 0
+preview_item() {
+  local id=$1 availability
+  known_id "$id" || return 1
+  if is_available "$id"; then
+    availability="${good}available${reset}"
+  else
+    availability="${bad}not installed: ${executable[$id]}${reset}"
+  fi
 
-case "$key" in
-  g)
-    show_git_menu
-    IFS= read -rsn1 subkey || exit 0
-    case "$subkey" in
-      d|g|n) run_choice "g$subkey" ;;
-      /) choice=$(fuzzy_pick) && run_choice "$choice" ;;
-      *) exit 0 ;;
-    esac
+  printf '\n  %b%s  %s%b\n\n' "$accent" "${icon[$id]}" "${title[$id]}" "$reset"
+  printf '  %b%s%b\n\n' "$muted" "${description[$id]}" "$reset"
+  printf '  %-11s %s\n' 'Category' "${category[$id]}"
+  printf '  %-11s %s\n' 'Shortcut' "${shortcut[$id]}"
+  if [[ -n ${command_line[$id]} ]]; then
+    printf '  %-11s %s\n' 'Command' "${command_line[$id]}"
+  fi
+  printf '  %-11s %b\n' 'Status' "$availability"
+  printf '  %-11s %s\n' 'Directory' "$PWD"
+
+  if [[ $id == git-menu ]]; then
+    printf '\n  %bd%b  GitHub dashboard\n' "$accent" "$reset"
+    printf '  %bg%b  Lazygit\n' "$accent" "$reset"
+    printf '  %bn%b  GitHub notifications\n' "$accent" "$reset"
+  fi
+}
+
+run_item() {
+  local id=$1 command
+  known_id "$id" || {
+    printf 'Unknown popup command: %s\n' "$id" >&2
+    return 2
+  }
+  [[ $id != git-menu ]] || return 2
+
+  if ! is_available "$id"; then
+    printf '\n%s is not installed or not available on PATH.\n' "${executable[$id]}" >&2
+    printf 'Press any key to close…' >&2
+    IFS= read -rsn1 || true
+    printf '\n' >&2
+    return 127
+  fi
+
+  read -r -a command <<<"${command_line[$id]}"
+  exec "${command[@]}"
+}
+
+shell_command() {
+  printf '%q' "$self"
+  printf ' %q' "$@"
+}
+
+root_action() {
+  printf 'reload(%s)+change-prompt(Launcher › )+change-header(plain key launch  ↑/↓ navigate  Enter open  / search  Esc close)+change-border-label( Herdr command center )+change-list-label( Commands )+hide-input+disable-search+clear-query' \
+    "$(shell_command --items root)"
+}
+
+git_action() {
+  printf 'reload(%s)+change-prompt(Git › )+change-header(d dashboard  g lazygit  n notifications  ↑/↓ navigate  / search  Esc back)+change-border-label( Git and GitHub )+change-list-label( Git commands )+hide-input+disable-search+clear-query' \
+    "$(shell_command --items git)"
+}
+
+search_action() {
+  printf 'reload(%s)+change-prompt(Search › )+change-header(type to filter  ↑/↓ navigate  Enter open  Esc clear/back)+change-border-label( Search all commands )+change-list-label( Results )+show-input+enable-search+clear-query' \
+    "$(shell_command --items all)"
+}
+
+become_action() {
+  # Let fzf emit the command id and exit. The parent launcher starts the app
+  # afterward so every TUI inherits the popup's real stdin/stdout/stderr.
+  printf 'become(%s)' "$(shell_command --choose "$1")"
+}
+
+fzf_action() {
+  local action=$1 value=${2:-} mode=${FZF_PROMPT:-}
+  case $action in
+    shortcut)
+      if [[ $mode == 'Search › ' ]]; then
+        printf 'put(%s)' "$value"
+        printf '\n'
+        return
+      fi
+      case "$mode:$value" in
+        'Launcher › :d') become_action docker ;;
+        'Launcher › :j') become_action jira ;;
+        'Launcher › :t') become_action processes ;;
+        'Launcher › :w') become_action workmux ;;
+        'Launcher › :y') become_action files ;;
+        'Launcher › :g') git_action ;;
+        'Launcher › :q') printf abort ;;
+        'Git › :d') become_action github-dashboard ;;
+        'Git › :g') become_action git ;;
+        'Git › :n') become_action github-news ;;
+        'Git › :q') printf abort ;;
+        *) printf ignore ;;
+      esac
+      ;;
+    search)
+      if [[ $mode == 'Search › ' ]]; then printf 'put(/)'; else search_action; fi
+      ;;
+    enter)
+      if [[ $value == git-menu ]]; then git_action; else become_action "$value"; fi
+      ;;
+    escape)
+      case $mode in
+        'Search › ')
+          if [[ -n ${FZF_QUERY:-} ]]; then printf clear-query; else root_action; fi
+          ;;
+        'Git › ') root_action ;;
+        *) printf abort ;;
+      esac
+      ;;
+    *) printf ignore ;;
+  esac
+  printf '\n'
+}
+
+launch_picker() {
+  local helper shortcut_key
+  helper=$(shell_command --fzf-action)
+  local -a bindings=(
+    "enter:transform(${helper} enter {1})"
+    "esc:transform(${helper} escape)"
+    "ctrl-c:abort"
+    "/:transform(${helper} search)"
+  )
+  for shortcut_key in d j t w y g n q; do
+    bindings+=("${shortcut_key}:transform(${helper} shortcut ${shortcut_key})")
+  done
+
+  local -a options=(
+    --ansi
+    --delimiter=$'\t'
+    --with-nth=2
+    --no-multi
+    --cycle
+    --disabled
+    --no-input
+    --layout=reverse
+    --style=full:rounded
+    --border-label=' Herdr command center '
+    --border-label-pos=3
+    --list-border=rounded
+    --list-label=' Commands '
+    --list-label-pos=3
+    --header='plain key launch  ↑/↓ navigate  Enter open  / search  Esc close'
+    --header-border=rounded
+    --header-label=' Keys '
+    --header-label-pos=3
+    --preview="$(shell_command --preview) {1}"
+    --preview-window='right,42%,border-rounded,<80(down,45%,border-rounded)'
+    --preview-label=' Details '
+    --preview-label-pos=3
+    --prompt='Launcher › '
+    --pointer='›'
+    --marker='✓'
+    --info=inline-right
+    --gap=1
+    --margin=1,2
+    --padding=1
+    --color="$fzf_colors"
+  )
+  local binding
+  for binding in "${bindings[@]}"; do options+=(--bind "$binding"); done
+
+  local selection status=0 id
+  selection=$(emit_items root | fzf "${options[@]}") || status=$?
+  case $status in
+    0) ;;
+    1|130) return 0 ;;
+    *) return "$status" ;;
+  esac
+
+  [[ -n $selection ]] || return 0
+  id=${selection%%$'\t'*}
+  run_item "$id"
+}
+
+case ${1:-} in
+  --items)
+    [[ $# == 2 ]] || exit 2
+    emit_items "$2"
     ;;
-  d|j|t|w|y)
-    run_choice "$key"
+  --preview)
+    [[ $# == 2 ]] || exit 2
+    preview_item "$2"
     ;;
-  /)
-    choice=$(fuzzy_pick) && run_choice "$choice"
+  --run)
+    [[ $# == 2 ]] || exit 2
+    run_item "$2"
+    ;;
+  --choose)
+    [[ $# == 2 ]] || exit 2
+    known_id "$2" || exit 2
+    printf '%s\n' "$2"
+    ;;
+  --fzf-action)
+    (($# >= 2 && $# <= 3)) || exit 2
+    fzf_action "$2" "${3:-}"
+    ;;
+  '')
+    launch_picker
     ;;
   *)
-    exit 0
+    printf 'usage: herdr-popup-picker\n' >&2
+    exit 2
     ;;
 esac
