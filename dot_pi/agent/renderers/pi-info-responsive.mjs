@@ -53,9 +53,7 @@ function pathCandidates(path) {
   const candidates = [path];
   for (let shortened = 1; shortened < segments.length; shortened += 1) {
     const next = segments.map((segment, index) =>
-      index < shortened && index < segments.length - 1
-        ? abbreviateDirectory(segment)
-        : segment,
+      index < shortened && index < segments.length - 1 ? abbreviateDirectory(segment) : segment,
     );
     candidates.push(`${prefix}${next.join("/")}`);
   }
@@ -78,27 +76,14 @@ function fitCwd(styledText, maxWidth) {
 export function renderBar(bar) {
   if (bar.position !== "footer") return null;
 
-  const activeProfile = globalThis[Symbol.for("pi.active-profile")];
-  const profilePart =
-    typeof activeProfile === "string" && activeProfile.length > 0
-      ? {
-          key: "profile",
-          text:
-            typeof bar.theme?.fg === "function"
-              ? bar.theme.fg("accent", activeProfile)
-              : activeProfile,
-        }
-      : null;
-  const parts = profilePart
-    ? [profilePart, ...bar.parts.filter((part) => part.key !== "profile")]
-    : bar.parts;
+  const parts = bar.parts;
 
   if (bar.width <= 0 || parts.length === 0) return [""];
 
   const ordered = parts
     .map((part, index) => ({ ...part, index }))
-    .sort((a, b) =>
-      (priority.get(a.key) ?? 999) - (priority.get(b.key) ?? 999) || a.index - b.index,
+    .sort(
+      (a, b) => (priority.get(a.key) ?? 999) - (priority.get(b.key) ?? 999) || a.index - b.index,
     );
 
   const separatorContent = bar.separator.trim();

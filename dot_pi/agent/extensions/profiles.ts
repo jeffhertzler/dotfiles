@@ -4,7 +4,12 @@ import {
   type ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
 import { builtinProviders } from "@earendil-works/pi-ai/providers/all";
-import type { Api, AuthEvent, AuthPrompt, Model, OAuthCredentials } from "@earendil-works/pi-ai";
+import type { Api, Model, Provider } from "@earendil-works/pi-ai";
+// Import pi-info's managed copy so both extensions share its segment registry.
+import {
+  registerSegment,
+  unregisterSegment,
+} from "../npm/node_modules/@sentixx/pi-info/extensions/statusline.js";
 import {
   existsSync,
   mkdirSync,
@@ -29,11 +34,6 @@ interface ProfilesConfig {
 type ProfileEntry = [name: string, definition: ProfileDefinition];
 
 const CONFIG_PATH = join(getAgentDir(), "profiles.json");
-const PROFILE_STATE = Symbol.for("pi.active-profile");
-
-type ExtensionOAuthCallbacks = Parameters<
-  NonNullable<Parameters<ExtensionAPI["registerProvider"]>[1]["oauth"]>["login"]
->[0];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -103,94 +103,42 @@ function loadConfig(): ProfilesConfig {
   }
 }
 
-async function promptOAuth(callbacks: ExtensionOAuthCallbacks, prompt: AuthPrompt): Promise<string> {
-  if (prompt.type === "select") {
-    const selected = await callbacks.onSelect?.({
-      message: prompt.message,
-      options: prompt.options.map((option) => ({ id: option.id, label: option.label })),
-    });
-    if (selected === undefined) throw new Error("OAuth login cancelled");
-    return selected;
-  }
-
-  if (prompt.type === "manual_code" && callbacks.onManualCodeInput) {
-    return callbacks.onManualCodeInput();
-  }
-
-  return callbacks.onPrompt({
-    message: prompt.message,
-    placeholder: prompt.placeholder,
-    allowEmpty: prompt.type === "manual_code",
-  });
-}
-
-function notifyOAuth(callbacks: ExtensionOAuthCallbacks, event: AuthEvent): void {
-  if (event.type === "auth_url") {
-    callbacks.onAuth({ url: event.url, instructions: event.instructions });
-  } else if (event.type === "device_code") {
-    callbacks.onDeviceCode?.({
-      userCode: event.userCode,
-      verificationUri: event.verificationUri,
-      intervalSeconds: event.intervalSeconds,
-      expiresInSeconds: event.expiresInSeconds,
-    });
-  } else if (event.type === "progress" || event.type === "info") {
-    callbacks.onProgress?.(event.message);
-  }
-}
-
-function asOAuthCredential(credentials: OAuthCredentials): OAuthCredentials & { type: "oauth" } {
-  return { ...credentials, type: "oauth" };
-}
-
-function cloneOAuthProvider(pi: ExtensionAPI, name: string, profile: ProfileDefinition): void {
+function cloneProvider(pi: ExtensionAPI, name: string, profile: ProfileDefinition): void {
   if (!profile.cloneFrom) return;
 
-  const sourceProvider = builtinProviders().find((provider) => provider.id === profile.cloneFrom);
-  const sourceModels = sourceProvider?.getModels() as Model<Api>[] | undefined;
-  const sourceOAuth = sourceProvider?.auth.oauth;
-  const firstModel = sourceModels?.[0];
+  const source = builtinProviders().find((provider) => provider.id === profile.cloneFrom);
+  if (!source) throw new Error(`Cannot clone provider ${profile.cloneFrom} for profile ${name}`);
 
-  if (!sourceOAuth || !firstModel) {
-    throw new Error(`Cannot clone OAuth provider ${profile.cloneFrom} for profile ${name}`);
-  }
+  const models = source.getModels().map((model) => ({
+    ...model,
+    provider: profile.provider,
+    name: `${model.name || model.id} (${name})`,
+  }));
+  const provider: Provider = {
+    id: profile.provider,
+    name: `${source.name} (${name})`,
+    baseUrl: source.baseUrl,
+    headers: source.headers,
+    auth: source.auth,
+    getModels: () => models,
+    stream: (model, context, options) => source.stream(model, context, options),
+    streamSimple: (model, context, options) => source.streamSimple(model, context, options),
+  };
 
-  pi.registerProvider(profile.provider, {
-    name: `${sourceOAuth.name} (${name})`,
-    baseUrl: firstModel.baseUrl,
-    api: firstModel.api,
-    oauth: {
-      name: `${sourceOAuth.name} (${name})`,
-      login: (callbacks) =>
-        sourceOAuth.login({
-          signal: callbacks.signal,
-          prompt: (prompt) => promptOAuth(callbacks, prompt),
-          notify: (event) => notifyOAuth(callbacks, event),
-        }),
-      refreshToken: (credentials) => sourceOAuth.refresh(asOAuthCredential(credentials)),
-      getApiKey: (credentials) => credentials.access,
-    },
-    models: sourceModels.map((model) => ({
-      id: model.id,
-      name: `${model.name || model.id} (${name})`,
-      api: model.api,
-      baseUrl: model.baseUrl,
-      reasoning: model.reasoning,
-      thinkingLevelMap: model.thinkingLevelMap,
-      input: [...model.input],
-      cost: model.cost,
-      contextWindow: model.contextWindow,
-      maxTokens: model.maxTokens,
-      compat: model.compat,
-    })),
-  });
+  pi.registerProvider(provider);
 }
 
-function updateProfileState(entries: ProfileEntry[], provider: string | undefined): void {
-  const state = globalThis as Record<PropertyKey, unknown>;
-  const entry = entries.find(([, profile]) => profile.provider === provider);
-  if (entry) state[PROFILE_STATE] = entry[1].footer ?? entry[0];
-  else delete state[PROFILE_STATE];
+function registerProfileSegment(entries: ProfileEntry[]): void {
+  registerSegment({
+    name: "profile",
+    label: "Profile",
+    data(ctx) {
+      const entry = entries.find(([, profile]) => profile.provider === ctx.model?.provider);
+      return entry ? { name: entry[1].footer ?? entry[0] } : null;
+    },
+    defaultFormat: "{name}",
+    color: () => "accent",
+  });
 }
 
 function findProfileModel(
@@ -258,7 +206,10 @@ function saveProjectProfile(profileName: string, model: Model<Api>, ctx: Extensi
   ctx.ui.notify(`Saved profile ${profileName} for this project`, "info");
 }
 
-function parseCommandArgs(args: string): { profileName?: string; saveForProject: boolean } {
+function parseCommandArgs(args: string): {
+  profileName?: string;
+  saveForProject: boolean;
+} {
   const tokens = args.trim().split(/\s+/).filter(Boolean);
   const saveForProject = tokens.includes("--project");
   const names = tokens.filter((token) => token !== "--project");
@@ -275,7 +226,8 @@ function parseCommandArgs(args: string): { profileName?: string; saveForProject:
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const entries = Object.entries(config.profiles);
-  for (const [name, profile] of entries) cloneOAuthProvider(pi, name, profile);
+  for (const [name, profile] of entries) cloneProvider(pi, name, profile);
+  registerProfileSegment(entries);
 
   pi.registerCommand("profile", {
     description: "Switch profiles; add --project to save the choice for this repository",
@@ -299,12 +251,5 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  pi.on("session_start", (_event, ctx) => {
-    updateProfileState(entries, ctx.model?.provider);
-    ctx.ui.setStatus("profile", undefined);
-  });
-  pi.on("model_select", (event) => updateProfileState(entries, event.model.provider));
-  pi.on("session_shutdown", (event) => {
-    if (event.reason === "quit") updateProfileState(entries);
-  });
+  pi.on("session_shutdown", () => unregisterSegment("profile"));
 }
