@@ -474,13 +474,20 @@ Status: core complete; fuzzy matching and offline bundles are explicitly deferre
 - [x] Non-destructive session archival and restoration.
 - [ ] Import/export for offline agent workflows.
 
-### Phase 4: VCS integration
+### Phase 4: VCS workflow evaluation
 
-- [ ] Formalize the provider interface.
-- [ ] Git provider independent of CodeDiff's explorer.
-- [ ] Launch reviews from Neogit selections/events.
-- [ ] JJ provider using revsets and `jj file show`/snapshot extraction.
-- [ ] Evaluate launching from jj.nvim or Neojj.
+Status: in progress; do not assume Agent Review needs to own a VCS provider.
+
+- [x] Install Neogit with CodeDiff as its diff viewer while retaining external
+  Lazygit as a fallback.
+- [ ] Evaluate native status, staging, commits, branches, and refresh after agent
+  edits.
+- [ ] Evaluate Neogit → CodeDiff with inline layout and the explorer initially
+  hidden.
+- [ ] Observe whether Agent Review needs no VCS API, thin host launch adapters,
+  or a full provider boundary.
+- [ ] Formalize a provider only if real workflow limitations require it.
+- [ ] Evaluate jj.nvim or Neojj after the Git workflow is understood.
 
 ### Phase 5: forge integration
 
@@ -491,10 +498,11 @@ Status: core complete; fuzzy matching and offline bundles are explicitly deferre
 
 ## Immediate next steps
 
-1. Use the consolidated Agent/Agent Review workflow in real reviews and fix
-   only observed regressions.
-2. Begin Phase 4 only after selecting a bounded Git workflow milestone; the
-   likely first slice is a neutral provider boundary followed by Neogit launch.
+1. Use Neogit as the native Git dashboard, CodeDiff for visual comparison,
+   Gitsigns for ambient buffer state, and Agent Review for durable feedback.
+2. Record actual friction—especially duplicate Neogit/CodeDiff file lists and
+   status refresh after agent edits—before adding any VCS API to Agent Review.
+3. Keep the Herdr/tmux Lazygit popup available as the familiar fallback.
 
 ## Resolved design decisions
 
