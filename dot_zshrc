@@ -7,8 +7,6 @@ F=~/.antidote/antidote.zsh; [ -f $F ] && . $F
 
 antidote load
 
-[ -z "$COLORFGBG" ] && export COLORFGBG='7;0'
-
 export VISUAL="nvim"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"
