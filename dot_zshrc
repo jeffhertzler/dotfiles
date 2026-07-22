@@ -19,6 +19,7 @@ alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
 alias h="herdr"
+alias hs="herdr-session-picker"
 alias rmrf="rm -rf"
 
 # Put the named Herdr session in each workspace's sidebar metadata.
