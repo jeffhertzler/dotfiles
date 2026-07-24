@@ -103,10 +103,11 @@ assert(vim.wait(10000, function()
   return session and session.layout == "inline" and #session.files == 1 and not session.explorer_win
 end, 20), "Neogit dd did not open a single-file Agent Diff")
 assert(#vim.api.nvim_list_tabpages() == 1)
-require("agent_diff").close()
+require("agent_diff.neogit").status()
 assert(vim.wait(3000, function()
   return vim.bo.filetype == "NeogitStatus"
-end, 20))
+    and vim.api.nvim_win_get_config(vim.api.nvim_get_current_win()).hide == false
+end, 20), "opening Neogit from its diff did not restore the visible status window")
 
 vim.api.nvim_win_set_cursor(0, { assert(find("+local new_name")), 0 })
 vim.api.nvim_feedkeys("s", "xt", false)

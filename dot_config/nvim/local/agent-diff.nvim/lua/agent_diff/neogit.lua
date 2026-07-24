@@ -261,6 +261,18 @@ local function setup_highlighter()
   end
 end
 
+function M.status()
+  local diff = require("agent_diff")
+  local session = diff.get_session()
+  local returns_to_status = session and session.park_owner and session.park_owner.name == "NeogitStatus"
+  if session then
+    diff.close()
+  end
+  if not returns_to_status then
+    vim.cmd("Neogit")
+  end
+end
+
 function M.setup()
   if installed then
     return

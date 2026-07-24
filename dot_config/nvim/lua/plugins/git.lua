@@ -70,7 +70,13 @@ return {
       require("agent_diff.neogit").setup()
     end,
     keys = {
-      { "<leader>gg", "<cmd>Neogit<cr>", desc = "Neogit Status" },
+      {
+        "<leader>gg",
+        function()
+          require("agent_diff.neogit").status()
+        end,
+        desc = "Neogit Status",
+      },
       { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "Neogit Commit" },
     },
     init = function()
