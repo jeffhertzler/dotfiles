@@ -4,6 +4,10 @@ local function valid_win(win)
   return win and vim.api.nvim_win_is_valid(win)
 end
 
+local function is_agent_diff_winbar(winbar)
+  return type(winbar) == "string" and winbar:find("AgentDiffWinbarTitle", 1, true) ~= nil
+end
+
 local function escape(value)
   return tostring(value or ""):gsub("%%", "%%%%")
 end
@@ -71,6 +75,13 @@ function M.setup()
     group = group,
     callback = setup_highlights,
   })
+  vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter", "WinEnter" }, {
+    group = group,
+    callback = function()
+      vim.schedule(M.sync)
+    end,
+  })
+  vim.schedule(M.sync)
 end
 
 function M.capture(session, win)
@@ -79,19 +90,44 @@ function M.capture(session, win)
   end
   session.saved_winbars = session.saved_winbars or {}
   if session.saved_winbars[win] == nil then
-    session.saved_winbars[win] = vim.wo[win].winbar
+    local winbar = vim.wo[win].winbar
+    session.saved_winbars[win] = is_agent_diff_winbar(winbar) and "" or winbar
+  end
+end
+
+local function role(session, win)
+  if not session or not valid_win(win) then
+    return nil
+  end
+  local bufnr = vim.api.nvim_win_get_buf(win)
+  if win == session.modified_win and bufnr == session.modified_buf then
+    return "modified"
+  elseif win == session.original_win and bufnr == session.original_buf then
+    return "original"
+  elseif win == session.explorer_win and bufnr == session.explorer_buf then
+    return "files"
   end
 end
 
 function M.update(session)
-  if valid_win(session.modified_win) then
-    vim.wo[session.modified_win].winbar = value(session, "modified")
+  for _, win in ipairs({ session.modified_win, session.original_win, session.explorer_win }) do
+    local current_role = role(session, win)
+    if current_role then
+      vim.wo[win].winbar = value(session, current_role)
+    end
   end
-  if valid_win(session.original_win) then
-    vim.wo[session.original_win].winbar = value(session, "original")
-  end
-  if valid_win(session.explorer_win) then
-    vim.wo[session.explorer_win].winbar = value(session, "files")
+end
+
+function M.sync()
+  local ok, agent_diff = pcall(require, "agent_diff")
+  local session = ok and agent_diff.get_session() or nil
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    local current_role = role(session, win)
+    if current_role then
+      vim.wo[win].winbar = value(session, current_role)
+    elseif is_agent_diff_winbar(vim.wo[win].winbar) then
+      vim.wo[win].winbar = (session and session.saved_winbars and session.saved_winbars[win]) or ""
+    end
   end
 end
 
