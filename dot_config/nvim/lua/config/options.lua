@@ -23,4 +23,24 @@ vim.opt.relativenumber = false
 vim.opt.showtabline = 0
 vim.opt.swapfile = false
 
+if vim.env.HERDR_ENV == "1" then
+  local osc52_copy = require("vim.ui.clipboard.osc52").copy("+")
+  local clipboard_cache = { {}, "v" }
+
+  local function copy(lines, regtype)
+    clipboard_cache = { vim.deepcopy(lines), regtype }
+    osc52_copy(lines)
+  end
+
+  local function paste()
+    return vim.deepcopy(clipboard_cache)
+  end
+
+  vim.g.clipboard = {
+    name = "Herdr OSC 52",
+    copy = { ["+"] = copy, ["*"] = copy },
+    paste = { ["+"] = paste, ["*"] = paste },
+  }
+end
+
 vim.opt.clipboard = { "unnamed", "unnamedplus" }
