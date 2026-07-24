@@ -22,11 +22,25 @@ return {
         desc = "Annotate selection",
       },
       {
+        "<leader>rA",
+        function()
+          require("agent_review").annotation.add_old()
+        end,
+        desc = "Annotate deleted line",
+      },
+      {
         "<leader>rd",
         function()
           require("agent_review").annotation.remove()
         end,
         desc = "Remove review annotation",
+      },
+      {
+        "<leader>rc",
+        function()
+          require("agent_review").session.clear()
+        end,
+        desc = "Clear review session",
       },
       {
         "<leader>re",

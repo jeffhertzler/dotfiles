@@ -26,6 +26,40 @@ function Input:_valid_window()
   return self.window and self.window.win and vim.api.nvim_win_is_valid(self.window.win)
 end
 
+function Input:_capture_origin()
+  local win = vim.api.nvim_get_current_win()
+  if self:_valid_window() and win == self.window.win then
+    return
+  end
+  self.origin_generation = (self.origin_generation or 0) + 1
+  self.origin_win = win
+  self.origin_insert_mode = vim.api.nvim_get_mode().mode:sub(1, 1) == "i"
+end
+
+function Input:_restore_origin()
+  local generation = self.origin_generation
+  local win = self.origin_win
+  local insert_mode = self.origin_insert_mode == true
+  self.origin_win = nil
+  self.origin_insert_mode = nil
+
+  pcall(vim.cmd, "stopinsert")
+  if win and vim.api.nvim_win_is_valid(win) then
+    pcall(vim.api.nvim_set_current_win, win)
+  end
+  vim.schedule(function()
+    if self.origin_generation ~= generation then
+      return
+    end
+    if win and vim.api.nvim_win_is_valid(win) then
+      pcall(vim.api.nvim_set_current_win, win)
+      pcall(vim.cmd, insert_mode and "startinsert" or "stopinsert")
+    elseif not insert_mode then
+      pcall(vim.cmd, "stopinsert")
+    end
+  end)
+end
+
 function Input:_resize()
   if not self:_valid_buffer() or not self:_valid_window() then
     return
@@ -75,6 +109,7 @@ function Input:value()
 end
 
 function Input:close()
+  pcall(vim.cmd, "stopinsert")
   if self.window then
     pcall(function()
       self.window:close({ buf = false })
@@ -87,6 +122,7 @@ function Input:close()
   self.window = nil
   self.cursor = nil
   self.insert_mode = true
+  self:_restore_origin()
 end
 
 function Input:hide(insert_mode)
@@ -97,6 +133,7 @@ function Input:hide(insert_mode)
   if self:_valid_window() then
     self:_save_view(insert_mode)
     self.window:hide()
+    self:_restore_origin()
   end
 end
 
@@ -146,6 +183,7 @@ function Input:_setup_buffer()
   vim.diagnostic.enable(false, { bufnr = buf })
 
   self:_map("n", "q", function() self:close() end, "Cancel")
+  self:_map("n", "<Esc>", function() self:close() end, "Cancel")
   self:_map("n", "<C-c>", function() self:close() end, "Cancel")
   self:_map("i", "<C-c>", function() self:close() end, "Cancel")
   self:_map("n", "<CR>", function() self:_accept({ action = "default" }) end, self.opts.accept_label)
@@ -230,6 +268,7 @@ end
 
 function Input:open(initial, opts)
   opts = opts or {}
+  self:_capture_origin()
   local reused = self:_valid_buffer()
   if not reused then
     self.buffer = vim.api.nvim_create_buf(false, true)
@@ -259,6 +298,7 @@ function Input:resume()
   if not self:_valid_buffer() then
     return false
   end
+  self:_capture_origin()
   self:_ensure_window()
   self:_restore_view()
   return true

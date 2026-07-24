@@ -14,18 +14,21 @@ the broader architecture.
 | --- | --- |
 | `<leader>ra` | Add a line annotation |
 | visual `<leader>ra` | Annotate the selected line/column range |
+| `<leader>rA` | Select and annotate a deleted line in an inline diff |
 | `<leader>rd` | Remove the annotation at the cursor |
+| `<leader>rc` | Clear all annotations in the active review session |
 | `<leader>re` | Edit the annotation at the cursor |
 | `<leader>rl` | Open the active-session picker |
 | `<leader>rs` | Stage active-session feedback for an agent |
 
 The picker uses `<CR>` to navigate, `e` to edit, `r` to resolve/reopen, and `d`
-to remove.
+to remove. Lualine shows `Review current/total` whenever the active session has
+open annotations; clicking it opens the picker.
 
 Annotation add/edit uses a compact bordered Markdown buffer. It starts one line
 tall and grows to eight lines. `<CR>` inserts a newline in insert mode,
 `<C-s>` or `<M-s>` saves, `<Esc>` leaves insert mode, normal `<CR>` saves, and
-normal `q` or `<C-c>` cancels.
+normal `<Esc>`, `q`, or `<C-c>` cancels.
 
 ## Command
 
@@ -65,8 +68,9 @@ layouts without tab pages. Working and revision-side annotations render in both
 layouts. The full CodeDiff host remains supported as an optional adapter.
 
 Old-side annotations project beside the corresponding virtual deletion block in
-inline views. To create one inline, put the cursor on the real line beside the
-block and run `:AgentReview add old`; select an old line when prompted.
+inline views. To create one inline, put the cursor on an added replacement line
+or the real line adjacent to a pure deletion and press `<leader>rA`; select the
+exact deleted line when prompted. `:AgentReview add old` provides the same flow.
 
 Virtual deletion rows cannot receive a Neovim cursor, so the comment box
 attaches to the containing block rather than an exact virtual row.
@@ -110,6 +114,9 @@ review.session.clear()
 
 review.workspace.list()
 review.workspace.clear()
+review.status.counts()
+review.status.text()
+review.status.open()
 review.ui.annotations(opts)
 review.ui.sessions(opts)
 review.ui.workspaces(opts)

@@ -78,7 +78,10 @@ function M.add_old(opts)
   local candidates = is_agent_diff and adapter.old_lines_at_cursor(cursor_line)
     or adapter.old_lines_at_cursor(tabpage, cursor_line)
   if #candidates == 0 then
-    notify("No inline old lines are associated with the cursor", vim.log.levels.WARN)
+    notify(
+      "No deleted lines at cursor; use an added replacement line or the real line adjacent to the deletion",
+      vim.log.levels.WARN
+    )
     return nil
   end
 
@@ -96,7 +99,7 @@ function M.add_old(opts)
     return add(candidates[1])
   end
   vim.ui.select(candidates, {
-    prompt = "Select old line",
+    prompt = "Select deleted line to annotate",
     format_item = function(candidate)
       return string.format("~%d  %s", candidate.line, candidate.text)
     end,
@@ -394,6 +397,7 @@ function M.setup(opts)
 
   render.setup_highlights()
   local persistence = require("agent_review.persistence").setup(opts.persistence)
+  require("agent_review.status").setup()
   local group = vim.api.nvim_create_augroup("AgentReview", { clear = true })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -547,6 +551,13 @@ API.workspace = {
     return vim.deepcopy(require("agent_review.scope").groups())
   end,
   clear = M.clear_current,
+}
+
+API.status = {
+  counts = function() return vim.deepcopy(require("agent_review.status").counts()) end,
+  text = function() return require("agent_review.status").text() end,
+  has = function() return require("agent_review.status").has() end,
+  open = function() return require("agent_review.status").open() end,
 }
 
 API.ui = {
