@@ -111,21 +111,17 @@ local function send_to_herdr(message, opts, done)
       return
     end
 
-    local _, send_err = util.herdr("agent", "send", target.pane_id, prepare_herdr_text(message))
+    local _, send_err
+    if submit then
+      _, send_err = util.herdr("agent", "prompt", target.pane_id, message)
+    else
+      _, send_err = util.herdr("pane", "send-text", target.pane_id, prepare_herdr_text(message))
+    end
     if send_err then
       copy_to_clipboard(message)
       vim.notify("failed to send to " .. target.pane_id .. ": " .. send_err .. ", copied to clipboard", vim.log.levels.ERROR)
       done(false)
       return
-    end
-
-    if submit then
-      local _, submit_err = util.herdr("pane", "send-keys", target.pane_id, "enter")
-      if submit_err then
-        vim.notify("message staged, but submission failed: " .. submit_err, vim.log.levels.WARN)
-        done(true)
-        return
-      end
     end
 
     if not switch_to_target then
