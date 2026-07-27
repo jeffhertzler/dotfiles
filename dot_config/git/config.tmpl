@@ -30,10 +30,6 @@
 	email = jeffhertzler@gmail.com
 
 {{ if or (eq $profile "arch") (eq $profile "macos") -}}
-[include]
-	path = ~/dev/catppuccin/delta/catppuccin.gitconfig
-[delta]
-	features = catppuccin-mocha
 [includeIf "gitdir:~/dev/greenlight/"]
 	path = ~/dev/greenlight/.gitconfig
 {{ end -}}
