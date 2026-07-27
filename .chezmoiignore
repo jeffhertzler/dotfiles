@@ -65,6 +65,7 @@ docs
 !.local/bin
 .local/bin/*
 !.local/bin/tunnel
+!.local/bin/lazygit-nvim
 {{- else }}
 .local
 {{- end }}
