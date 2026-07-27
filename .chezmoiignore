@@ -7,36 +7,58 @@ README.md
 .ssh/id_rsa
 {{- end }}
 
-# WSL and native Windows begin deny-by-default. Their files will be enabled
+# WSL, macOS, and native Windows begin deny-by-default. Their files will be enabled
 # one reviewed layer at a time instead of inheriting the existing Unix setup.
-{{- if or (eq $profile "wsl") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
 .agents
 .config/*
 !.config/git
 !.config/git/config
 !.config/git/ignore
-{{- if or (eq $profile "wsl") (eq $profile "windows") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.config/lazygit
 !.config/lazygit/config.yml
 !.config/herdr
 .config/herdr/*
 !.config/herdr/config.toml
+{{- end }}
+{{- if or (eq $profile "wsl") (eq $profile "windows") }}
 !.config/nvim
 !.config/nvim/**
 {{- end }}
-{{- if eq $profile "wsl" }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.config/gh
 .config/gh/*
 !.config/gh/config.yml
+{{- end }}
+{{- if eq $profile "wsl" }}
 !.config/opencode
 !.config/opencode/**
+{{- end }}
+{{- if eq $profile "macos" }}
+!.config/atuin
+!.config/atuin/**
+!.config/bat
+!.config/bat/**
+!.config/bottom
+!.config/bottom/bottom.toml
+!.config/lazydocker
+!.config/lazydocker/config.yml
+!.config/posting
+!.config/posting/config.yaml
+!.config/tmux
+!.config/tmux/**
+!.config/workmux
+!.config/workmux/config.yaml
+!.config/yazi
+!.config/yazi/**
 {{- end }}
 !.config/starship.toml
 !.config/shell
 !.config/shell/common.sh
 .greenlight.zsh
 .jabba
-{{- if eq $profile "wsl" }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.local
 .local/*
 !.local/bin
@@ -80,14 +102,7 @@ ensure-herdr-plugins.sh
 .mac.zsh
 {{- end }}
 
-# Mac keeps only its portable client helper; Arch owns the workstation helper
-# collection. WSL's matching exception is defined inside its deny-by-default
-# block above.
-{{- if eq $profile "macos" }}
-.local/*
-!.local/bin
-.local/bin/*
-!.local/bin/tunnel
-{{- else if eq $profile "arch" }}
+# Arch owns the workstation helper collection, but not the client-side tunnel.
+{{- if eq $profile "arch" }}
 .local/bin/tunnel
 {{- end }}

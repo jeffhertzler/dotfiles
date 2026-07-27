@@ -1,3 +1,4 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
 [mgr]
 show_hidden = true
 
@@ -8,7 +9,11 @@ suppress_preload = true
 nvim = [
   { run = '~/.config/yazi/nvim-remote.sh "$@"', desc = "Open in Neovim", block = true, for = "unix" },
 ]
+{{- if eq $profile "macos" }}
+open = [{ run = 'open "$@"', desc = "Open with system handler" }]
+{{- else }}
 open = [{ run = 'xdg-open "$@"', desc = "Open with system handler" }]
+{{- end }}
 
 [open]
 rules = [
