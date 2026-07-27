@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 12a16ef | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
-| S02 | WSL | 12a16ef | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
-| S03 | macOS | 12a16ef | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
-| S04 | Arch | 12a16ef | Clean | LazyGit-to-Neovim and Herdr reordering are shared; plugin-dependent full-layout splits remain Arch-only. |
+| S01 | Windows | d5b44f2 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit-to-Neovim, local directional splits, and named-pipe-safe Herdr reordering are active. |
+| S02 | WSL | d5b44f2 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
+| S03 | macOS | d5b44f2 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
+| S04 | Arch | d5b44f2 | Clean | LazyGit-to-Neovim and Herdr reordering are shared; plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -114,6 +114,7 @@ Kinds:
 | D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them in .arch.zsh rather than the shared template. The Mac tmux and Workmux config directories were removed after the user confirmed they were unnecessary. | Explicit user decision | Preserve only the Arch legacy setup until eventual retirement. |
 | D56 | Pi tool manager | Windows and WSL use Mise for Pi; Mac and Arch use Volta. Native Windows Mise is intentionally limited to Pi and its config remains unmanaged. Volta upstream is now unmaintained and recommends migrating to Mise. | Explicitly deferred | Revisit broader Mise adoption and any Volta migration as a separate compatibility review. |
 | D57 | LazyGit editor bridge | All four profiles use the custom lazygit-nvim bridge rather than LazyGit's built-in nvim preset. Unix invokes it directly. Native Windows LazyGit runs editor commands through cmd.exe, so its rendered config launches the same script explicitly through Git Bash. The Windows command, a filename containing spaces, and a native Neovim named-pipe return were verified together. | Explicit user decision | Keep the behavior shared; retain only the required Windows launcher syntax. |
+| D58 | Herdr reorder Windows socket | The first shared rollout passed syntax/config checks but the live Windows binding failed because Node received Herdr's bare pipe name and passed it directly to net.connect. Herdr's own bundled Node integrations prepend the Windows named-pipe namespace, so herdr-reorder now does the same. A disposable named-pipe server verified the complete request/response path before redeployment. | Corrected and implemented | Keep the platform-specific endpoint conversion inside the otherwise shared helper. |
 
 ### D49 helper classification
 
@@ -163,6 +164,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr directional-sharing config backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-directional-sharing/config.toml.
 - LazyGit bridge backup: %LOCALAPPDATA%/dotfiles-backups/20260727-lazygit-bridge/config.yml.
 - Herdr reordering backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-reorder/config.toml.
+- Herdr reordering pipe-fix backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs.
 
 ### WSL
 
@@ -206,6 +208,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr directional-sharing config backup: ~/.local/state/dotfiles-backups/20260727-herdr-directional-sharing/config.toml on WSL, Mac, and Arch.
 - LazyGit bridge backups: ~/.local/state/dotfiles-backups/20260727-lazygit-bridge on WSL, Mac, and Arch. Mac and Arch contain direct pre-apply copies. WSL's initial backup command lost a shell variable at the PowerShell boundary, so its old config was restored from the identical Windows pre-change copy and its old helper was reconstructed byte-for-byte from commit 4725ea7 (blob 8fd9388) before verification.
 - Herdr reordering backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder on WSL, Mac, and Arch. Each contains the prior config; Arch also retains its prior helper.
+- Herdr reordering pipe-fix backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs on WSL, Mac, and Arch.
 
 ### Arch
 
