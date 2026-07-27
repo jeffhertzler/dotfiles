@@ -16,7 +16,6 @@ README.md
 !.config/shell/common.sh
 .greenlight.zsh
 .jabba
-.linux.zsh
 .local
 .ocprofile.zsh
 .pi
@@ -42,4 +41,13 @@ ensure-herdr-plugins.sh
 # WSL-only bridge and remote-session helpers.
 {{- if ne $profile "wsl" }}
 .wsl.zsh
+{{- end }}
+
+# Each Unix system gets only its own profile overlay.
+{{- if ne $profile "arch" }}
+.arch.zsh
+{{- end }}
+
+{{- if ne $profile "macos" }}
+.mac.zsh
 {{- end }}

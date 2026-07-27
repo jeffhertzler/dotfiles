@@ -12,4 +12,3 @@ function nvu() {
 	return $exit_code
 }
 alias tu="tmux-preview-update"
-

@@ -19,7 +19,8 @@ files one reviewed layer at a time.
 
 - `.config/shell/common.sh` contains dependency-free editor settings and aliases
   shared by Bash and Zsh.
-- Arch and macOS render the established Unix Zsh configuration.
+- Arch and macOS render the established Unix Zsh configuration plus their
+  respective `.arch.zsh` or `.mac.zsh` profile overlay.
 - WSL renders a lightweight Zsh baseline plus its profile helpers in `.wsl.zsh`.
 - Native Windows manages `.bash_profile` and `.bashrc` for Git Bash.
 

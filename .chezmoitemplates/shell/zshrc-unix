@@ -89,8 +89,12 @@ function y() {
 }
 
 F=~/.private.zsh; [ -f $F ] && . $F
-F=~/.linux.zsh; [ -f $F ] && . $F
+{{- $profile := includeTemplate "profile" . | trim }}
+{{- if eq $profile "arch" }}
+F=~/.arch.zsh; [ -f $F ] && . $F
+{{- else if eq $profile "macos" }}
 F=~/.mac.zsh; [ -f $F ] && . $F
+{{- end }}
 F=~/.greenlight.zsh; [ -f $F ] && . $F
 F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
