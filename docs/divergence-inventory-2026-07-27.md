@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 6084cc4 on normalize/multi-platform
+Configuration baseline: 28d6321 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 6084cc4 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim and Pi configurations are active. |
-| S02 | WSL | 6084cc4 | Clean | Native source clone at ~/.local/share/chezmoi. The shared LazyGit-to-Neovim helper is active. |
-| S03 | macOS | 6084cc4 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, and LazyGit-to-Neovim configurations are active. |
-| S04 | Arch | 6084cc4 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
+| S01 | Windows | 28d6321 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim, Pi, and local Herdr directional splits are active. |
+| S02 | WSL | 28d6321 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim and local Herdr directional-split helpers are active. |
+| S03 | macOS | 28d6321 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, and local Herdr directional splits are active. |
+| S04 | Arch | 28d6321 | Clean | Local Herdr directional splits remain shared while plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -83,7 +83,7 @@ Kinds:
 | D24 | Starship | The same ~/.config/starship.toml is managed on all supported profiles. | Intentional | Keep. |
 | D25 | Herdr core | The same core UI, theme, history, and navigation keys are managed on Windows, WSL, Mac, and Arch. | Intentional | Keep. |
 | D26 | Herdr Windows terminal | Windows alone sets Git Bash as Herdr's shell, new_cwd=follow, and preview update channel. | Required/intentional | Review preview-channel preference separately from the shell requirement. |
-| D27 | Herdr advanced commands | Popup launcher, directional splits, reordering, and Worktrunk actions render only on Arch. | Conservative | Enable subsets on Mac, WSL, or Windows after checking helper/plugin availability? |
+| D27 | Herdr advanced commands | Local left/up directional splits and their Node helper are shared by Windows, WSL, Mac, and Arch. Arch alone retains plugin-dependent full-layout splits, popup launcher, reordering, and Worktrunk actions. | Partially decided and implemented | Review reordering next, then the popup launcher and session picker. |
 | D28 | Herdr plugin subtree | Herdr plugin actions and plugin configuration are Arch-only. The installed plugins are user-shared under ~/.config/herdr/plugins and remain outside Chezmoi ownership. | Conservative | Decide whether Mac should share the plugin set. |
 | D29 | Herdr plugin installer | The obsolete session-by-session plugin bootstrap was removed. The former `R` status meant Chezmoi would run the run-after script; it did not indicate an old target file. Arch already has the four plugins installed in shared user scope. | Decided and implemented | Keep plugin installation outside Chezmoi unless a new shared-user bootstrap is deliberately designed. |
 | D30 | Tunnel command | WSL uses systemd user services with tailscale/lan routes. Mac uses SSH ControlMaster sockets with tailscale/lan/remote routes. Windows and Arch do not receive tunnel. | Required | Keep separate implementations behind one command name. |
@@ -122,7 +122,8 @@ Kinds:
 | tunnel | Shared command with required profile-specific implementations | Managed only on WSL and Mac. |
 | tmux-lazygit-popup, tmux-nvim-server, tmux-preview-update, tmux-yazi-split | Legacy tmux integration | Managed only on Arch. Four matching but unmanaged Mac leftovers were retired into the dated helper backup. |
 | worktrunk-seed | Worktrunk-specific | Managed only on Arch with the legacy Worktrunk setup. |
-| herdr-directional-split.mjs, herdr-popup-picker, herdr-reorder.mjs, herdr-session-picker | Herdr advanced behavior | Defer to D27/D28. The popup requires Bash 4 features and optional tools; session-picker requires jq and fzf. |
+| herdr-directional-split.mjs | Portable Herdr behavior with an optional plugin-dependent mode | Managed on all four machines. Local left/up commands are shared; full-layout commands stay Arch-only with edi.layout-tools. |
+| herdr-popup-picker, herdr-reorder.mjs, herdr-session-picker | Remaining Herdr advanced behavior | Continue D27/D28. The popup requires Bash 4 features and optional tools; session-picker requires jq and fzf; reordering needs a Windows-safe lock location before sharing. |
 | agent-review | Shared Neovim feature with a currently Unix/GNU-specific Bash client | Defer to D48. A cross-platform implementation should avoid Bash 4, jq, and GNU base64 requirements. |
 
 ## Deferred actual changes
@@ -157,6 +158,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
   C:/Users/Jeff Hertzler/.config/shell/common.sh.pre-chezmoi-20260727-170115
 - Legacy Neovim rollback remains under LocalAppData from the Windows migration.
 - Windows had no pre-existing ~/.pi tree. Pi 0.82.1 is installed as the pinned npm:@earendil-works/pi-coding-agent tool in unmanaged ~/.config/mise/config.toml; Mise 2026.7.12 is WinGet package jdx.mise. The only PATH addition is %LOCALAPPDATA%/mise/shims in the user PATH. Auth remains recoverable from the matching Unix copies and the dated Pi convergence backups.
+- Herdr directional-sharing config backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-directional-sharing/config.toml.
 
 ### WSL
 
@@ -196,6 +198,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
   be reinstalled but the deleted plugin clones are not directly recoverable.
 - Mac helper convergence backup: ~/.local/state/dotfiles-backups/20260727-1854-helper-convergence/mac-local-bin. It contains the stale pre-shared lazygit-nvim plus copies and retired-live originals of the four removed tmux helpers.
+- Herdr directional-sharing config backup: ~/.local/state/dotfiles-backups/20260727-herdr-directional-sharing/config.toml on WSL, Mac, and Arch.
 
 ### Arch
 
@@ -215,7 +218,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, and Worktrunk helpers; next review the Herdr helpers with D27/D28 and agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
+2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, Worktrunk, and local directional-split helpers; next review Herdr reordering, popup/session helpers, then agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -277,3 +280,4 @@ rewritten during review:
 - 7e8c212 manage pi config on wsl and macos
 - d4cf9b1 manage pi config on windows
 - 6084cc4 share lazygit nvim helper on unix clients
+- 28d6321 share herdr directional split commands
