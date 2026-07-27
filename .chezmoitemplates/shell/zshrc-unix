@@ -64,8 +64,8 @@ F=~/.arch.zsh; [ -f $F ] && . $F
 {{- else if eq $profile "macos" }}
 F=~/.mac.zsh; [ -f $F ] && . $F
 {{- end }}
-F=~/.greenlight.zsh; [ -f $F ] && . $F
-F=~/.vimme.zsh; [ -f $F ] && . $F
+F=~/.config/shell/greenlight.zsh; [ -f $F ] && . $F
+F=~/.config/shell/vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F

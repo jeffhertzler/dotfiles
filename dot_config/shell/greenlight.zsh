@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+if [[ ! -d "$HOME/dev/greenlight" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
+
 bold=$(tput bold)
 normal=$(tput sgr0)
 

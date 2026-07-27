@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+if [[ ! -d "$HOME/dev/vimme" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
+
 VIMME="$HOME/dev/vimme"
 
 abbrev-alias -c cdv="cd $VIMME"
