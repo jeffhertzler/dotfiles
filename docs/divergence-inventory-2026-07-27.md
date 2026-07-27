@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 97fdf24 on normalize/multi-platform
+Configuration baseline: 4914cf6 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 97fdf24 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 97fdf24 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 97fdf24 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | 97fdf24 | Clean | All four previously deferred entries were resolved without overwriting live files. |
+| S01 | Windows | 4914cf6 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 4914cf6 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | 4914cf6 | Clean | Native source clone preserved with a backup branch and stash. |
+| S04 | Arch | 4914cf6 | Clean | All four previously deferred entries were resolved without overwriting live files. |
 
 ## Installed-tool matrix
 
@@ -65,7 +65,7 @@ Kinds:
 | D07 | Zsh plugins | WSL, Mac, and Arch share the same Antidote plugin list and ez-compinit loads first. | Intentional | Keep unified. |
 | D08 | Shell aliases | common.sh supplies editor, Herdr, LazyGit, Chezmoi, Git, updater, and portable tool helpers to Bash and Zsh. Optional tools are capability-guarded; shell initialization and edit/reload aliases remain shell-specific, while Arch retains tmux, Workmux, and Tailscale aliases in .arch.zsh. Login-shell and full Chezmoi verification passed on all four machines. | Decided and implemented | Keep portable interactive behavior in common.sh; keep shell initialization and platform ownership outside it. |
 | D09 | Shell overlays | WSL sources .wsl.zsh, Mac sources .mac.zsh, and Arch sources .arch.zsh. | Required/intentional | Review each overlay and move only truly shared functions upward. |
-| D10 | Project overlays | .greenlight.zsh, .vimme.zsh, and .ocprofile.zsh are managed on Arch but ignored on WSL, Mac, and Windows. Mac has live unmanaged copies. | Conservative | Should these be shared on Mac and/or WSL? |
+| D10 | Project overlays | Greenlight and Vimme now live under ~/.config/shell and are managed on WSL, Mac, and Arch. Each exits without side effects unless its ~/dev checkout exists, so they activate on Mac/Arch and remain inert on WSL. The old home-directory files were backed up and removed. OpenCode profile ownership remains separate: .ocprofile.zsh is still managed only on Arch while Mac has an unmanaged copy. | Partially decided and implemented | Resolve the OpenCode profile switcher with D35/D36, including Mac's broken absolute config symlink. |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
 | D12 | XDG root | Managed app configs use ~/.config. Windows sets XDG_CONFIG_HOME in Git Bash and as a user environment variable for Neovim. | Intentional | Keep. Existing long-lived Windows processes may need restart to see the environment variable. |
 | D13 | Git common core | Name, email, default branch, pull behavior, excludes file, and ~/.config/git/local.config include are shared. | Intentional | Keep. |
@@ -105,8 +105,8 @@ Kinds:
 | D47 | Pi current Arch state | Source matches Arch's Pi 0.82.1 state and now uses Pi's own no-final-newline serialization for settings.json. Parsed JSON was identical before normalization. | Intentional; serialization normalized | Treat changelog state as config or remove it from version control later? |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
-| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It also ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
-| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, Zsh plugins, and tunnel. It ignores the remaining workstation tools and project overlays. | Conservative choice made during this pass | Decide which Mac/Arch tools should join the WSL baseline. |
+| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It still ignores Neovim, OpenCode config, Pi, agents, SSH, and all local helpers except tunnel; its live .ocprofile.zsh remains unmanaged pending D35/D36. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
+| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choice made during this pass | Decide which Mac/Arch tools should join the WSL baseline. |
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
@@ -161,7 +161,15 @@ unmanaged and ignored by Chezmoi.
 - D06 static-PATH backup: ~/.zshenv.pre-chezmoi-20260727-164606.
 - D08 shared-shell backups use timestamp 20260727-170116 for common.sh and
   ~/.zshrc.
-- Exact filenames are the original path plus .pre-chezmoi-TIMESTAMP.
+- D10 Greenlight/Vimme XDG migration backups:
+  - WSL: ~/.local/state/chezmoi-backups/project-overlays-20260727-211130
+  - Mac: ~/.local/state/chezmoi-backups/project-overlays-20260727-171131
+  - Arch: ~/.local/state/chezmoi-backups/project-overlays-20260727-171132
+- Greenlight no-TERM follow-up backups use timestamps 20260727-211236 on WSL,
+  20260727-171237 on Mac, and 20260727-171238 on Arch under
+  ~/.local/state/chezmoi-backups/greenlight-tput-*.
+- Earlier inline backup filenames are the original path plus
+  .pre-chezmoi-TIMESTAMP; the D10 backup directories above retain named copies.
 - Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
   be reinstalled but the deleted plugin clones are not directly recoverable.
@@ -185,7 +193,7 @@ unmanaged and ignored by Chezmoi.
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
 2. D31, D35, D46, D49, D50, D51: decide which machines enable each application.
-3. D05, D06, and D08 are complete. Review D10 to finish consolidating the active shell layers; leave legacy tmux/Workmux preserved on Arch.
+3. D05, D06, and D08 are complete. Greenlight/Vimme in D10 are complete; resolve the OpenCode portion with D35/D36. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
 
@@ -235,3 +243,5 @@ rewritten during review:
 - 1ca3c35 resolve deferred Arch configuration drift
 - 0fe25d5 ignore Neovim lockfile at Chezmoi layer
 - 97fdf24 share portable shell helpers with Git Bash
+- d82673f move project shell helpers under XDG config
+- 4914cf6 avoid tput warnings without a terminal
