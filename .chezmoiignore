@@ -2,6 +2,7 @@
 README.md
 docs
 .config/git/local.config
+.config/nvim/lazy-lock.json
 
 {{- if ne (env "CHEZMOI_INCLUDE_SECRETS") "1" }}
 .private.zsh
