@@ -1,3 +1,4 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
 #!/usr/bin/env zsh
 
 # Let ez-compinit reuse its completion cache for up to 20 hours. Antidote's
@@ -80,10 +81,14 @@ alias ls="eza"
 alias la="eza -laag --icons"
 alias lt="eza -T --icons"
 
+{{- if eq $profile "arch" }}
 alias ta="tmux a"
+{{- end }}
 
 alias pe="nvim ~/.local/share/posting/default"
+{{- if eq $profile "arch" }}
 alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"
+{{- end }}
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
 alias ze="nvim ~/.local/share/chezmoi/dot_zshrc"
 
@@ -97,7 +102,9 @@ alias tsu="sudo tailscale up --accept-dns --accept-routes"
 alias ocp="oc -P personal"
 alias ocw="oc -P work"
 alias ca="cursor-agent --yolo"
+{{- if eq $profile "arch" }}
 alias wm='workmux'
+{{- end }}
 
 function y() {
 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
@@ -109,7 +116,6 @@ function y() {
 }
 
 F=~/.private.zsh; [ -f $F ] && . $F
-{{- $profile := includeTemplate "profile" . | trim }}
 {{- if eq $profile "arch" }}
 F=~/.arch.zsh; [ -f $F ] && . $F
 {{- else if eq $profile "macos" }}
@@ -126,9 +132,11 @@ if command -v op >/dev/null 2>&1; then
   (( $+functions[compdef] )) && compdef _op op
 fi
 
+{{- if eq $profile "arch" }}
 if command -v workmux >/dev/null 2>&1; then
   eval "$(workmux completions zsh)"
 fi
+{{- end }}
 
 if command -v wt >/dev/null 2>&1; then
   eval "$(command wt config shell init zsh)"

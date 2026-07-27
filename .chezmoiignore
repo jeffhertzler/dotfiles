@@ -47,10 +47,6 @@ docs
 !.config/lazydocker/config.yml
 !.config/posting
 !.config/posting/config.yaml
-!.config/tmux
-!.config/tmux/**
-!.config/workmux
-!.config/workmux/config.yaml
 !.config/yazi
 !.config/yazi/**
 {{- end }}

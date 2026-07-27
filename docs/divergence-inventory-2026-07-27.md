@@ -58,7 +58,7 @@ Kinds:
 | D05 | Unix shells | WSL uses a small zshrc template; Mac and Arch use the larger Unix zshrc template. | Conservative | Merge these into one guarded Zsh baseline? |
 | D06 | Zsh environment | WSL has only ~/.local/bin and OpenCode in its path template. Mac/Arch add Volta, Bun, Cargo, Go, and Composer paths. | Conservative | Share the larger path setup where tools exist? |
 | D07 | Zsh plugins | WSL, Mac, and Arch share the same Antidote plugin list and ez-compinit loads first. | Intentional | Keep unified. |
-| D08 | Shell aliases | common.sh supplies editor, Herdr, and LazyGit aliases everywhere it is managed. The larger Git/tmux/Yazi/tool alias set exists only in the Mac/Arch Unix template. | Conservative | Which aliases belong in common.sh? |
+| D08 | Shell aliases | common.sh supplies editor, Herdr, and LazyGit aliases everywhere it is managed. The larger Git/Yazi/tool alias set exists in the Mac/Arch Unix template; tmux and Workmux aliases render only on Arch. | Conservative plus explicit legacy decision | Which remaining aliases belong in common.sh? |
 | D09 | Shell overlays | WSL sources .wsl.zsh, Mac sources .mac.zsh, and Arch sources .arch.zsh. | Required/intentional | Review each overlay and move only truly shared functions upward. |
 | D10 | Project overlays | .greenlight.zsh, .vimme.zsh, and .ocprofile.zsh are managed on Arch but ignored on WSL, Mac, and Windows. Mac has live unmanaged copies. | Conservative | Should these be shared on Mac and/or WSL? |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
@@ -88,10 +88,10 @@ Kinds:
 | D35 | OpenCode ownership | WSL and Arch manage OpenCode. Mac has OpenCode installed but ignores its config. Windows has no OpenCode. | Conservative/high priority | Manage Mac too? |
 | D36 | OpenCode default profile | WSL symlinks opencode.json to work.json. Arch symlinks it to personal.json. | Conservative choice made during this pass | Unify the default, or preserve a machine/profile distinction? |
 | D37 | OpenCode version | WSL, Mac, and Arch have different installed OpenCode versions and installation methods. | Historical | Normalize installation/version management separately from config. |
-| D38 | Workmux ownership | Mac and Arch manage the same Workmux source config. WSL does not have Workmux. | Conservative | Install/share on WSL or leave workstation-only? |
-| D39 | Workmux command | Source and Mac use opencode --port. Arch live uses opencode. Both installed OpenCode versions document --port with default 0. | Deferred actual drift | Pick one command after testing how Workmux discovers the server. |
+| D38 | Workmux ownership | Workmux is preserved as Arch-only legacy configuration. Mac still has Workmux and its old config installed, but Chezmoi no longer manages that config or loads its completion. WSL does not have Workmux. | Explicit user decision | Keep until the eventual tmux/Workmux retirement; do not delete yet. |
+| D39 | Workmux command | Preserved source config uses opencode --port. Arch live uses opencode. Mac's now-unmanaged legacy file also still uses opencode --port. Both installed OpenCode versions document --port with default 0. | Deferred actual drift | Resolve only before the next Arch Workmux apply; this is no longer a cross-platform convergence issue. |
 | D40 | Worktrunk | Worktrunk config, Herdr actions, and seeding helper are Arch-only; Mac and WSL lack Worktrunk. | Conservative | Install and share, or keep Arch-only? |
-| D41 | tmux | Source tmux config is managed on Mac and Arch. WSL has tmux installed but its config remains independent because the shared file references many workstation tools and helpers. | Conservative/high priority | Refactor into a portable core plus optional workstation layer? |
+| D41 | tmux | tmux is preserved as Arch-only legacy configuration. Mac and WSL still have tmux installed, and their existing files are left untouched but unmanaged. | Explicit user decision | Keep until eventual retirement; do not delete the source or live files yet. |
 | D42 | Yazi | Mac and Arch manage Yazi. WSL and Windows ignore it. Mac renders open; Linux renders xdg-open. | Required plus conservative | Keep opener split; decide whether to install/share Yazi on WSL. |
 | D43 | Atuin | Mac and Arch manage Atuin; WSL and Windows ignore it. | Conservative | Install/share on WSL and possibly Windows? |
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
@@ -100,7 +100,7 @@ Kinds:
 | D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, and staged-feedback trailing spacing. | Intentional | Treat changelog state as config or remove it from version control later? |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
-| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, tmux, Workmux, and Yazi. It ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choice made during this pass | This is the main list to reconsider if greater unification is desired. |
+| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It also ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
 | D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, Zsh plugins, and tunnel. It ignores the remaining workstation tools and project overlays. | Conservative choice made during this pass | Decide which Mac/Arch tools should join the WSL baseline. |
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
@@ -159,7 +159,7 @@ Windows, WSL, and Mac currently have no managed target drift.
 
 1. D01: choose the desired ownership model.
 2. D31, D35, D46, D49, D50, D51: decide what should truly be shared.
-3. D05, D06, D08, D10, D41: consolidate shell and tmux layers.
+3. D05, D06, D08, D10: consolidate the active shell layers; leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, D29, D40: consolidate Herdr and Worktrunk behavior.
 5. D34 and D39: resolve the two live application drifts.
 6. D14 through D23: finish Git, gh, SSH, and secret policy.
