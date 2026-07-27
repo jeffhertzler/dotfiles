@@ -69,7 +69,7 @@ docs
 .local
 {{- end }}
 .pi
-{{- if or (eq $profile "wsl") (eq $profile "macos") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.pi
 !.pi/**
 {{- end }}
