@@ -78,6 +78,27 @@ attaches to the containing block rather than an exact virtual row. Agent Diff's
 real buffer; normal `<leader>ra` can therefore target exact deleted, index, and
 working lines there.
 
+## Pi feedback
+
+The Pi `feedback.ts` extension opens the latest assistant response as a
+read-only Markdown file in a temporary Neovim process. Normal Agent Review
+mappings add line or character-range feedback, while feedback buffers override
+`<leader>rs` to export those annotations back to Pi and close Neovim. Submitted
+annotations are consumed and their temporary feedback workspace is removed. `q`
+or `<leader>rq` discards the workspace, including when quitting through another
+Neovim command. `<leader>rk` explicitly keeps a resumable draft, and
+`<leader>rc` clears its annotations while the feedback buffer is open.
+`/feedback clear` removes all kept feedback drafts for the current Pi session.
+
+In Pi, run:
+
+```text
+/feedback
+```
+
+After Neovim closes, submitted comments are staged in Pi's editor as structured
+feedback rather than sent automatically.
+
 ## Sessions and persistence
 
 Each repository or plain-file workspace has one active named session. Normal
