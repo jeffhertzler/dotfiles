@@ -24,7 +24,7 @@ docs
 .config/herdr/*
 !.config/herdr/config.toml
 {{- end }}
-{{- if or (eq $profile "wsl") (eq $profile "windows") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.config/nvim
 !.config/nvim/**
 {{- end }}
