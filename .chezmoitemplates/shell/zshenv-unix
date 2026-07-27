@@ -8,8 +8,7 @@ export GOPATH="$HOME/go"
 # Herdr's noninteractive SSH bridge may not receive a client locale.
 export LANG="${LANG:-en_US.UTF-8}"
 
-typeset -a user_bin_dirs existing_user_bin_dirs
-user_bin_dirs=(
+path=(
   "$HOME/.local/bin"
   "$HOME/.opencode/bin"
   "$HOME/.local/share/mise/shims"
@@ -19,14 +18,8 @@ user_bin_dirs=(
   "$HOME/.go/bin"
   "$GOPATH/bin"
   "$COMPOSER_BIN"
+  $path
 )
 
-for user_bin_dir in $user_bin_dirs; do
-  [[ -d "$user_bin_dir" ]] && existing_user_bin_dirs+=("$user_bin_dir")
-done
-
-path=($existing_user_bin_dirs $path)
 typeset -U path PATH
 export PATH
-
-unset user_bin_dir user_bin_dirs existing_user_bin_dirs
