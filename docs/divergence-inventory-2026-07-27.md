@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 6efb058 on normalize/multi-platform
+Configuration baseline: fad0451 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,9 +18,9 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | a687299 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | a687299 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | a687299 | Clean | Native source clone preserved with a backup branch and stash. |
+| S01 | Windows | fad0451 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | fad0451 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | fad0451 | Clean | Native source clone preserved with a backup branch and stash. |
 | S04 | Arch | Current branch | Four deferred entries | lazy-lock.json, Workmux command, Pi's no-final-newline serialization, and removal of the old Herdr installer target remain unresolved. |
 
 ## Installed-tool matrix
@@ -60,10 +60,10 @@ Kinds:
 | D02 | Generic Linux | There is no current generic native-Linux machine. The minimal profile remains only as a safe fallback and carries no support or unification promise. | Decided | Revisit only when a real non-Arch, non-WSL Linux machine is added. |
 | D03 | Source topology | Each machine keeps a native Chezmoi clone and tracks the same GitHub upstream branch. No machine is the permanent authoritative source; Windows is only the current editing location. The normalized branch will be pushed and ultimately merged into master after this review. | Decided; implementation pending | Replace local bundles and cross-filesystem fetches with ordinary upstream pull/fetch after review. |
 | D04 | Windows shell | Git Bash is the default for native Windows workflows and local Herdr. WSL remains a fully supported parallel shell/environment for Linux workflows; the two are not mutually exclusive. Windows manages Git Bash startup while WSL manages its own Zsh startup. | Decided | Keep both available. |
-| D05 | Unix shells | WSL uses a small zshrc template; Mac and Arch use the larger Unix zshrc template. | Conservative | Merge these into one guarded Zsh baseline? |
+| D05 | Unix shells | WSL, Mac, and Arch render one shared Zsh baseline. Optional integrations are capability-guarded; the profile overlay is selected explicitly, and tmux/Workmux remain Arch-only legacy behavior. Rendered syntax, isolated startup, real login-shell startup, and narrow Chezmoi verification passed on all three machines. | Decided and implemented | Keep unified; add platform branches only for demonstrated incompatibilities. |
 | D06 | Zsh environment | WSL has only ~/.local/bin and OpenCode in its path template. Mac/Arch add Volta, Bun, Cargo, Go, and Composer paths. | Conservative | Share the larger path setup where tools exist? |
 | D07 | Zsh plugins | WSL, Mac, and Arch share the same Antidote plugin list and ez-compinit loads first. | Intentional | Keep unified. |
-| D08 | Shell aliases | common.sh supplies editor, Herdr, and LazyGit aliases everywhere it is managed. The larger Git/Yazi/tool alias set exists in the Mac/Arch Unix template; tmux and Workmux aliases render only on Arch. | Conservative plus explicit legacy decision | Which remaining aliases belong in common.sh? |
+| D08 | Shell aliases | common.sh supplies editor, Herdr, and LazyGit aliases everywhere it is managed. The broader Git/tool alias set now exists in the shared Zsh baseline and optional tools are capability-guarded; tmux and Workmux aliases render only on Arch. | Partly unified plus explicit legacy decision | Which aliases should also move into common.sh for Git Bash? |
 | D09 | Shell overlays | WSL sources .wsl.zsh, Mac sources .mac.zsh, and Arch sources .arch.zsh. | Required/intentional | Review each overlay and move only truly shared functions upward. |
 | D10 | Project overlays | .greenlight.zsh, .vimme.zsh, and .ocprofile.zsh are managed on Arch but ignored on WSL, Mac, and Windows. Mac has live unmanaged copies. | Conservative | Should these be shared on Mac and/or WSL? |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
@@ -148,6 +148,8 @@ Windows, WSL, and Mac currently have no managed target drift.
 - ~/.config/herdr/config.toml.pre-chezmoi-20260727-073034
 - ~/.config/gh/config.yml.pre-chezmoi-20260727-073554
 - ~/.zsh_plugins.txt.pre-chezmoi-20260727-074721
+- D05 unified-shell backups: ~/.zshrc.pre-chezmoi-20260727-175006 and
+  ~/.wsl.zsh.pre-chezmoi-20260727-175006.
 - Previous Neovim tree: ~/.config/nvim.pre-chezmoi-20260727-070409
 
 ### macOS
@@ -155,6 +157,7 @@ Windows, WSL, and Mac currently have no managed target drift.
 - Config backups use timestamp 20260727-034417 for Git, gh, and Yazi.
 - Shell/plugin backups use timestamps 20260727-034722 and 20260727-034734.
 - Latest Mac Zsh legacy-gating backup uses timestamp 20260727-131806.
+- D05 unified-shell backup: ~/.zshrc.pre-chezmoi-20260727-135007.
 - Exact filenames are the original path plus .pre-chezmoi-TIMESTAMP.
 - Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
@@ -167,12 +170,13 @@ Windows, WSL, and Mac currently have no managed target drift.
 - Neovim runtime backups use timestamp 20260727-035113.
 - Pi settings backup uses timestamp 20260727-035234.
 - Latest Arch Zsh legacy-gating backup uses timestamp 20260727-131806.
+- D05 unified-shell backup: ~/.zshrc.pre-chezmoi-20260727-135007.
 
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
 2. D31, D35, D46, D49, D50, D51: decide which machines enable each application.
-3. D05, D06, D08, D10: consolidate the active shell layers; leave legacy tmux/Workmux preserved on Arch.
+3. D05 is complete. Review D06, D08, and D10 to finish consolidating the active shell layers; leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, D29, D40: consolidate Herdr and Worktrunk behavior.
 5. D34 and D39: resolve the two live application drifts.
 6. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -215,3 +219,4 @@ rewritten during review:
 - be2f612 keep tmux and workmux as Arch-only legacy
 - 55b4235 use pi tui utils instead of custom solution to avoid issues with emojis
 - 6efb058 merge Arch Pi renderer lineage
+- fad0451 unify Zsh startup across Unix profiles
