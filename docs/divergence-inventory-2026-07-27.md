@@ -214,6 +214,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr reordering backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder on WSL, Mac, and Arch. Each contains the prior config; Arch also retains its prior helper.
 - Herdr reordering pipe-fix backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs on WSL, Mac, and Arch.
 - Herdr command-shell backups: ~/.local/state/dotfiles-backups/20260727-herdr-command-shell/config.toml on WSL, Mac, and Arch.
+- AgentBridge registry backups: ~/.local/state/dotfiles-backups/20260727-agentbridge-registry on WSL, Mac, and Arch; each contains only the managed targets changed on that profile.
 
 ### Arch
 
