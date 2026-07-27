@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: d4cf9b1 on normalize/multi-platform
+Configuration baseline: 6084cc4 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | d4cf9b1 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim and Pi configurations are active. |
-| S02 | WSL | d4cf9b1 | Clean | Native source clone at ~/.local/share/chezmoi. The formerly divergent ~/.config, ~/.config/gh, and ~/.config/herdr directory modes are normalized to 0755. |
-| S03 | macOS | d4cf9b1 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim and Pi configurations are active. |
-| S04 | Arch | d4cf9b1 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
+| S01 | Windows | 6084cc4 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim and Pi configurations are active. |
+| S02 | WSL | 6084cc4 | Clean | Native source clone at ~/.local/share/chezmoi. The shared LazyGit-to-Neovim helper is active. |
+| S03 | macOS | 6084cc4 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, and LazyGit-to-Neovim configurations are active. |
+| S04 | Arch | 6084cc4 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
 
 ## Installed-tool matrix
 
@@ -105,14 +105,25 @@ Kinds:
 | D46 | Pi ownership | Windows, WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. | Decided and implemented | Keep the shared portable configuration enabled on all four machines. |
 | D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL, Mac, and Windows outside Chezmoi. Unix copies use mode 0600; Windows inherits only SYSTEM, Administrators, and the user with full control. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
-| D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
-| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It still ignores agents, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy and Pi decisions | This remains the main list to reconsider if greater unification is desired. |
-| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Pi decision | Decide which remaining Mac/Arch tools should join the WSL baseline. |
+| D49 | Local helper scripts | lazygit-nvim is shared by WSL, Mac, and Arch because their shared LazyGit config invokes it; Windows uses LazyGit's native Neovim preset. tunnel remains profile-specific on WSL/Mac. tmux helpers and worktrunk-seed remain Arch-only legacy. Herdr advanced helpers and agent-review remain under review. | Partially decided and implemented | Review the Herdr helper group with D27/D28, then agent-review with D48. |
+| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, Yazi, tunnel, and lazygit-nvim. It intentionally no longer manages legacy tmux/Workmux. It still ignores agents, SSH, and the remaining local helpers. | Conservative choices plus explicit legacy and Pi decisions | This remains the main list to reconsider if greater unification is desired. |
+| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, tunnel, lazygit-nvim, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Pi and LazyGit-helper decisions | Decide which remaining Mac/Arch tools should join the WSL baseline. |
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, and Git Bash startup. | Conservative plus explicit Pi decision | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
 | D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them in .arch.zsh rather than the shared template. The Mac tmux and Workmux config directories were removed after the user confirmed they were unnecessary. | Explicit user decision | Preserve only the Arch legacy setup until eventual retirement. |
 | D56 | Pi tool manager | Windows and WSL use Mise for Pi; Mac and Arch use Volta. Native Windows Mise is intentionally limited to Pi and its config remains unmanaged. Volta upstream is now unmaintained and recommends migrating to Mise. | Explicitly deferred | Revisit broader Mise adoption and any Volta migration as a separate compatibility review. |
+
+### D49 helper classification
+
+| Helper | Classification | Current decision |
+|---|---|---|
+| lazygit-nvim | Portable Unix integration required by the shared Unix LazyGit config | Managed on WSL, Mac, and Arch; Windows keeps editPreset: nvim. |
+| tunnel | Shared command with required profile-specific implementations | Managed only on WSL and Mac. |
+| tmux-lazygit-popup, tmux-nvim-server, tmux-preview-update, tmux-yazi-split | Legacy tmux integration | Managed only on Arch. Four matching but unmanaged Mac leftovers were retired into the dated helper backup. |
+| worktrunk-seed | Worktrunk-specific | Managed only on Arch with the legacy Worktrunk setup. |
+| herdr-directional-split.mjs, herdr-popup-picker, herdr-reorder.mjs, herdr-session-picker | Herdr advanced behavior | Defer to D27/D28. The popup requires Bash 4 features and optional tools; session-picker requires jq and fzf. |
+| agent-review | Shared Neovim feature with a currently Unix/GNU-specific Bash client | Defer to D48. A cross-platform implementation should avoid Bash 4, jq, and GNU base64 requirements. |
 
 ## Deferred actual changes
 
@@ -184,6 +195,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
   be reinstalled but the deleted plugin clones are not directly recoverable.
+- Mac helper convergence backup: ~/.local/state/dotfiles-backups/20260727-1854-helper-convergence/mac-local-bin. It contains the stale pre-shared lazygit-nvim plus copies and retired-live originals of the four removed tmux helpers.
 
 ### Arch
 
@@ -203,7 +215,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46 is complete on all four machines. Continue D49 through D52 for the remaining applications; D56 keeps broader Mise adoption deferred.
+2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, and Worktrunk helpers; next review the Herdr helpers with D27/D28 and agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -264,3 +276,4 @@ rewritten during review:
 - 10ecd01 manage neovim on macos
 - 7e8c212 manage pi config on wsl and macos
 - d4cf9b1 manage pi config on windows
+- 6084cc4 share lazygit nvim helper on unix clients
