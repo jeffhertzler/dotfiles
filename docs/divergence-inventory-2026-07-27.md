@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 28d6321 on normalize/multi-platform
+Configuration baseline: d0c3f4e on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | d5b44f2 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit-to-Neovim, local directional splits, and named-pipe-safe Herdr reordering are active. |
-| S02 | WSL | d5b44f2 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
-| S03 | macOS | d5b44f2 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
-| S04 | Arch | d5b44f2 | Clean | LazyGit-to-Neovim and Herdr reordering are shared; plugin-dependent full-layout splits remain Arch-only. |
+| S01 | Windows | d0c3f4e | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit-to-Neovim, local directional splits, and named-pipe-safe Herdr reordering are active. Windows renders helper commands through Node with absolute paths because Herdr runs custom commands through cmd.exe. |
+| S02 | WSL | d0c3f4e | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
+| S03 | macOS | d0c3f4e | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, local directional splits, and Herdr reordering are active. |
+| S04 | Arch | d0c3f4e | Clean | LazyGit-to-Neovim and Herdr reordering are shared; plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -115,6 +115,7 @@ Kinds:
 | D56 | Pi tool manager | Windows and WSL use Mise for Pi; Mac and Arch use Volta. Native Windows Mise is intentionally limited to Pi and its config remains unmanaged. Volta upstream is now unmaintained and recommends migrating to Mise. | Explicitly deferred | Revisit broader Mise adoption and any Volta migration as a separate compatibility review. |
 | D57 | LazyGit editor bridge | All four profiles use the custom lazygit-nvim bridge rather than LazyGit's built-in nvim preset. Unix invokes it directly. Native Windows LazyGit runs editor commands through cmd.exe, so its rendered config launches the same script explicitly through Git Bash. The Windows command, a filename containing spaces, and a native Neovim named-pipe return were verified together. | Explicit user decision | Keep the behavior shared; retain only the required Windows launcher syntax. |
 | D58 | Herdr reorder Windows socket | The first shared rollout passed syntax/config checks but the live Windows binding failed because Node received Herdr's bare pipe name and passed it directly to net.connect. Herdr's own bundled Node integrations prepend the Windows named-pipe namespace, so herdr-reorder now does the same. A disposable named-pipe server verified the complete request/response path before redeployment. | Corrected and implemented | Keep the platform-specific endpoint conversion inside the otherwise shared helper. |
+| D59 | Herdr custom-command shell on Windows | The named-pipe-safe helper worked when invoked directly, but the binding still did not launch because Herdr executes Windows custom commands through cmd.exe and cmd.exe cannot resolve a Unix shebang path beginning with `~`. Windows now renders `node "C:/Users/Jeff Hertzler/.local/bin/..."`; Unix keeps the direct `~/.local/bin/...` command. The exact rendered cmd.exe command and the live prefix binding both moved the focused tab successfully. | Corrected and implemented | Keep one shared behavior with only the launcher syntax conditionalized for Windows. |
 
 ### D49 helper classification
 
@@ -165,6 +166,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - LazyGit bridge backup: %LOCALAPPDATA%/dotfiles-backups/20260727-lazygit-bridge/config.yml.
 - Herdr reordering backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-reorder/config.toml.
 - Herdr reordering pipe-fix backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs.
+- Herdr Windows command-shell backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-windows-command-shell/config.toml.
 
 ### WSL
 
@@ -209,6 +211,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - LazyGit bridge backups: ~/.local/state/dotfiles-backups/20260727-lazygit-bridge on WSL, Mac, and Arch. Mac and Arch contain direct pre-apply copies. WSL's initial backup command lost a shell variable at the PowerShell boundary, so its old config was restored from the identical Windows pre-change copy and its old helper was reconstructed byte-for-byte from commit 4725ea7 (blob 8fd9388) before verification.
 - Herdr reordering backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder on WSL, Mac, and Arch. Each contains the prior config; Arch also retains its prior helper.
 - Herdr reordering pipe-fix backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs on WSL, Mac, and Arch.
+- Herdr command-shell backups: ~/.local/state/dotfiles-backups/20260727-herdr-command-shell/config.toml on WSL, Mac, and Arch.
 
 ### Arch
 
