@@ -1,5 +1,9 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 sourceDir = {{ .chezmoi.sourceDir | quote }}
 
+{{ if eq $profile "windows" -}}
+pager = ""
+
+{{ end -}}
 [data]
     profile = {{ $profile | quote }}
