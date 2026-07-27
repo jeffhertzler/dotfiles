@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 6f62f52 on normalize/multi-platform
+Configuration baseline: 1ca3c35 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 6f62f52 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 6f62f52 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 6f62f52 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | Current branch | Four deferred entries | lazy-lock.json, Workmux command, Pi's no-final-newline serialization, and removal of the old Herdr installer target remain unresolved. |
+| S01 | Windows | 1ca3c35 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 1ca3c35 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | 1ca3c35 | Clean | Native source clone preserved with a backup branch and stash. |
+| S04 | Arch | 1ca3c35 | Clean | All four previously deferred entries were resolved without overwriting live files. |
 
 ## Installed-tool matrix
 
@@ -83,18 +83,18 @@ Kinds:
 | D25 | Herdr core | The same core UI, theme, history, and navigation keys are managed on Windows, WSL, Mac, and Arch. | Intentional | Keep. |
 | D26 | Herdr Windows terminal | Windows alone sets Git Bash as Herdr's shell, new_cwd=follow, and preview update channel. | Required/intentional | Review preview-channel preference separately from the shell requirement. |
 | D27 | Herdr advanced commands | Popup launcher, directional splits, reordering, and Worktrunk actions render only on Arch. | Conservative | Enable subsets on Mac, WSL, or Windows after checking helper/plugin availability? |
-| D28 | Herdr plugin subtree | Herdr plugin config and automatic plugin bootstrap are effectively Arch-only. | Conservative | Decide whether Mac should share the plugin set. |
-| D29 | Herdr plugin installer | Source renamed ensure-herdr-plugins.sh to run_after_ensure-herdr-plugins.sh. Arch still has the old ~/ensure-herdr-plugins.sh target, so chezmoi reports R. Applying may also execute the installer. | Deferred actual drift | Review the script and plugin list before deleting the old target or running it. |
+| D28 | Herdr plugin subtree | Herdr plugin actions and plugin configuration are Arch-only. The installed plugins are user-shared under ~/.config/herdr/plugins and remain outside Chezmoi ownership. | Conservative | Decide whether Mac should share the plugin set. |
+| D29 | Herdr plugin installer | The obsolete session-by-session plugin bootstrap was removed. The former `R` status meant Chezmoi would run the run-after script; it did not indicate an old target file. Arch already has the four plugins installed in shared user scope. | Decided and implemented | Keep plugin installation outside Chezmoi unless a new shared-user bootstrap is deliberately designed. |
 | D30 | Tunnel command | WSL uses systemd user services with tailscale/lan routes. Mac uses SSH ControlMaster sockets with tailscale/lan/remote routes. Windows and Arch do not receive tunnel. | Required | Keep separate implementations behind one command name. |
 | D31 | Neovim ownership | Windows, WSL, and Arch manage the shared LazyVim tree. Mac has Neovim 0.12.4 installed but its config is deliberately ignored and remains independent. | Conservative/high priority | Bring Mac onto the shared Neovim tree? |
 | D32 | Neovim platform guards | Windows uses LLVM, Git Bash shell settings, Node-launched Oxfmt, and a Windows markdown-preview installer. Unix uses Volta when present. FGA, tmux, Yazi, and Go integrations have executable/file guards. | Required/intentional | Keep guards; review whether any can simplify after ownership converges. |
 | D33 | Neovim language support | TypeScript and Python were user-verified on the newly managed setup. Go tooling is skipped only when no Go executable is visible. | Intentional | Repeat verification on Mac if it joins the shared config. |
-| D34 | Neovim lockfile | Arch's live lazy-lock.json differs from source for SchemaStore, Catppuccin, grug-far, mason-lspconfig, mini.move, Neogit, neotest-golang, nvim-lspconfig, nvim-treesitter, nvim-treesitter-textobjects, and Yazi. | Deferred actual drift | Choose source pins, Arch pins, or a coordinated Lazy update tested on all managed machines. |
+| D34 | Neovim lockfile | lazy-lock.json was removed from source and gitignored. Each live Neovim installation retains its local lockfile as unmanaged runtime state. | Decided and implemented | Do not commit or manage Lazy's per-machine lockfile. |
 | D35 | OpenCode ownership | WSL and Arch manage OpenCode. Mac has OpenCode installed but ignores its config. Windows has no OpenCode. | Conservative/high priority | Manage Mac too? |
 | D36 | OpenCode default profile | WSL symlinks opencode.json to work.json. Arch symlinks it to personal.json. | Conservative choice made during this pass | Unify the default, or preserve a machine/profile distinction? |
 | D37 | OpenCode version | WSL, Mac, and Arch have different installed OpenCode versions and installation methods. Broader Mise installation/configuration unification was explicitly deferred. | Historical/deferred | Normalize installation/version management separately from config when revisited. |
 | D38 | Workmux ownership | Workmux is preserved as Arch-only legacy configuration. Mac still has the Workmux executable installed, but its ~/.config/workmux directory was removed and its shell completion is no longer loaded. WSL does not have Workmux. | Explicit user decision | Keep the Arch source until eventual retirement. |
-| D39 | Workmux command | Preserved Arch source config uses opencode --port. Arch live uses opencode. Both installed OpenCode versions document --port with default 0. | Deferred actual drift | Resolve only before the next Arch Workmux apply; this is no longer a cross-platform convergence issue. |
+| D39 | Workmux command | Preserved Arch source config now matches the known-working live command `opencode`. The redundant `--port` flag defaults to 0 when used. | Decided and implemented | Keep the legacy config aligned with the live command until Workmux is retired. |
 | D40 | Worktrunk | Worktrunk config, Herdr actions, and seeding helper are Arch-only; Mac and WSL lack Worktrunk. | Conservative | Install and share, or keep Arch-only? |
 | D41 | tmux | tmux is preserved as Arch-only legacy configuration. Mac and WSL still have tmux installed. Mac's ~/.config/tmux directory, including downloaded TPM plugin clones, was removed; WSL's independent state remains untouched. | Explicit user decision | Keep the Arch source until eventual retirement. |
 | D42 | Yazi | Mac and Arch manage Yazi. WSL and Windows ignore it. Mac renders open; Linux renders xdg-open. | Required plus conservative | Keep opener split; decide whether to install/share Yazi on WSL. |
@@ -102,7 +102,7 @@ Kinds:
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
 | D46 | Pi ownership | Arch manages .pi. WSL and Mac both have Pi installed but ignore .pi; Windows lacks Pi. | Conservative/high priority | Share Pi extensions/settings, or split credentials/providers from portable extensions? |
-| D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, staged-feedback trailing spacing, and pi-tui width handling for emoji-safe responsive rendering. Pi rewrites settings.json without a final newline, while source retains one. | Intentional plus benign drift | Treat changelog state as config or remove it from version control later? Do not churn the file merely to resolve the newline. |
+| D47 | Pi current Arch state | Source matches Arch's Pi 0.82.1 state and now uses Pi's own no-final-newline serialization for settings.json. Parsed JSON was identical before normalization. | Intentional; serialization normalized | Treat changelog state as config or remove it from version control later? |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
 | D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It also ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
@@ -114,16 +114,9 @@ Kinds:
 
 ## Deferred actual changes
 
-Do not run an unscoped chezmoi apply on Arch until these are reviewed:
-
-1. ~/.config/nvim/lazy-lock.json: choose a canonical plugin lock.
-2. ~/.config/workmux/config.yaml: choose opencode or opencode --port.
-3. ~/.pi/agent/settings.json: ignore the harmless final-newline-only drift, or
-   later redesign ownership of app-written state.
-4. ~/ensure-herdr-plugins.sh: decide whether to delete the old target and
-   whether the run-after installer should execute.
-
-Windows, WSL, and Mac currently have no managed target drift.
+None. Windows, WSL, Mac, and Arch currently have no managed target drift.
+The live Neovim lazy-lock.json files remain present but are intentionally
+unmanaged and ignored by Git.
 
 ## Rollback points
 
@@ -185,9 +178,8 @@ Windows, WSL, and Mac currently have no managed target drift.
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
 2. D31, D35, D46, D49, D50, D51: decide which machines enable each application.
 3. D05 and D06 are complete. Review D08 and D10 to finish consolidating the active shell layers; leave legacy tmux/Workmux preserved on Arch.
-4. D27, D28, D29, D40: consolidate Herdr and Worktrunk behavior.
-5. D34 and D39: resolve the two live application drifts.
-6. D14 through D23: finish Git, gh, SSH, and secret policy.
+4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
+5. D14 through D23: finish Git, gh, SSH, and secret policy.
 
 ## Branch changes made during this pass
 
@@ -231,3 +223,5 @@ rewritten during review:
 - b945323 move Arch shell behavior into its overlay
 - 9917939 unify guarded Unix shell environment
 - 6f62f52 simplify shared Unix PATH setup
+- 3df506f record static shared Unix PATH policy
+- 1ca3c35 resolve deferred Arch configuration drift
