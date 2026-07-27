@@ -36,7 +36,15 @@ README.md
 !.config/shell/common.sh
 .greenlight.zsh
 .jabba
+{{- if eq $profile "wsl" }}
+!.local
+.local/*
+!.local/bin
+.local/bin/*
+!.local/bin/tunnel
+{{- else }}
 .local
+{{- end }}
 .ocprofile.zsh
 .pi
 .private.zsh
@@ -70,4 +78,16 @@ ensure-herdr-plugins.sh
 
 {{- if ne $profile "macos" }}
 .mac.zsh
+{{- end }}
+
+# Mac keeps only its portable client helper; Arch owns the workstation helper
+# collection. WSL's matching exception is defined inside its deny-by-default
+# block above.
+{{- if eq $profile "macos" }}
+.local/*
+!.local/bin
+.local/bin/*
+!.local/bin/tunnel
+{{- else if eq $profile "arch" }}
+.local/bin/tunnel
 {{- end }}

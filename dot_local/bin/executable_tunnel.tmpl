@@ -1,0 +1,201 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "wsl" }}
+#!/usr/bin/env bash
+
+set -u
+
+readonly service_prefix="arch-tunnel"
+readonly default_route="tailscale"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  tunnel up [tailscale|lan]
+  tunnel down
+  tunnel status
+
+The default route for `tunnel up` is tailscale. Starting one route stops the
+other first because both routes bind the same local ports.
+EOF
+}
+
+unit_for() {
+  printf '%s@%s.service\n' "$service_prefix" "$1"
+}
+
+validate_route() {
+  case "$1" in
+    tailscale|lan) ;;
+    *)
+      printf 'Unknown route: %s\n' "$1" >&2
+      usage >&2
+      return 2
+      ;;
+  esac
+}
+
+route_status() {
+  local route="$1"
+  local state
+  state="$(systemctl --user is-active "$(unit_for "$route")" 2>/dev/null || true)"
+  printf '%-10s %s\n' "$route" "$state"
+}
+
+case "${1:-status}" in
+  up)
+    route="${2:-$default_route}"
+    validate_route "$route" || exit $?
+
+    for other in tailscale lan; do
+      [[ "$other" == "$route" ]] || systemctl --user stop "$(unit_for "$other")"
+    done
+    systemctl --user start "$(unit_for "$route")" || exit $?
+    sleep 1
+
+    if ! systemctl --user is-active --quiet "$(unit_for "$route")"; then
+      route_status "$route"
+      printf 'Tunnel failed to stay active; inspect with:\n' >&2
+      printf '  journalctl --user -u %s -n 20 --no-pager\n' \
+        "$(unit_for "$route")" >&2
+      exit 1
+    fi
+
+    route_status "$route"
+    ;;
+
+  down)
+    systemctl --user stop \
+      "$(unit_for tailscale)" \
+      "$(unit_for lan)"
+    route_status tailscale
+    route_status lan
+    ;;
+
+  status)
+    route_status tailscale
+    route_status lan
+    ;;
+
+  help|-h|--help)
+    usage
+    ;;
+
+  *)
+    printf 'Unknown command: %s\n' "$1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+{{- else if eq $profile "macos" }}
+#!/usr/bin/env bash
+
+set -u
+
+readonly default_route="tailscale"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  tunnel up [tailscale|lan|remote]
+  tunnel down
+  tunnel status
+
+The default route for `tunnel up` is tailscale. Starting one route stops the
+others first because all routes bind the same local ports.
+EOF
+}
+
+host_for() {
+  printf 'arch-tunnel-%s\n' "$1"
+}
+
+socket_for() {
+  printf '/tmp/arch-tunnel-%s-%s.sock\n' "$(id -u)" "$1"
+}
+
+validate_route() {
+  case "$1" in
+    tailscale|lan|remote) ;;
+    *)
+      printf 'Unknown route: %s\n' "$1" >&2
+      usage >&2
+      return 2
+      ;;
+  esac
+}
+
+is_active() {
+  local route="$1"
+  command ssh -S "$(socket_for "$route")" -O check "$(host_for "$route")" \
+    >/dev/null 2>&1
+}
+
+route_status() {
+  local route="$1"
+  if is_active "$route"; then
+    printf '%-10s active\n' "$route"
+  else
+    printf '%-10s inactive\n' "$route"
+  fi
+}
+
+stop_route() {
+  local route="$1"
+  local socket
+  socket="$(socket_for "$route")"
+
+  if is_active "$route"; then
+    command ssh -S "$socket" -O exit "$(host_for "$route")" >/dev/null
+  fi
+
+  if ! is_active "$route"; then
+    rm -f -- "$socket"
+  fi
+}
+
+case "${1:-status}" in
+  up)
+    route="${2:-$default_route}"
+    validate_route "$route" || exit $?
+
+    for other in tailscale lan remote; do
+      [[ "$other" == "$route" ]] || stop_route "$other"
+    done
+    stop_route "$route"
+
+    command ssh -fNT -M -S "$(socket_for "$route")" "$(host_for "$route")" || exit $?
+
+    if ! is_active "$route"; then
+      printf 'Tunnel failed to stay active.\n' >&2
+      exit 1
+    fi
+
+    route_status "$route"
+    ;;
+
+  down)
+    stop_route tailscale
+    stop_route lan
+    stop_route remote
+    route_status tailscale
+    route_status lan
+    route_status remote
+    ;;
+
+  status)
+    route_status tailscale
+    route_status lan
+    route_status remote
+    ;;
+
+  help|-h|--help)
+    usage
+    ;;
+
+  *)
+    printf 'Unknown command: %s\n' "$1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+{{- end }}
