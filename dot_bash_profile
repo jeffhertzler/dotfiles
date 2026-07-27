@@ -1,0 +1,13 @@
+# Git Bash login sessions do not always populate USER.
+export USER="${USER:-$(id -un)}"
+
+# Git Bash accepts C.UTF-8, but native Windows Neovim's C runtime does not.
+# Normalize that inherited value to a UTF-8 locale understood by both.
+if [[ -z ${LANG-} || $LANG == C.UTF-8 ]]; then
+  export LANG=en_US.UTF-8
+fi
+if [[ -z ${LC_ALL-} || $LC_ALL == C.UTF-8 ]]; then
+  export LC_ALL=en_US.UTF-8
+fi
+
+[[ -r "$HOME/.bashrc" ]] && source "$HOME/.bashrc"

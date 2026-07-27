@@ -7,16 +7,13 @@ F=~/.antidote/antidote.zsh; [ -f $F ] && . $F
 
 antidote load
 
-export VISUAL="nvim"
-export EDITOR="nvim"
-export GIT_EDITOR="nvim"
+[[ -r "$HOME/.config/shell/common.sh" ]] && source "$HOME/.config/shell/common.sh"
 
 alias au="antidote update"
 alias gou="SHELL_PROFILE=/tmp/go-installer-profile bash <(curl -sL https://git.io/go-installer)"
 alias piu="volta install @earendil-works/pi-coding-agent@latest"
 alias uvu="uv tool upgrade --all"
 
-alias h="herdr"
 alias hs="herdr-session-picker"
 alias rmrf="rm -rf"
 
@@ -58,17 +55,12 @@ alias gl="git pull"
 alias gp="git push"
 
 alias lad="lazydocker"
-alias lag="lazygit"
 
 alias ls="eza"
 alias la="eza -laag --icons"
 alias lt="eza -T --icons"
 
 alias ta="tmux a"
-
-alias v="nvim ."
-alias vi="nvim"
-alias vim="nvim"
 
 alias pe="nvim ~/.local/share/posting/default"
 alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"

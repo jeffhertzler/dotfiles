@@ -1,0 +1,6 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "wsl" -}}
+{{-   template "shell/zshrc-wsl" . -}}
+{{- else -}}
+{{-   template "shell/zshrc-unix" . -}}
+{{- end -}}

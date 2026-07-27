@@ -1,0 +1,9 @@
+# Minimal shared environment for Ubuntu WSL.
+path=(
+  "$HOME/.local/bin"
+  "$HOME/.opencode/bin"
+  $path
+)
+
+typeset -U path PATH
+export PATH

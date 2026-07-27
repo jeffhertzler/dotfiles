@@ -12,6 +12,8 @@ README.md
 .agents
 .config/*
 !.config/starship.toml
+!.config/shell
+!.config/shell/common.sh
 .greenlight.zsh
 .jabba
 .linux.zsh
@@ -23,7 +25,21 @@ README.md
 .ssh
 .vimme.zsh
 .zsh_plugins.txt
+ensure-herdr-plugins.sh
+{{- end }}
+
+# Native Windows uses Git Bash; the Unix profiles use Zsh.
+{{- if ne $profile "windows" }}
+.bash_profile
+.bashrc
+{{- end }}
+
+{{- if or (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
 .zshenv
 .zshrc
-ensure-herdr-plugins.sh
+{{- end }}
+
+# WSL-only bridge and remote-session helpers.
+{{- if ne $profile "wsl" }}
+.zshrc.local
 {{- end }}

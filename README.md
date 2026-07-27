@@ -14,3 +14,13 @@ Chezmoi detects one of four supported profiles:
 Arch and macOS retain the existing Unix configuration while normalization is
 in progress. WSL and native Windows begin deny-by-default and will gain managed
 files one reviewed layer at a time.
+
+## Shell layout
+
+- `.config/shell/common.sh` contains dependency-free editor settings and aliases
+  shared by Bash and Zsh.
+- Arch and macOS render the established Unix Zsh configuration.
+- WSL renders a lightweight Zsh baseline plus WSL-only helpers in `.zshrc.local`.
+- Native Windows manages `.bash_profile` and `.bashrc` for Git Bash.
+
+Machine-local SSH configuration and credentials are intentionally not managed.
