@@ -1,4 +1,10 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
+{{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
+{{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
+{{- if eq $profile "windows" -}}
+{{-   $directionalSplit = printf "node \"%s/.local/bin/herdr-directional-split.mjs\"" .chezmoi.homeDir -}}
+{{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
+{{- end -}}
 onboarding = false
 
 {{ if eq $profile "windows" -}}
@@ -51,37 +57,37 @@ split_horizontal = "prefix+alt+j"
 [[keys.command]]
 key = "prefix+alt+h"
 type = "shell"
-command = "~/.local/bin/herdr-directional-split.mjs local left"
+command = '{{ $directionalSplit }} local left'
 description = "split pane left"
 
 [[keys.command]]
 key = "prefix+alt+k"
 type = "shell"
-command = "~/.local/bin/herdr-directional-split.mjs local up"
+command = '{{ $directionalSplit }} local up'
 description = "split pane up"
 
 [[keys.command]]
 key = "prefix+ctrl+h"
 type = "shell"
-command = "~/.local/bin/herdr-reorder.mjs tab left"
+command = '{{ $reorder }} tab left'
 description = "move tab left"
 
 [[keys.command]]
 key = "prefix+ctrl+l"
 type = "shell"
-command = "~/.local/bin/herdr-reorder.mjs tab right"
+command = '{{ $reorder }} tab right'
 description = "move tab right"
 
 [[keys.command]]
 key = "prefix+ctrl+k"
 type = "shell"
-command = "~/.local/bin/herdr-reorder.mjs workspace up"
+command = '{{ $reorder }} workspace up'
 description = "move workspace / worktree group up"
 
 [[keys.command]]
 key = "prefix+ctrl+j"
 type = "shell"
-command = "~/.local/bin/herdr-reorder.mjs workspace down"
+command = '{{ $reorder }} workspace down'
 description = "move workspace / worktree group down"
 
 {{ if eq $profile "arch" -}}
