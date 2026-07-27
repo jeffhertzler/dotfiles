@@ -10,7 +10,8 @@ README.md
 # one reviewed layer at a time instead of inheriting the existing Unix setup.
 {{- if or (eq $profile "wsl") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
 .agents
-.config
+.config/*
+!.config/starship.toml
 .greenlight.zsh
 .jabba
 .linux.zsh
