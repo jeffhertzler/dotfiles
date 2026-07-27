@@ -143,5 +143,6 @@ as valid only after atomic rename.
 ## Recommendation
 
 Keep v1 unless real-world use shows that startup latency outweighs the added
-routing, state, and lifecycle complexity. If v2 is implemented, build the
-isolated annotation adapter before making existing-Neovim mode the default.
+routing, state, and lifecycle complexity. Implement the combined-feedback work
+in [`FEEDBACK_V1_1.md`](./FEEDBACK_V1_1.md) first. If v2 is implemented, build
+the isolated annotation adapter before making existing-Neovim mode the default.
