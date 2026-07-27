@@ -4,8 +4,8 @@ if [[ ! -d "$HOME/dev/greenlight" ]]; then
   return 0 2>/dev/null || exit 0
 fi
 
-bold=$(tput bold)
-normal=$(tput sgr0)
+bold=$(tput bold 2>/dev/null || true)
+normal=$(tput sgr0 2>/dev/null || true)
 
 if [ -f $HOME/greenlight-local.env ]; then
   export $( grep -vE "^(#.*|\s*)$" $HOME/greenlight-local.env )
