@@ -3,6 +3,12 @@ set -euo pipefail
 
 self=$(realpath "$0")
 
+# Herdr's detached server may not have inherited a locale. Unicode TUIs such as
+# btop refuse to start under the resulting POSIX locale.
+if [[ $(locale charmap 2>/dev/null || true) != UTF-8 ]]; then
+  export LC_ALL=C.UTF-8
+fi
+
 root_ids=(docker jira processes workmux files git-menu)
 git_ids=(github-dashboard git github-news)
 all_ids=(docker jira processes workmux files github-dashboard git github-news)
@@ -85,7 +91,10 @@ declare -A executable=(
   [github-news]='gh'
 )
 
-background=${COLORFGBG##*;}
+# Popup processes inherit the Herdr server's environment, where COLORFGBG may
+# be unset. Default to a dark background instead of exiting under `set -u`.
+background=${COLORFGBG:-0}
+background=${background##*;}
 if [[ $background =~ ^[0-9]+$ && $background -ge 7 ]]; then
   theme=light
   accent='\033[38;2;136;57;239m'
