@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 0fe25d5 on normalize/multi-platform
+Configuration baseline: 97fdf24 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 0fe25d5 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 0fe25d5 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 0fe25d5 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | 0fe25d5 | Clean | All four previously deferred entries were resolved without overwriting live files. |
+| S01 | Windows | 97fdf24 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 97fdf24 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | 97fdf24 | Clean | Native source clone preserved with a backup branch and stash. |
+| S04 | Arch | 97fdf24 | Clean | All four previously deferred entries were resolved without overwriting live files. |
 
 ## Installed-tool matrix
 
@@ -63,7 +63,7 @@ Kinds:
 | D05 | Unix shells | WSL, Mac, and Arch render one shared Zsh baseline. Optional portable integrations are capability-guarded; the shared template selects one profile overlay, while explicitly platform-owned behavior lives in that overlay. Rendered syntax, isolated startup, real login-shell startup, and narrow Chezmoi verification passed on all three machines. | Decided and implemented | Keep unified; add platform branches only for demonstrated incompatibilities. |
 | D06 | Zsh environment | WSL, Mac, and Arch render one shared .zshenv with a static ordered list of expected home tool directories, including the future Mise shim location. PATH is deduplicated; Mise installation and configuration ownership are unchanged. Syntax, isolated behavior, real noninteractive startup, and narrow Chezmoi verification passed on all three machines. | Decided and implemented | Keep unified; broader Mise adoption remains deferred. |
 | D07 | Zsh plugins | WSL, Mac, and Arch share the same Antidote plugin list and ez-compinit loads first. | Intentional | Keep unified. |
-| D08 | Shell aliases | common.sh supplies editor, Herdr, and LazyGit aliases everywhere it is managed. The broader Git/tool alias set now exists in the shared Zsh baseline and optional tools are capability-guarded; Arch owns its tmux, Workmux, and Tailscale aliases in .arch.zsh. | Partly unified plus explicit legacy decision | Which aliases should also move into common.sh for Git Bash? |
+| D08 | Shell aliases | common.sh supplies editor, Herdr, LazyGit, Chezmoi, Git, updater, and portable tool helpers to Bash and Zsh. Optional tools are capability-guarded; shell initialization and edit/reload aliases remain shell-specific, while Arch retains tmux, Workmux, and Tailscale aliases in .arch.zsh. Login-shell and full Chezmoi verification passed on all four machines. | Decided and implemented | Keep portable interactive behavior in common.sh; keep shell initialization and platform ownership outside it. |
 | D09 | Shell overlays | WSL sources .wsl.zsh, Mac sources .mac.zsh, and Arch sources .arch.zsh. | Required/intentional | Review each overlay and move only truly shared functions upward. |
 | D10 | Project overlays | .greenlight.zsh, .vimme.zsh, and .ocprofile.zsh are managed on Arch but ignored on WSL, Mac, and Windows. Mac has live unmanaged copies. | Conservative | Should these be shared on Mac and/or WSL? |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
@@ -132,6 +132,8 @@ unmanaged and ignored by Chezmoi.
 ### Windows
 
 - C:/Users/Jeff Hertzler/.gitconfig.pre-xdg-20260727-032541
+- D08 shared-shell backup:
+  C:/Users/Jeff Hertzler/.config/shell/common.sh.pre-chezmoi-20260727-170115
 - Legacy Neovim rollback remains under LocalAppData from the Windows migration.
 
 ### WSL
@@ -145,6 +147,8 @@ unmanaged and ignored by Chezmoi.
   ~/.wsl.zsh.pre-chezmoi-20260727-175006.
 - D06 shared-environment backup: ~/.zshenv.pre-chezmoi-20260727-203355.
 - D06 static-PATH backup: ~/.zshenv.pre-chezmoi-20260727-204605.
+- D08 shared-shell backups use timestamp 20260727-210115 for common.sh and
+  ~/.zshrc.
 - Previous Neovim tree: ~/.config/nvim.pre-chezmoi-20260727-070409
 
 ### macOS
@@ -155,6 +159,8 @@ unmanaged and ignored by Chezmoi.
 - D05 unified-shell backup: ~/.zshrc.pre-chezmoi-20260727-135007.
 - D06 shared-environment backup: ~/.zshenv.pre-chezmoi-20260727-163356.
 - D06 static-PATH backup: ~/.zshenv.pre-chezmoi-20260727-164606.
+- D08 shared-shell backups use timestamp 20260727-170116 for common.sh and
+  ~/.zshrc.
 - Exact filenames are the original path plus .pre-chezmoi-TIMESTAMP.
 - Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
@@ -172,12 +178,14 @@ unmanaged and ignored by Chezmoi.
   ~/.arch.zsh.pre-chezmoi-20260727-140456.
 - D06 shared-environment backup: ~/.zshenv.pre-chezmoi-20260727-163356.
 - D06 static-PATH backup: ~/.zshenv.pre-chezmoi-20260727-164606.
+- D08 shared-shell backups use timestamp 20260727-170116 for common.sh and
+  ~/.zshrc.
 
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
 2. D31, D35, D46, D49, D50, D51: decide which machines enable each application.
-3. D05 and D06 are complete. Review D08 and D10 to finish consolidating the active shell layers; leave legacy tmux/Workmux preserved on Arch.
+3. D05, D06, and D08 are complete. Review D10 to finish consolidating the active shell layers; leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
 
@@ -226,3 +234,4 @@ rewritten during review:
 - 3df506f record static shared Unix PATH policy
 - 1ca3c35 resolve deferred Arch configuration drift
 - 0fe25d5 ignore Neovim lockfile at Chezmoi layer
+- 97fdf24 share portable shell helpers with Git Bash
