@@ -66,13 +66,17 @@ fi
 if [ "$native_nvim" -eq 1 ]; then
   case "$mode" in
   edit)
-    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $1<cr>"
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr>" &&
+      nvim --server "$server" --remote "$1"
     ;;
   line | wait)
-    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $2<cr><cmd>$1<cr>"
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr>" &&
+      nvim --server "$server" --remote "$2" &&
+      nvim --server "$server" --remote-send "<cmd>$1<cr>"
     ;;
   dir)
-    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr><cmd>e $1<cr>"
+    nvim --server "$server" --remote-send "q<cmd>sleep 10m<cr>" &&
+      nvim --server "$server" --remote "$1"
     ;;
   *)
     log "unknown native mode=$mode"

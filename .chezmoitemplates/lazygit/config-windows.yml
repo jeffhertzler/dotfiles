@@ -1,0 +1,7 @@
+promptToReturnFromSubprocess: false
+
+os:
+  edit: '"C:/Program Files/Git/bin/bash.exe" "{{ .chezmoi.homeDir }}/.local/bin/lazygit-nvim" edit {{ "{{filename}}" }}'
+  editAtLine: '"C:/Program Files/Git/bin/bash.exe" "{{ .chezmoi.homeDir }}/.local/bin/lazygit-nvim" line {{ "{{line}}" }} {{ "{{filename}}" }}'
+  editAtLineAndWait: '"C:/Program Files/Git/bin/bash.exe" "{{ .chezmoi.homeDir }}/.local/bin/lazygit-nvim" wait {{ "{{line}}" }} {{ "{{filename}}" }}'
+  openDirInEditor: '"C:/Program Files/Git/bin/bash.exe" "{{ .chezmoi.homeDir }}/.local/bin/lazygit-nvim" dir {{ "{{dir}}" }}'
