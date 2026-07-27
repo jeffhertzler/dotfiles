@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: a687299 on normalize/multi-platform
+Configuration baseline: 6efb058 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -97,7 +97,7 @@ Kinds:
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
 | D46 | Pi ownership | Arch manages .pi. WSL and Mac both have Pi installed but ignore .pi; Windows lacks Pi. | Conservative/high priority | Share Pi extensions/settings, or split credentials/providers from portable extensions? |
-| D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, and staged-feedback trailing spacing. | Intentional | Treat changelog state as config or remove it from version control later? |
+| D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, staged-feedback trailing spacing, and pi-tui width handling for emoji-safe responsive rendering. | Intentional | Treat changelog state as config or remove it from version control later? |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
 | D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It also ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
@@ -199,3 +199,6 @@ rewritten during review:
 - 3c15c10 select OpenCode profile by machine
 - 3f0b3b8 record current Arch Pi packages
 - a687299 preserve spacing in staged Pi feedback
+- be2f612 keep tmux and workmux as Arch-only legacy
+- 55b4235 use pi tui utils instead of custom solution to avoid issues with emojis
+- 6efb058 merge Arch Pi renderer lineage
