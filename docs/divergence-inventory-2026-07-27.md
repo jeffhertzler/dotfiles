@@ -88,10 +88,10 @@ Kinds:
 | D35 | OpenCode ownership | WSL and Arch manage OpenCode. Mac has OpenCode installed but ignores its config. Windows has no OpenCode. | Conservative/high priority | Manage Mac too? |
 | D36 | OpenCode default profile | WSL symlinks opencode.json to work.json. Arch symlinks it to personal.json. | Conservative choice made during this pass | Unify the default, or preserve a machine/profile distinction? |
 | D37 | OpenCode version | WSL, Mac, and Arch have different installed OpenCode versions and installation methods. | Historical | Normalize installation/version management separately from config. |
-| D38 | Workmux ownership | Workmux is preserved as Arch-only legacy configuration. Mac still has Workmux and its old config installed, but Chezmoi no longer manages that config or loads its completion. WSL does not have Workmux. | Explicit user decision | Keep until the eventual tmux/Workmux retirement; do not delete yet. |
-| D39 | Workmux command | Preserved source config uses opencode --port. Arch live uses opencode. Mac's now-unmanaged legacy file also still uses opencode --port. Both installed OpenCode versions document --port with default 0. | Deferred actual drift | Resolve only before the next Arch Workmux apply; this is no longer a cross-platform convergence issue. |
+| D38 | Workmux ownership | Workmux is preserved as Arch-only legacy configuration. Mac still has the Workmux executable installed, but its ~/.config/workmux directory was removed and its shell completion is no longer loaded. WSL does not have Workmux. | Explicit user decision | Keep the Arch source until eventual retirement. |
+| D39 | Workmux command | Preserved Arch source config uses opencode --port. Arch live uses opencode. Both installed OpenCode versions document --port with default 0. | Deferred actual drift | Resolve only before the next Arch Workmux apply; this is no longer a cross-platform convergence issue. |
 | D40 | Worktrunk | Worktrunk config, Herdr actions, and seeding helper are Arch-only; Mac and WSL lack Worktrunk. | Conservative | Install and share, or keep Arch-only? |
-| D41 | tmux | tmux is preserved as Arch-only legacy configuration. Mac and WSL still have tmux installed, and their existing files are left untouched but unmanaged. | Explicit user decision | Keep until eventual retirement; do not delete the source or live files yet. |
+| D41 | tmux | tmux is preserved as Arch-only legacy configuration. Mac and WSL still have tmux installed. Mac's ~/.config/tmux directory, including downloaded TPM plugin clones, was removed; WSL's independent state remains untouched. | Explicit user decision | Keep the Arch source until eventual retirement. |
 | D42 | Yazi | Mac and Arch manage Yazi. WSL and Windows ignore it. Mac renders open; Linux renders xdg-open. | Required plus conservative | Keep opener split; decide whether to install/share Yazi on WSL. |
 | D43 | Atuin | Mac and Arch manage Atuin; WSL and Windows ignore it. | Conservative | Install/share on WSL and possibly Windows? |
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
@@ -105,7 +105,7 @@ Kinds:
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
-| D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them. Existing Mac tmux and Workmux config files remain physically present but unmanaged. | Explicit user decision | Preserve until eventual retirement; do not delete yet. |
+| D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them. The Mac tmux and Workmux config directories were removed after the user confirmed they were unnecessary. | Explicit user decision | Preserve only the Arch legacy setup until eventual retirement. |
 
 ## Deferred actual changes
 
@@ -151,6 +151,9 @@ Windows, WSL, and Mac currently have no managed target drift.
 - Shell/plugin backups use timestamps 20260727-034722 and 20260727-034734.
 - Latest Mac Zsh legacy-gating backup uses timestamp 20260727-131806.
 - Exact filenames are the original path plus .pre-chezmoi-TIMESTAMP.
+- Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
+  Trash. Their configuration remains in the Arch-only source; TPM plugins can
+  be reinstalled but the deleted plugin clones are not directly recoverable.
 
 ### Arch
 
