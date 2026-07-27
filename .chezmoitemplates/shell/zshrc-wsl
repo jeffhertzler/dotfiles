@@ -41,8 +41,8 @@ if command -v mise >/dev/null 2>&1; then
   eval "$(mise activate zsh)"
 fi
 
-# Keep machine-specific additions separate from the baseline.
-[[ -r "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+# Keep WSL-specific additions separate from the baseline.
+[[ -r "$HOME/.wsl.zsh" ]] && source "$HOME/.wsl.zsh"
 
 if command -v starship >/dev/null 2>&1 && (( ! $+functions[starship_zle-keymap-select] )); then
   eval "$(starship init zsh)"

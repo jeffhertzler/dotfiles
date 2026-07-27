@@ -41,5 +41,5 @@ ensure-herdr-plugins.sh
 
 # WSL-only bridge and remote-session helpers.
 {{- if ne $profile "wsl" }}
-.zshrc.local
+.wsl.zsh
 {{- end }}
