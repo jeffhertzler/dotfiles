@@ -59,13 +59,16 @@ docs
 !.config/shell/vimme.zsh
 {{- end }}
 .jabba
-{{- if or (eq $profile "wsl") (eq $profile "macos") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.local
 .local/*
 !.local/bin
 .local/bin/*
+!.local/bin/herdr-directional-split.mjs
+{{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.local/bin/tunnel
 !.local/bin/lazygit-nvim
+{{- end }}
 {{- else }}
 .local
 {{- end }}

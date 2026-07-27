@@ -48,6 +48,18 @@ swap_pane_right = "prefix+shift+l"
 split_vertical = "prefix+alt+l"
 split_horizontal = "prefix+alt+j"
 
+[[keys.command]]
+key = "prefix+alt+h"
+type = "shell"
+command = "~/.local/bin/herdr-directional-split.mjs local left"
+description = "split pane left"
+
+[[keys.command]]
+key = "prefix+alt+k"
+type = "shell"
+command = "~/.local/bin/herdr-directional-split.mjs local up"
+description = "split pane up"
+
 {{ if eq $profile "arch" -}}
 [[keys.command]]
 key = "prefix+p"
@@ -146,18 +158,6 @@ key = "alt+l"
 type = "plugin_action"
 command = "herdr-splits.resize-right"
 description = "resize right (neovim/herdr)"
-
-[[keys.command]]
-key = "prefix+alt+h"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs local left"
-description = "split pane left"
-
-[[keys.command]]
-key = "prefix+alt+k"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs local up"
-description = "split pane up"
 
 [[keys.command]]
 key = "prefix+alt+shift+h"
