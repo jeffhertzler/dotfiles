@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 7e8c212 on normalize/multi-platform
+Configuration baseline: d4cf9b1 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 7e8c212 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 7e8c212 | Clean | Native source clone at ~/.local/share/chezmoi. The formerly divergent ~/.config, ~/.config/gh, and ~/.config/herdr directory modes are normalized to 0755. |
-| S03 | macOS | 7e8c212 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim and Pi configurations are active. |
-| S04 | Arch | 7e8c212 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
+| S01 | Windows | d4cf9b1 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim and Pi configurations are active. |
+| S02 | WSL | d4cf9b1 | Clean | Native source clone at ~/.local/share/chezmoi. The formerly divergent ~/.config, ~/.config/gh, and ~/.config/herdr directory modes are normalized to 0755. |
+| S03 | macOS | d4cf9b1 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim and Pi configurations are active. |
+| S04 | Arch | d4cf9b1 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
 
 ## Installed-tool matrix
 
@@ -42,7 +42,8 @@ not Worktrunk.
 | tmux, Workmux | Absent | tmux only | Both | Both |
 | Worktrunk | Absent; wt means Windows Terminal | Absent | Absent | Installed |
 | Yazi | Absent | Absent | Installed | Installed |
-| Pi | Absent | 0.82.1 via Mise | 0.82.1 @earendil fork via Volta | 0.82.1 @earendil fork via Volta |
+| Pi | 0.82.1 @earendil fork via Mise | 0.82.1 via Mise | 0.82.1 @earendil fork via Volta | 0.82.1 @earendil fork via Volta |
+| Pi tool manager | Mise 2026.7.12 via WinGet | Mise | Volta | Volta |
 | Go | Absent | Installed via Mise | Installed | Installed |
 
 ## Policy divergences to review line by line
@@ -61,7 +62,7 @@ Kinds:
 | D03 | Source topology | Each machine keeps a native Chezmoi clone and tracks the same GitHub upstream branch. No machine is the permanent authoritative source; Windows is only the current editing location. The normalized branch will be pushed and ultimately merged into master after this review. | Decided; implementation pending | Replace local bundles and cross-filesystem fetches with ordinary upstream pull/fetch after review. |
 | D04 | Windows shell | Git Bash is the default for native Windows workflows and local Herdr. WSL remains a fully supported parallel shell/environment for Linux workflows; the two are not mutually exclusive. Windows manages Git Bash startup while WSL manages its own Zsh startup. | Decided | Keep both available. |
 | D05 | Unix shells | WSL, Mac, and Arch render one shared Zsh baseline. Optional portable integrations are capability-guarded; the shared template selects one profile overlay, while explicitly platform-owned behavior lives in that overlay. Rendered syntax, isolated startup, real login-shell startup, and narrow Chezmoi verification passed on all three machines. | Decided and implemented | Keep unified; add platform branches only for demonstrated incompatibilities. |
-| D06 | Zsh environment | WSL, Mac, and Arch render one shared .zshenv with a static ordered list of expected home tool directories, including ~/.opencode/bin and the future Mise shim location. PATH is deduplicated. Git Bash adds ~/.opencode/bin in its own .bashrc rather than common.sh. Broader Mise adoption remains deferred; only WSL's obsolete OpenCode Mise entry was removed after the official binary was verified. | Decided and implemented | Keep unified; broader Mise adoption remains deferred. |
+| D06 | Zsh environment | WSL, Mac, and Arch render one shared .zshenv with a static ordered list of expected home tool directories, including ~/.opencode/bin and the future Mise shim location. PATH is deduplicated. Git Bash adds ~/.opencode/bin in its own .bashrc rather than common.sh. Windows adds the native Mise shim directory through its user PATH for Pi. Broader Mise adoption remains deferred. | Decided and implemented | Keep unified; broader Mise adoption remains deferred. |
 | D07 | Zsh plugins | WSL, Mac, and Arch share the same Antidote plugin list and ez-compinit loads first. | Intentional | Keep unified. |
 | D08 | Shell aliases | common.sh supplies editor, Herdr, LazyGit, Chezmoi, Git, updater, and portable tool helpers to Bash and Zsh. Optional tools are capability-guarded; shell initialization and edit/reload aliases remain shell-specific, while Arch retains tmux, Workmux, and Tailscale aliases in .arch.zsh. Login-shell and full Chezmoi verification passed on all four machines. | Decided and implemented | Keep portable interactive behavior in common.sh; keep shell initialization and platform ownership outside it. |
 | D09 | Shell overlays | WSL sources .wsl.zsh, Mac sources .mac.zsh, and Arch sources .arch.zsh. | Required/intentional | Review each overlay and move only truly shared functions upward. |
@@ -101,16 +102,17 @@ Kinds:
 | D43 | Atuin | Mac and Arch manage Atuin; WSL and Windows ignore it. | Conservative | Install/share on WSL and possibly Windows? |
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
-| D46 | Pi ownership | WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. Windows still lacks Pi. | Decided and implemented on Unix | Decide separately whether and how to install Pi on native Windows. |
-| D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL and Mac with mode 0600, outside Chezmoi. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
+| D46 | Pi ownership | Windows, WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. | Decided and implemented | Keep the shared portable configuration enabled on all four machines. |
+| D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL, Mac, and Windows outside Chezmoi. Unix copies use mode 0600; Windows inherits only SYSTEM, Administrators, and the user with full control. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
 | D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It still ignores agents, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy and Pi decisions | This remains the main list to reconsider if greater unification is desired. |
 | D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Pi decision | Decide which remaining Mac/Arch tools should join the WSL baseline. |
-| D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
+| D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, and Git Bash startup. | Conservative plus explicit Pi decision | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
 | D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them in .arch.zsh rather than the shared template. The Mac tmux and Workmux config directories were removed after the user confirmed they were unnecessary. | Explicit user decision | Preserve only the Arch legacy setup until eventual retirement. |
+| D56 | Pi tool manager | Windows and WSL use Mise for Pi; Mac and Arch use Volta. Native Windows Mise is intentionally limited to Pi and its config remains unmanaged. Volta upstream is now unmaintained and recommends migrating to Mise. | Explicitly deferred | Revisit broader Mise adoption and any Volta migration as a separate compatibility review. |
 
 ## Deferred actual changes
 
@@ -143,6 +145,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - D08 shared-shell backup:
   C:/Users/Jeff Hertzler/.config/shell/common.sh.pre-chezmoi-20260727-170115
 - Legacy Neovim rollback remains under LocalAppData from the Windows migration.
+- Windows had no pre-existing ~/.pi tree. Pi 0.82.1 is installed as the pinned npm:@earendil-works/pi-coding-agent tool in unmanaged ~/.config/mise/config.toml; Mise 2026.7.12 is WinGet package jdx.mise. The only PATH addition is %LOCALAPPDATA%/mise/shims in the user PATH. Auth remains recoverable from the matching Unix copies and the dated Pi convergence backups.
 
 ### WSL
 
@@ -200,7 +203,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46 is complete for WSL, Mac, and Arch; decide native Windows Pi installation separately. Continue D49, D50, and D51 for the remaining applications.
+2. D46 is complete on all four machines. Continue D49 through D52 for the remaining applications; D56 keeps broader Mise adoption deferred.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -260,3 +263,4 @@ rewritten during review:
 - 38a530a inline shared zsh templates
 - 10ecd01 manage neovim on macos
 - 7e8c212 manage pi config on wsl and macos
+- d4cf9b1 manage pi config on windows
