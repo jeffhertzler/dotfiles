@@ -25,6 +25,9 @@ README.md
 !.config/nvim/**
 {{- end }}
 {{- if eq $profile "wsl" }}
+!.config/gh
+.config/gh/*
+!.config/gh/config.yml
 !.config/opencode
 !.config/opencode/**
 {{- end }}
