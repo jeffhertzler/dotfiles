@@ -57,7 +57,7 @@ Kinds:
 | ID | Area | Current behavior | Kind | Question for review |
 |---|---|---|---|---|
 | D01 | Overall ownership | Each application has one shared configuration. Every machine explicitly enables the applications it uses; only required OS behavior is conditional, and machine-local values use unmanaged overlays. The current implementation still needs to be migrated toward this policy one application at a time. | Decided | Adopted as the governing policy. |
-| D02 | Generic Linux | A non-Arch native Linux host receives only the small reviewed baseline. | Conservative | Should generic Linux follow Arch, WSL, or its own profile? |
+| D02 | Generic Linux | There is no current generic native-Linux machine. The minimal profile remains only as a safe fallback and carries no support or unification promise. | Decided | Revisit only when a real non-Arch, non-WSL Linux machine is added. |
 | D03 | Source topology | Windows uses the working checkout. WSL, Mac, and Arch use native ~/.local/share/chezmoi clones. The normalization branch is local and is not pushed. | Intentional | Keep native clones but push the branch, or choose a different synchronization model? |
 | D04 | Windows shell | Windows manages .bash_profile and .bashrc for Git Bash and ignores Zsh. | Required | Keep Git Bash as the native Windows shell? |
 | D05 | Unix shells | WSL uses a small zshrc template; Mac and Arch use the larger Unix zshrc template. | Conservative | Merge these into one guarded Zsh baseline? |
