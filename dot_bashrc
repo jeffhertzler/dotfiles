@@ -17,6 +17,7 @@ fi
 if [[ -d "/c/Program Files/starship/bin" ]]; then
   export PATH="/c/Program Files/starship/bin:$PATH"
 fi
+export PATH="$HOME/.opencode/bin:$PATH"
 
 # Load the Bash line editor early, then attach it after prompt configuration.
 if [[ -r "$HOME/.local/share/blesh/ble.sh" ]]; then
