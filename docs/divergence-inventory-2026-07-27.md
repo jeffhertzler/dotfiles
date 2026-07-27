@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 28d6321 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Neovim, Pi, and local Herdr directional splits are active. |
-| S02 | WSL | 28d6321 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim and local Herdr directional-split helpers are active. |
-| S03 | macOS | 28d6321 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, and local Herdr directional splits are active. |
-| S04 | Arch | 28d6321 | Clean | Local Herdr directional splits remain shared while plugin-dependent full-layout splits remain Arch-only. |
+| S01 | Windows | 1c870b9 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. The shared LazyGit-to-Neovim bridge was verified with a native named pipe and a filename containing spaces. |
+| S02 | WSL | 1c870b9 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim and local Herdr directional-split helpers are active. |
+| S03 | macOS | 1c870b9 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, and local Herdr directional splits are active. |
+| S04 | Arch | 1c870b9 | Clean | LazyGit-to-Neovim is shared; local Herdr directional splits remain shared while plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -201,6 +201,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
   be reinstalled but the deleted plugin clones are not directly recoverable.
 - Mac helper convergence backup: ~/.local/state/dotfiles-backups/20260727-1854-helper-convergence/mac-local-bin. It contains the stale pre-shared lazygit-nvim plus copies and retired-live originals of the four removed tmux helpers.
 - Herdr directional-sharing config backup: ~/.local/state/dotfiles-backups/20260727-herdr-directional-sharing/config.toml on WSL, Mac, and Arch.
+- LazyGit bridge backups: ~/.local/state/dotfiles-backups/20260727-lazygit-bridge on WSL, Mac, and Arch. Mac and Arch contain direct pre-apply copies. WSL's initial backup command lost a shell variable at the PowerShell boundary, so its old config was restored from the identical Windows pre-change copy and its old helper was reconstructed byte-for-byte from commit 4725ea7 (blob 8fd9388) before verification.
 
 ### Arch
 
