@@ -144,7 +144,7 @@ local function start_disk_watchers(session)
   session.file_watcher = watch.file(session.root .. "/" .. session.path, refresh_working)
   local git_dir = git.git_dir(session.root)
   if session.revision == "INDEX" and git_dir then
-    session.index_watcher = watch.directory(git_dir, function()
+    session.index_watcher = watch.file(git_dir .. "/index", function()
       if session == active then
         M.refresh({ reload = true })
       end
@@ -262,6 +262,11 @@ function M.open(opts)
       buffer = target_buf,
       silent = true,
       desc = "Toggle diff files",
+    })
+    vim.keymap.set("n", "?", require("agent_diff.help").diff, {
+      buffer = target_buf,
+      silent = true,
+      desc = "Agent Diff help",
     })
   end
   start_autocmds(session)
@@ -400,6 +405,7 @@ function M.close()
     vim.b[session.modified_buf].agent_diff_active = nil
     vim.b[session.modified_buf].agent_diff_context = nil
     pcall(vim.keymap.del, "n", "<leader>b", { buffer = session.modified_buf })
+    pcall(vim.keymap.del, "n", "?", { buffer = session.modified_buf })
   end
   if valid_buf(session.original_buf) then
     pcall(vim.api.nvim_buf_delete, session.original_buf, { force = true })
@@ -435,6 +441,10 @@ end
 
 function M.prev_file()
   return changeset().prev_file()
+end
+
+function M.patch()
+  return require("agent_diff.patch").open()
 end
 
 function M.toggle_sidebar()
@@ -502,6 +512,7 @@ function M.setup(opts)
   vim.api.nvim_create_user_command("AgentDiffRefresh", function()
     M.refresh({ reload = true })
   end, { desc = "Reload and refresh Agent Diff" })
+  vim.api.nvim_create_user_command("AgentPatch", M.patch, { desc = "Toggle the staged/unstaged patch workspace" })
 end
 
 return M

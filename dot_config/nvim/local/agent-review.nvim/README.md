@@ -73,7 +73,10 @@ or the real line adjacent to a pure deletion and press `<leader>rA`; select the
 exact deleted line when prompted. `:AgentReview add old` provides the same flow.
 
 Virtual deletion rows cannot receive a Neovim cursor, so the comment box
-attaches to the containing block rather than an exact virtual row.
+attaches to the containing block rather than an exact virtual row. Agent Diff's
+`<leader>gw` patch workspace materializes staged and unstaged patch rows in a
+real buffer; normal `<leader>ra` can therefore target exact deleted, index, and
+working lines there.
 
 ## Sessions and persistence
 

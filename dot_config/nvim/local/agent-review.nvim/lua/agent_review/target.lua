@@ -224,6 +224,9 @@ end
 function M.capture(opts)
   opts = opts or {}
   local bufnr = vim.api.nvim_get_current_buf()
+  if vim.b[bufnr].agent_diff_patch then
+    return require("agent_review.patch").capture(opts)
+  end
   local context = M.context_for_buffer(bufnr)
   if not context or not context.path then
     notify("Annotations require a regular file or a supported diff buffer")

@@ -44,7 +44,7 @@ local function clear_context(session)
     render.clear(session.modified_buf)
     vim.b[session.modified_buf].agent_diff_active = nil
     vim.b[session.modified_buf].agent_diff_context = nil
-    for _, lhs in ipairs({ "<leader>b", "]f", "[f" }) do
+    for _, lhs in ipairs({ "<leader>b", "]f", "[f", "?" }) do
       pcall(vim.keymap.del, "n", lhs, { buffer = session.modified_buf })
     end
   end
@@ -58,6 +58,7 @@ local function install_diff_maps(session, buf)
   vim.keymap.set("n", "<leader>b", M.toggle_sidebar, vim.tbl_extend("force", opts, { desc = "Toggle diff files" }))
   vim.keymap.set("n", "]f", M.next_file, vim.tbl_extend("force", opts, { desc = "Next diff file" }))
   vim.keymap.set("n", "[f", M.prev_file, vim.tbl_extend("force", opts, { desc = "Previous diff file" }))
+  vim.keymap.set("n", "?", require("agent_diff.help").diff, vim.tbl_extend("force", opts, { desc = "Agent Diff help" }))
 end
 
 local function render_explorer(session)
@@ -204,7 +205,7 @@ local function setup_external_refresh(session)
     or session.modified_revision == "INDEX"
     or session.modified_revision == "WORKING"
   if not session.index_watcher and git_dir and dynamic_revisions then
-    session.index_watcher = watch.directory(git_dir, function()
+    session.index_watcher = watch.file(git_dir .. "/index", function()
       if session == active then
         M.refresh({ files = true, external = true })
       end

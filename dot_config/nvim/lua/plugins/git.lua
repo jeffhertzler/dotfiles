@@ -32,6 +32,13 @@ return {
         end,
         desc = "Git Diff Side-by-Side",
       },
+      {
+        "<leader>gw",
+        function()
+          require("agent_diff").patch()
+        end,
+        desc = "Git Patch Workspace",
+      },
     },
   },
   {

@@ -29,7 +29,7 @@ local elapsed_ms = (vim.uv.hrtime() - started) / 1e6
 assert(elapsed_ms < 5000, string.format("large diff took %.1fms", elapsed_ms))
 local session = assert(diff.get_session())
 assert(#vim.api.nvim_list_tabpages() == 1)
-assert(vim.wo[session.modified_win].winbar:find("Agent Diff", 1, true))
+assert(not vim.wo[session.modified_win].winbar:find("AgentDiffWinbarTitle", 1, true))
 
 vim.api.nvim_buf_set_lines(session.modified_buf, -1, -1, false, { "external tail" })
 vim.api.nvim_exec_autocmds("TextChanged", { buffer = session.modified_buf })

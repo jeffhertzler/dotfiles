@@ -38,7 +38,9 @@ local function create_annotation(capture, body)
     created_at = now,
     updated_at = now,
   })
-  if capture.target.side == "old" and (capture.host == "codediff" or capture.host == "agent_diff") then
+  if capture.host == "agent_patch" then
+    require("agent_review.patch").render()
+  elseif capture.target.side == "old" and (capture.host == "codediff" or capture.host == "agent_diff") then
     render.refresh_visible()
   else
     render.refresh_buffer(capture.bufnr)
@@ -398,6 +400,7 @@ function M.setup(opts)
   render.setup_highlights()
   local persistence = require("agent_review.persistence").setup(opts.persistence)
   require("agent_review.status").setup()
+  require("agent_review.patch").setup()
   local group = vim.api.nvim_create_augroup("AgentReview", { clear = true })
 
   vim.api.nvim_create_autocmd("VimLeavePre", {
