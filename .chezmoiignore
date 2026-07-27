@@ -73,7 +73,6 @@ docs
 {{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
 .zsh_plugins.txt
 {{- end }}
-ensure-herdr-plugins.sh
 {{- end }}
 
 # Native Windows uses Git Bash; the Unix profiles use Zsh.

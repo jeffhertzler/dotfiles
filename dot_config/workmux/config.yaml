@@ -9,7 +9,7 @@ pre_remove:
   - sh -lc 'oc-cleanup kill >/dev/null 2>&1 || true'
 
 panes:
-  - command: opencode --port
+  - command: opencode
     focus: true
   # - command: nvim .
   # - command:
