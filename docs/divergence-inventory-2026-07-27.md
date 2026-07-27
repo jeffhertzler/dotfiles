@@ -16,7 +16,7 @@ it only means the current policy is being followed.
 | S01 | Windows | a687299 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
 | S02 | WSL | a687299 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
 | S03 | macOS | a687299 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | a687299 | Three deferred entries | lazy-lock.json, Workmux command, and removal of the old Herdr installer target remain unresolved. |
+| S04 | Arch | Current branch | Four deferred entries | lazy-lock.json, Workmux command, Pi's no-final-newline serialization, and removal of the old Herdr installer target remain unresolved. |
 
 ## Installed-tool matrix
 
@@ -97,7 +97,7 @@ Kinds:
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
 | D46 | Pi ownership | Arch manages .pi. WSL and Mac both have Pi installed but ignore .pi; Windows lacks Pi. | Conservative/high priority | Share Pi extensions/settings, or split credentials/providers from portable extensions? |
-| D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, staged-feedback trailing spacing, and pi-tui width handling for emoji-safe responsive rendering. | Intentional | Treat changelog state as config or remove it from version control later? |
+| D47 | Pi current Arch state | Source now matches Arch's Pi 0.82.1 changelog state, pi-cursor-sdk package, staged-feedback trailing spacing, and pi-tui width handling for emoji-safe responsive rendering. Pi rewrites settings.json without a final newline, while source retains one. | Intentional plus benign drift | Treat changelog state as config or remove it from version control later? Do not churn the file merely to resolve the newline. |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
 | D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Starship/common shell, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It also ignores Neovim, OpenCode, Pi, agents, project overlays, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
@@ -105,6 +105,7 @@ Kinds:
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
+| D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them. Existing Mac tmux and Workmux config files remain physically present but unmanaged. | Explicit user decision | Preserve until eventual retirement; do not delete yet. |
 
 ## Deferred actual changes
 
@@ -112,7 +113,9 @@ Do not run an unscoped chezmoi apply on Arch until these are reviewed:
 
 1. ~/.config/nvim/lazy-lock.json: choose a canonical plugin lock.
 2. ~/.config/workmux/config.yaml: choose opencode or opencode --port.
-3. ~/ensure-herdr-plugins.sh: decide whether to delete the old target and
+3. ~/.pi/agent/settings.json: ignore the harmless final-newline-only drift, or
+   later redesign ownership of app-written state.
+4. ~/ensure-herdr-plugins.sh: decide whether to delete the old target and
    whether the run-after installer should execute.
 
 Windows, WSL, and Mac currently have no managed target drift.
@@ -146,6 +149,7 @@ Windows, WSL, and Mac currently have no managed target drift.
 
 - Config backups use timestamp 20260727-034417 for Git, gh, and Yazi.
 - Shell/plugin backups use timestamps 20260727-034722 and 20260727-034734.
+- Latest Mac Zsh legacy-gating backup uses timestamp 20260727-131806.
 - Exact filenames are the original path plus .pre-chezmoi-TIMESTAMP.
 
 ### Arch
@@ -154,6 +158,7 @@ Windows, WSL, and Mac currently have no managed target drift.
 - Zsh backup: ~/.zshrc.pre-chezmoi-20260727-034928.
 - Neovim runtime backups use timestamp 20260727-035113.
 - Pi settings backup uses timestamp 20260727-035234.
+- Latest Arch Zsh legacy-gating backup uses timestamp 20260727-131806.
 
 ## Review order
 
