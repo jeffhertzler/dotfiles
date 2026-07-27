@@ -8,6 +8,8 @@ import { join } from 'node:path';
 
 const [kind, direction] = process.argv.slice(2);
 const socketPath = process.env.HERDR_SOCKET_PATH;
+const socketEndpoint =
+  process.platform === 'win32' && socketPath ? `\\\\.\\pipe\\${socketPath}` : socketPath;
 const workspaceId = process.env.HERDR_ACTIVE_WORKSPACE_ID || process.env.HERDR_WORKSPACE_ID;
 const tabId = process.env.HERDR_ACTIVE_TAB_ID || process.env.HERDR_TAB_ID;
 let requestId = 0;
@@ -55,7 +57,7 @@ function socket(method, params = {}) {
   if (!socketPath) throw new Error('HERDR_SOCKET_PATH is unavailable');
 
   return new Promise((resolve, reject) => {
-    const client = net.connect(socketPath);
+    const client = net.connect(socketEndpoint);
     let buffer = '';
     const timer = setTimeout(() => {
       client.destroy();
