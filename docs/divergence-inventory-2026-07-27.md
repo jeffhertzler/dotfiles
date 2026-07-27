@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 1ca3c35 on normalize/multi-platform
+Configuration baseline: 0fe25d5 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 1ca3c35 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 1ca3c35 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 1ca3c35 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | 1ca3c35 | Clean | All four previously deferred entries were resolved without overwriting live files. |
+| S01 | Windows | 0fe25d5 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 0fe25d5 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | 0fe25d5 | Clean | Native source clone preserved with a backup branch and stash. |
+| S04 | Arch | 0fe25d5 | Clean | All four previously deferred entries were resolved without overwriting live files. |
 
 ## Installed-tool matrix
 
@@ -89,7 +89,7 @@ Kinds:
 | D31 | Neovim ownership | Windows, WSL, and Arch manage the shared LazyVim tree. Mac has Neovim 0.12.4 installed but its config is deliberately ignored and remains independent. | Conservative/high priority | Bring Mac onto the shared Neovim tree? |
 | D32 | Neovim platform guards | Windows uses LLVM, Git Bash shell settings, Node-launched Oxfmt, and a Windows markdown-preview installer. Unix uses Volta when present. FGA, tmux, Yazi, and Go integrations have executable/file guards. | Required/intentional | Keep guards; review whether any can simplify after ownership converges. |
 | D33 | Neovim language support | TypeScript and Python were user-verified on the newly managed setup. Go tooling is skipped only when no Go executable is visible. | Intentional | Repeat verification on Mac if it joins the shared config. |
-| D34 | Neovim lockfile | lazy-lock.json was removed from source and gitignored. Each live Neovim installation retains its local lockfile as unmanaged runtime state. | Decided and implemented | Do not commit or manage Lazy's per-machine lockfile. |
+| D34 | Neovim lockfile | lazy-lock.json was removed from source and excluded through .chezmoiignore. Each live Neovim installation retains its local lockfile as unmanaged runtime state. | Decided and implemented | Do not place Lazy's per-machine lockfile in Chezmoi source or managed state. |
 | D35 | OpenCode ownership | WSL and Arch manage OpenCode. Mac has OpenCode installed but ignores its config. Windows has no OpenCode. | Conservative/high priority | Manage Mac too? |
 | D36 | OpenCode default profile | WSL symlinks opencode.json to work.json. Arch symlinks it to personal.json. | Conservative choice made during this pass | Unify the default, or preserve a machine/profile distinction? |
 | D37 | OpenCode version | WSL, Mac, and Arch have different installed OpenCode versions and installation methods. Broader Mise installation/configuration unification was explicitly deferred. | Historical/deferred | Normalize installation/version management separately from config when revisited. |
@@ -116,7 +116,7 @@ Kinds:
 
 None. Windows, WSL, Mac, and Arch currently have no managed target drift.
 The live Neovim lazy-lock.json files remain present but are intentionally
-unmanaged and ignored by Git.
+unmanaged and ignored by Chezmoi.
 
 ## Rollback points
 
@@ -225,3 +225,4 @@ rewritten during review:
 - 6f62f52 simplify shared Unix PATH setup
 - 3df506f record static shared Unix PATH policy
 - 1ca3c35 resolve deferred Arch configuration drift
+- 0fe25d5 ignore Neovim lockfile at Chezmoi layer
