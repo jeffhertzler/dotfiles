@@ -25,3 +25,9 @@ files one reviewed layer at a time.
 - Native Windows manages `.bash_profile` and `.bashrc` for Git Bash.
 
 Machine-local SSH configuration and credentials are intentionally not managed.
+
+## Git layout
+
+Portable identity, defaults, and global ignores live in `.config/git`. Profile
+conditions add only integrations installed on that system. Optional machine-only
+settings belong in the unmanaged `~/.config/git/local.config` file.

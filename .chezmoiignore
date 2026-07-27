@@ -1,5 +1,6 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 README.md
+.config/git/local.config
 
 {{- if ne (env "CHEZMOI_INCLUDE_SECRETS") "1" }}
 .private.zsh
@@ -11,6 +12,9 @@ README.md
 {{- if or (eq $profile "wsl") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
 .agents
 .config/*
+!.config/git
+!.config/git/config
+!.config/git/ignore
 !.config/starship.toml
 !.config/shell
 !.config/shell/common.sh

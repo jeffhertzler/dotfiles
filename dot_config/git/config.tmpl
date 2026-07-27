@@ -1,0 +1,49 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+[core]
+	excludesFile = ~/.config/git/ignore
+
+{{ if eq $profile "arch" -}}
+[credential "https://github.com"]
+	helper =
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !/usr/bin/gh auth git-credential
+{{ end -}}
+
+{{ if or (eq $profile "arch") (eq $profile "macos") (eq $profile "windows") -}}
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	process = git-lfs filter-process
+	required = true
+	smudge = git-lfs smudge -- %f
+{{ end -}}
+
+[github]
+	user = jeffhertzler
+[init]
+	defaultBranch = main
+[pull]
+	rebase = false
+[user]
+	name = Jeff Hertzler
+	email = jeffhertzler@gmail.com
+
+{{ if or (eq $profile "arch") (eq $profile "macos") -}}
+[include]
+	path = ~/dev/catppuccin/delta/catppuccin.gitconfig
+[delta]
+	features = catppuccin-mocha
+[includeIf "gitdir:~/dev/greenlight/"]
+	path = ~/dev/greenlight/.gitconfig
+{{ end -}}
+
+{{ if eq $profile "macos" -}}
+[diff "lockb"]
+	textconv = bun
+	binary = true
+{{ end -}}
+
+# This file is intentionally unmanaged and may contain machine-specific values.
+[include]
+	path = ~/.config/git/local.config
