@@ -60,6 +60,30 @@ type = "shell"
 command = "~/.local/bin/herdr-directional-split.mjs local up"
 description = "split pane up"
 
+[[keys.command]]
+key = "prefix+ctrl+h"
+type = "shell"
+command = "~/.local/bin/herdr-reorder.mjs tab left"
+description = "move tab left"
+
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "shell"
+command = "~/.local/bin/herdr-reorder.mjs tab right"
+description = "move tab right"
+
+[[keys.command]]
+key = "prefix+ctrl+k"
+type = "shell"
+command = "~/.local/bin/herdr-reorder.mjs workspace up"
+description = "move workspace / worktree group up"
+
+[[keys.command]]
+key = "prefix+ctrl+j"
+type = "shell"
+command = "~/.local/bin/herdr-reorder.mjs workspace down"
+description = "move workspace / worktree group down"
+
 {{ if eq $profile "arch" -}}
 [[keys.command]]
 key = "prefix+p"
@@ -68,30 +92,6 @@ command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-popup-picker"
 description = "open popup launcher"
 width = "90%"
 height = "90%"
-
-[[keys.command]]
-key = "prefix+ctrl+h"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs tab left"
-description = "move tab left"
-
-[[keys.command]]
-key = "prefix+ctrl+l"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs tab right"
-description = "move tab right"
-
-[[keys.command]]
-key = "prefix+ctrl+k"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs workspace up"
-description = "move workspace / worktree group up"
-
-[[keys.command]]
-key = "prefix+ctrl+j"
-type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-reorder.mjs workspace down"
-description = "move workspace / worktree group down"
 
 [[keys.command]]
 key = "prefix+shift+g"

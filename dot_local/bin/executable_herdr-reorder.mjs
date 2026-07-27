@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import net from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const [kind, direction] = process.argv.slice(2);
 const socketPath = process.env.HERDR_SOCKET_PATH;
@@ -17,7 +20,10 @@ const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mil
 
 async function acquireLock() {
   if (!socketPath) throw new Error('HERDR_SOCKET_PATH is unavailable');
-  const lockPath = `${socketPath}.reorder.lock`;
+  const lockDirectory = join(process.env.XDG_RUNTIME_DIR || tmpdir(), 'herdr-reorder');
+  fs.mkdirSync(lockDirectory, { recursive: true, mode: 0o700 });
+  const socketKey = createHash('sha256').update(socketPath).digest('hex').slice(0, 16);
+  const lockPath = join(lockDirectory, `${socketKey}.lock`);
 
   for (let attempt = 0; attempt < 150; attempt += 1) {
     try {
