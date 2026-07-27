@@ -24,6 +24,10 @@ README.md
 !.config/nvim
 !.config/nvim/**
 {{- end }}
+{{- if eq $profile "wsl" }}
+!.config/opencode
+!.config/opencode/**
+{{- end }}
 !.config/starship.toml
 !.config/shell
 !.config/shell/common.sh
