@@ -9,6 +9,10 @@ log() {
   printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$log_file"
 }
 
+live_nvim_server() {
+  [ -n "$1" ] && nvim --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
+}
+
 native_nvim=0
 server=
 target_kind=none
@@ -22,15 +26,17 @@ else
   if [ -n "$herdr_pane" ]; then
     if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
       registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
+    elif [ "${OS:-}" = Windows_NT ]; then
+      registry_dir=${TMPDIR:-/tmp}/herdr-nvim
     else
       registry_dir=/tmp/herdr-nvim-$(id -u)
     fi
-    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.:-' '_')
+    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.-' '_')
     registry_file=$registry_dir/$safe_pane.server
 
     if [ -r "$registry_file" ]; then
       IFS= read -r server <"$registry_file" || server=
-      if [ -n "$server" ] && [ -S "$server" ]; then
+      if live_nvim_server "$server"; then
         target_kind=herdr
       else
         server=

@@ -2,15 +2,23 @@ local M = {}
 
 local initialized = false
 
+local function registry_directory()
+  if vim.env.XDG_RUNTIME_DIR and vim.env.XDG_RUNTIME_DIR ~= "" then
+    return vim.env.XDG_RUNTIME_DIR .. "/herdr-nvim"
+  end
+  if vim.fn.has("win32") == 1 then
+    return vim.fs.joinpath(vim.uv.os_tmpdir(), "herdr-nvim")
+  end
+  return "/tmp/herdr-nvim-" .. vim.uv.os_get_passwd().uid
+end
+
 local function registry_path()
   if vim.env.HERDR_ENV ~= "1" or not vim.env.HERDR_PANE_ID or vim.env.HERDR_PANE_ID == "" then
     return nil, nil
   end
-  local directory = (vim.env.XDG_RUNTIME_DIR and vim.env.XDG_RUNTIME_DIR ~= "")
-      and (vim.env.XDG_RUNTIME_DIR .. "/herdr-nvim")
-    or ("/tmp/herdr-nvim-" .. vim.fn.getuid())
-  local pane = vim.env.HERDR_PANE_ID:gsub("[^%w_.:-]", "_")
-  return directory .. "/" .. pane .. ".server", directory
+  local directory = registry_directory()
+  local pane = vim.env.HERDR_PANE_ID:gsub("[^%w_.-]", "_")
+  return vim.fs.joinpath(directory, pane .. ".server"), directory
 end
 
 function M.publish()

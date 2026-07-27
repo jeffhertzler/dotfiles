@@ -23,10 +23,12 @@ if [ -z "$NVIM_SOCKET" ]; then
   if [ -n "$herdr_pane" ]; then
     if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
       registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
+    elif [ "${OS:-}" = Windows_NT ]; then
+      registry_dir=${TMPDIR:-/tmp}/herdr-nvim
     else
       registry_dir=/tmp/herdr-nvim-$(id -u)
     fi
-    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.:-' '_')
+    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.-' '_')
     registry_file=$registry_dir/$safe_pane.server
 
     if [ -r "$registry_file" ]; then

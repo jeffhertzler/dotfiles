@@ -32,10 +32,16 @@ discover_server() {
     return
   fi
 
-  local runtime=${XDG_RUNTIME_DIR:-/tmp}
-  local registry="$runtime/herdr-nvim"
+  local registry
+  if [[ -n ${XDG_RUNTIME_DIR:-} ]]; then
+    registry="$XDG_RUNTIME_DIR/herdr-nvim"
+  elif [[ ${OS:-} == Windows_NT ]]; then
+    registry="${TMPDIR:-/tmp}/herdr-nvim"
+  else
+    registry="/tmp/herdr-nvim-$(id -u)"
+  fi
   if [[ -n ${HERDR_PANE_ID:-} ]]; then
-    local pane=${HERDR_PANE_ID//[^[:alnum:]_.:-]/_}
+    local pane=${HERDR_PANE_ID//[^[:alnum:]_.-]/_}
     local file="$registry/$pane.server"
     if [[ -r $file ]]; then
       local candidate
