@@ -7,6 +7,7 @@ return {
       integrations = {
         blink_cmp = true,
         cmp = false,
+        diffview = true,
         fzf = false,
         harpoon = true,
         nvimtree = false,

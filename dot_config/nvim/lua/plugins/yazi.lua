@@ -3,6 +3,7 @@
 ---@type LazySpec
 return {
   "mikavilpas/yazi.nvim",
+  cond = vim.fn.executable("yazi") == 1,
   event = "VeryLazy",
   keys = {
     -- 👇 in this section, choose your own keymappings!

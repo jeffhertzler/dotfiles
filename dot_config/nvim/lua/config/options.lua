@@ -11,13 +11,42 @@ vim.g.root_spec = { { ".git", "lua" }, "cwd" }
 
 vim.g.snacks_animate = false
 
-local node22 = vim.fn.trim(vim.fn.system("volta run --node 22 which node"))
-local nodeBin = node22:gsub("/node$", "")
+local path_separator = vim.fn.has("win32") == 1 and ";" or ":"
 
-local newPath = [[let $PATH = ']] .. nodeBin .. [[:' . $PATH]]
-vim.cmd(newPath)
+local function prepend_path(path)
+  if path and path ~= "" and vim.fn.isdirectory(path) == 1 then
+    vim.env.PATH = path .. path_separator .. (vim.env.PATH or "")
+  end
+end
 
-vim.g.node_host_prog = vim.fn.trim(vim.fn.system("volta which neovim-node-host"))
+if vim.fn.has("win32") == 1 then
+  -- Native Neovim cannot execute npm's PowerShell shim, and Treesitter needs a
+  -- native compiler. Keep these ahead of the Git Bash PATH inherited by Nvim.
+  prepend_path("C:/Program Files/LLVM/bin")
+  prepend_path(vim.fn.expand("$APPDATA/npm/node_modules/tree-sitter-cli"))
+
+  local git_bash = "C:/Progra~1/Git/bin/bash.exe"
+  if vim.fn.executable(git_bash) == 1 then
+    vim.opt.shell = git_bash
+    vim.opt.shellcmdflag = "-c"
+    vim.opt.shellredir = ">%s 2>&1"
+    vim.opt.shellpipe = "2>&1| tee"
+    vim.opt.shellquote = ""
+    vim.opt.shellxquote = ""
+  end
+elseif vim.fn.executable("volta") == 1 and vim.fn.executable("which") == 1 then
+  -- Arch and macOS use Volta's Node 22 for Node-backed editor tooling. If
+  -- Volta is absent or incomplete, leave Neovim's inherited PATH untouched.
+  local node22 = vim.fn.trim(vim.fn.system({ "volta", "run", "--node", "22", "which", "node" }))
+  if vim.v.shell_error == 0 and vim.fn.executable(node22) == 1 then
+    prepend_path(vim.fs.dirname(node22))
+  end
+
+  local node_host = vim.fn.trim(vim.fn.system({ "volta", "which", "neovim-node-host" }))
+  if vim.v.shell_error == 0 and vim.fn.executable(node_host) == 1 then
+    vim.g.node_host_prog = node_host
+  end
+end
 
 vim.opt.relativenumber = false
 vim.opt.showtabline = 0

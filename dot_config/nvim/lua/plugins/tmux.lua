@@ -5,7 +5,7 @@ return {
   },
   {
     "alexghergh/nvim-tmux-navigation",
-    cond = vim.env.HERDR_ENV ~= "1",
+    cond = vim.env.HERDR_ENV ~= "1" and vim.fn.executable("tmux") == 1,
     keys = {
       { "<C-h>", "<cmd>NvimTmuxNavigateLeft<cr>", silent = true },
       { "<C-j>", "<cmd>NvimTmuxNavigateDown<cr>", silent = true },
