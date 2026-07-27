@@ -73,7 +73,9 @@ README.md
 .profile
 .ssh
 .vimme.zsh
+{{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
 .zsh_plugins.txt
+{{- end }}
 ensure-herdr-plugins.sh
 {{- end }}
 
