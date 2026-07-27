@@ -1,5 +1,6 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 README.md
+docs
 .config/git/local.config
 
 {{- if ne (env "CHEZMOI_INCLUDE_SECRETS") "1" }}
