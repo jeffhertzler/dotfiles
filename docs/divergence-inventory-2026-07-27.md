@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 10ecd01 on normalize/multi-platform
+Configuration baseline: 7e8c212 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 10ecd01 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 10ecd01 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 10ecd01 | Clean | Native source clone preserved with a backup branch and stash. The formerly independent Neovim tree is backed up and replaced by the shared configuration. |
-| S04 | Arch | 10ecd01 | Clean | All previously deferred target entries were resolved without overwriting live files. |
+| S01 | Windows | 7e8c212 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 7e8c212 | Clean | Native source clone at ~/.local/share/chezmoi. The formerly divergent ~/.config, ~/.config/gh, and ~/.config/herdr directory modes are normalized to 0755. |
+| S03 | macOS | 7e8c212 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim and Pi configurations are active. |
+| S04 | Arch | 7e8c212 | Clean | All previously deferred target entries were resolved without overwriting live files. ~/.local is normalized to Chezmoi's 0755 mode. |
 
 ## Installed-tool matrix
 
@@ -42,7 +42,7 @@ not Worktrunk.
 | tmux, Workmux | Absent | tmux only | Both | Both |
 | Worktrunk | Absent; wt means Windows Terminal | Absent | Absent | Installed |
 | Yazi | Absent | Absent | Installed | Installed |
-| Pi | Absent | Installed via Mise | Installed | Installed |
+| Pi | Absent | 0.82.1 via Mise | 0.82.1 @earendil fork via Volta | 0.82.1 @earendil fork via Volta |
 | Go | Absent | Installed via Mise | Installed | Installed |
 
 ## Policy divergences to review line by line
@@ -101,12 +101,12 @@ Kinds:
 | D43 | Atuin | Mac and Arch manage Atuin; WSL and Windows ignore it. | Conservative | Install/share on WSL and possibly Windows? |
 | D44 | bat and bottom | Mac and Arch manage identical configs; WSL and Windows ignore them. bottom.toml is mostly a stock commented file. | Conservative/historical | Share tools, simplify the files, or remove inert config? |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
-| D46 | Pi ownership | Arch manages .pi. WSL and Mac both have Pi installed but ignore .pi; Windows lacks Pi. | Conservative/high priority | Share Pi extensions/settings, or split credentials/providers from portable extensions? |
-| D47 | Pi current Arch state | Source matches Arch's Pi 0.82.1 state and now uses Pi's own no-final-newline serialization for settings.json. Parsed JSON was identical before normalization. | Intentional; serialization normalized | Treat changelog state as config or remove it from version control later? |
+| D46 | Pi ownership | WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. Windows still lacks Pi. | Decided and implemented on Unix | Decide separately whether and how to install Pi on native Windows. |
+| D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL and Mac with mode 0600, outside Chezmoi. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
 | D49 | Local helper scripts | Arch manages the full ~/.local/bin helper collection. WSL and Mac manage only tunnel. Windows manages none. | Conservative/high priority | Classify helpers as portable, Unix-only, Arch-only, or obsolete. |
-| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It still ignores Pi, agents, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy decision | This remains the main list to reconsider if greater unification is desired. |
-| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choice made during this pass | Decide which Mac/Arch tools should join the WSL baseline. |
+| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, and Yazi. It intentionally no longer manages legacy tmux/Workmux. It still ignores agents, SSH, and all local helpers except tunnel. | Conservative choices plus explicit legacy and Pi decisions | This remains the main list to reconsider if greater unification is desired. |
+| D51 | WSL allowlist | WSL manages Git, gh config, LazyGit, Herdr core, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Pi decision | Decide which remaining Mac/Arch tools should join the WSL baseline. |
 | D52 | Windows allowlist | Windows manages Git, LazyGit, Herdr core, Neovim, OpenCode, Starship/common shell, and Git Bash startup. | Conservative | Decide whether to install/share gh or other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
@@ -117,6 +117,10 @@ Kinds:
 None. Windows, WSL, Mac, and Arch currently have no managed target drift.
 The live Neovim lazy-lock.json files remain present but are intentionally
 unmanaged and ignored by Chezmoi.
+
+Mac Pi startup currently emits npm's deprecation warning for an existing
+private-registry `always-auth` setting. Pi still starts successfully; review the
+work npm configuration separately rather than changing it as part of Pi setup.
 
 ## Rollback points
 
@@ -130,6 +134,8 @@ unmanaged and ignored by Chezmoi.
 - Arch also has an older unrelated stash named asdf; do not alter it casually.
 - OpenCode migration backups: %LOCALAPPDATA%/dotfiles-backups/20260727-2139-opencode-9d2dacb on Windows and ~/.local/state/dotfiles-backups/20260727-2139-opencode-9d2dacb on WSL, Mac, and Arch.
 - Mac pre-shared Neovim backup: ~/.local/state/dotfiles-backups/20260727-2205-mac-nvim-pre-shared. Both the verified copy and the retired live tree are retained there.
+- Pi convergence backups: ~/.local/state/dotfiles-backups/20260727-2235-pi-convergence on WSL, Mac, and Arch. Mac's retired Workmux extension is additionally under retired-live/.pi/agent/extensions in that backup.
+- Mac Pi changed from Homebrew 0.80.6 plus the original Volta package 0.70.6 to only @earendil-works/pi-coding-agent 0.82.1 via Volta. Homebrew also removed ten dependencies it classified as unused; all removed formulae are reinstallable through Homebrew if another workflow needs them.
 
 ### Windows
 
@@ -194,7 +200,7 @@ unmanaged and ignored by Chezmoi.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46, D49, D50, D51: decide which machines enable each remaining application. D31 and D35 through D37 are complete.
+2. D46 is complete for WSL, Mac, and Arch; decide native Windows Pi installation separately. Continue D49, D50, and D51 for the remaining applications.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -253,3 +259,4 @@ rewritten during review:
 - 3e1a6f9 scope opencode path to git bash
 - 38a530a inline shared zsh templates
 - 10ecd01 manage neovim on macos
+- 7e8c212 manage pi config on wsl and macos
