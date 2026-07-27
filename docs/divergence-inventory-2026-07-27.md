@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-27
-Configuration baseline: 3e1a6f9 on normalize/multi-platform
+Configuration baseline: 38a530a on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Current source | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | 3e1a6f9 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
-| S02 | WSL | 3e1a6f9 | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
-| S03 | macOS | 3e1a6f9 | Clean | Native source clone preserved with a backup branch and stash. |
-| S04 | Arch | 3e1a6f9 | Clean | All previously deferred target entries were resolved without overwriting live files. |
+| S01 | Windows | 38a530a | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
+| S02 | WSL | 38a530a | Clean when directories are excluded | Native source clone at ~/.local/share/chezmoi. ~/.config is mode 750 and ~/.config/herdr is mode 700, intentionally tighter than source-directory defaults. |
+| S03 | macOS | 38a530a | Clean | Native source clone preserved with a backup branch and stash. |
+| S04 | Arch | 38a530a | Clean | All previously deferred target entries were resolved without overwriting live files. |
 
 ## Installed-tool matrix
 
@@ -250,3 +250,4 @@ rewritten during review:
 - 31ecf42 simplify opencode account profiles
 - 9d2dacb scope opencode config ignores per project
 - 3e1a6f9 scope opencode path to git bash
+- 38a530a inline shared zsh templates
