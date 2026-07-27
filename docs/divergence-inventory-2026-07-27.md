@@ -9,6 +9,11 @@ This document records both actual target drift and deliberate or conservative
 profile splits. A clean chezmoi status does not mean the machines are unified;
 it only means the current policy is being followed.
 
+Governing policy decided after the initial inventory: each application gets one
+shared configuration, machines explicitly opt into the applications they use,
+OS conditionals are limited to genuinely required behavior, and machine-local
+values stay in unmanaged local overlays.
+
 ## Current health and drift
 
 | ID | Machine | Current source | Managed target status | Notes |
@@ -51,7 +56,7 @@ Kinds:
 
 | ID | Area | Current behavior | Kind | Question for review |
 |---|---|---|---|---|
-| D01 | Overall ownership | Arch is allow-by-default. Windows, WSL, macOS, generic Linux, and unsupported platforms are deny-by-default with explicit allowlists. | Conservative | Should all supported machines instead share an allow-by-default baseline with a short exception list? |
+| D01 | Overall ownership | Each application has one shared configuration. Every machine explicitly enables the applications it uses; only required OS behavior is conditional, and machine-local values use unmanaged overlays. The current implementation still needs to be migrated toward this policy one application at a time. | Decided | Adopted as the governing policy. |
 | D02 | Generic Linux | A non-Arch native Linux host receives only the small reviewed baseline. | Conservative | Should generic Linux follow Arch, WSL, or its own profile? |
 | D03 | Source topology | Windows uses the working checkout. WSL, Mac, and Arch use native ~/.local/share/chezmoi clones. The normalization branch is local and is not pushed. | Intentional | Keep native clones but push the branch, or choose a different synchronization model? |
 | D04 | Windows shell | Windows manages .bash_profile and .bashrc for Git Bash and ignores Zsh. | Required | Keep Git Bash as the native Windows shell? |
@@ -165,8 +170,8 @@ Windows, WSL, and Mac currently have no managed target drift.
 
 ## Review order
 
-1. D01: choose the desired ownership model.
-2. D31, D35, D46, D49, D50, D51: decide what should truly be shared.
+1. D01 is decided: use shared application configs with explicit per-machine enablement.
+2. D31, D35, D46, D49, D50, D51: decide which machines enable each application.
 3. D05, D06, D08, D10: consolidate the active shell layers; leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, D29, D40: consolidate Herdr and Worktrunk behavior.
 5. D34 and D39: resolve the two live application drifts.
