@@ -111,7 +111,7 @@ function buildPrompt(feedback: FeedbackPayload): string {
     out.push("", comment.body);
   }
 
-  return out.join("\n");
+  return `${out.join("\n")}\n\n`;
 }
 
 function parseFeedback(path: string, metadata: FeedbackMetadata): FeedbackPayload {
