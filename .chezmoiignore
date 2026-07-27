@@ -69,6 +69,10 @@ docs
 .local
 {{- end }}
 .pi
+{{- if or (eq $profile "wsl") (eq $profile "macos") }}
+!.pi
+!.pi/**
+{{- end }}
 .private.zsh
 .profile
 .ssh
