@@ -31,3 +31,9 @@ Machine-local SSH configuration and credentials are intentionally not managed.
 Portable identity, defaults, and global ignores live in `.config/git`. Profile
 conditions add only integrations installed on that system. Optional machine-only
 settings belong in the unmanaged `~/.config/git/local.config` file.
+
+## LazyGit layout
+
+All supported profiles set `XDG_CONFIG_HOME` to `~/.config` and manage one
+`.config/lazygit/config.yml`. Arch and macOS use the Neovim bridge; native
+Windows and WSL use LazyGit's built-in `nvim` editor preset.

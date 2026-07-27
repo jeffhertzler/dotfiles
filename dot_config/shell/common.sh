@@ -1,4 +1,5 @@
 # Shared interactive behavior for Bash and Zsh.
+export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export VISUAL="nvim"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"

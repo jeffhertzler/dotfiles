@@ -1,0 +1,4 @@
+promptToReturnFromSubprocess: false
+
+os:
+  editPreset: nvim

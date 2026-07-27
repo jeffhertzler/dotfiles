@@ -1,0 +1,6 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if or (eq $profile "arch") (eq $profile "macos") -}}
+{{-   template "lazygit/config-unix.yml" . -}}
+{{- else -}}
+{{-   template "lazygit/config-nvim.yml" . -}}
+{{- end -}}
