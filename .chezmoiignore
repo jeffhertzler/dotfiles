@@ -19,6 +19,7 @@ README.md
 !.config/lazygit
 !.config/lazygit/config.yml
 !.config/herdr
+.config/herdr/*
 !.config/herdr/config.toml
 !.config/nvim
 !.config/nvim/**
