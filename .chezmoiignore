@@ -33,10 +33,8 @@ docs
 .config/gh/*
 !.config/gh/config.yml
 {{- end }}
-{{- if eq $profile "wsl" }}
 !.config/opencode
 !.config/opencode/**
-{{- end }}
 {{- if eq $profile "macos" }}
 !.config/atuin
 !.config/atuin/**
@@ -55,6 +53,7 @@ docs
 !.config/shell
 .config/shell/*
 !.config/shell/common.sh
+!.config/shell/opencode.sh
 {{- if ne $profile "windows" }}
 !.config/shell/greenlight.zsh
 !.config/shell/vimme.zsh
@@ -69,7 +68,6 @@ docs
 {{- else }}
 .local
 {{- end }}
-.ocprofile.zsh
 .pi
 .private.zsh
 .profile

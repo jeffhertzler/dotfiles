@@ -1,6 +1,0 @@
-{{- $profile := includeTemplate "profile" . | trim -}}
-{{- if eq $profile "wsl" -}}
-{{ .chezmoi.homeDir }}/.config/opencode/work.json
-{{- else -}}
-{{ .chezmoi.homeDir }}/.config/opencode/personal.json
-{{- end }}

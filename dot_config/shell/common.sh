@@ -4,6 +4,13 @@ export VISUAL="nvim"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"
 
+case ":$PATH:" in
+  *":$HOME/.opencode/bin:"*) ;;
+  *) export PATH="$HOME/.opencode/bin:$PATH" ;;
+esac
+
+[ ! -r "$HOME/.config/shell/opencode.sh" ] || . "$HOME/.config/shell/opencode.sh"
+
 alias h='herdr'
 alias lag='lazygit'
 alias v='nvim .'
