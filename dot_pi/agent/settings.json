@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.81.1",
+  "lastChangelogVersion": "0.82.1",
   "defaultProvider": "openai-codex-personal",
   "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
@@ -12,6 +12,7 @@
     },
     "npm:@sentixx/pi-info",
     "npm:pi-mcp-adapter",
-    "npm:pi-web-access"
+    "npm:pi-web-access",
+    "npm:pi-cursor-sdk"
   ]
 }
