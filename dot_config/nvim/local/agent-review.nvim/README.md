@@ -99,6 +99,9 @@ In Pi, run:
 After Neovim closes, submitted comments are staged in Pi's editor as structured
 feedback rather than sent automatically.
 
+A possible existing-Neovim mode, including its tradeoffs and lifecycle design,
+is documented in [`FEEDBACK_V2.md`](./FEEDBACK_V2.md).
+
 ## Sessions and persistence
 
 Each repository or plain-file workspace has one active named session. Normal
