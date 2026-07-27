@@ -1,6 +1,1 @@
-{{- $profile := includeTemplate "profile" . | trim -}}
-{{- if eq $profile "wsl" -}}
-{{-   template "shell/zshenv-wsl" . -}}
-{{- else -}}
-{{-   template "shell/zshenv-unix" . -}}
-{{- end -}}
+{{- template "shell/zshenv-unix" . -}}
