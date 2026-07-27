@@ -1,4 +1,5 @@
 import { stripVTControlCharacters } from "node:util";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 // Higher-priority segments are packed first. Lower-priority segments disappear
 // cleanly as the terminal narrows instead of being clipped halfway through.
@@ -15,27 +16,6 @@ const priority = new Map([
   ["cwd", 90],
 ]);
 
-function visibleWidth(text) {
-  return Array.from(stripVTControlCharacters(text)).length;
-}
-
-function truncateAnsi(text, width) {
-  if (width <= 0) return "";
-
-  const tokens = text.match(/\x1b\[[0-?]*[ -/]*[@-~]|[^\x1b]/g) ?? [];
-  let result = "";
-  let used = 0;
-  for (const token of tokens) {
-    if (token.startsWith("\x1b")) {
-      result += token;
-      continue;
-    }
-    if (used >= width) break;
-    result += token;
-    used += 1;
-  }
-  return `${result}\x1b[0m`;
-}
 
 function abbreviateDirectory(segment) {
   const characters = Array.from(segment);
@@ -114,7 +94,7 @@ export function renderBar(bar) {
     used += separatorCost + visibleWidth(text);
   }
 
-  if (selected.length > 0) return [selected.join(separator)];
+  if (selected.length > 0) return [truncateToWidth(selected.join(separator), bar.width, "")];
   if (ordered[0].key === "cwd") return [""];
-  return [truncateAnsi(ordered[0].text, bar.width)];
+  return [truncateToWidth(ordered[0].text, bar.width, "")];
 }
