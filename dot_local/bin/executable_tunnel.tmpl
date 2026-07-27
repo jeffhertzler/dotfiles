@@ -1,5 +1,5 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
-{{- if eq $profile "wsl" }}
+{{- if eq $profile "wsl" -}}
 #!/usr/bin/env bash
 
 set -u
@@ -86,7 +86,7 @@ case "${1:-status}" in
     exit 2
     ;;
 esac
-{{- else if eq $profile "macos" }}
+{{- else if eq $profile "macos" -}}
 #!/usr/bin/env bash
 
 set -u
