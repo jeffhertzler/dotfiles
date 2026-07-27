@@ -1,11 +1,31 @@
 #!/usr/bin/env zsh
 
-autoload -Uz compinit && compinit
+# Let ez-compinit reuse its completion cache for up to 20 hours. Antidote's
+# plugin list owns compinit, so do not initialize it a second time here.
+zstyle ':plugin:ez-compinit' use-cache on
 
-F=/usr/share/zsh-antidote/antidote.zsh; [ -f $F ] && . $F
-F=~/.antidote/antidote.zsh; [ -f $F ] && . $F
+if [[ -r /usr/share/zsh-antidote/antidote.zsh ]]; then
+  source /usr/share/zsh-antidote/antidote.zsh
+  antidote load
+elif [[ -r "$HOME/.antidote/antidote.zsh" ]]; then
+  source "$HOME/.antidote/antidote.zsh"
+  antidote load
+fi
 
-antidote load
+setopt AUTO_CD
+setopt INTERACTIVE_COMMENTS
+setopt NO_BEEP
+
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt APPEND_HISTORY
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+setopt SHARE_HISTORY
 
 [[ -r "$HOME/.config/shell/common.sh" ]] && source "$HOME/.config/shell/common.sh"
 
@@ -21,7 +41,7 @@ alias rmrf="rm -rf"
 if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]]; then
   command herdr workspace report-metadata "$HERDR_WORKSPACE_ID" \
     --source shell:session --token "session=$HERDR_SESSION" \
-    --seq "$(date +%s%N)" >/dev/null 2>&1 &!
+    --seq "$(date +%s)" >/dev/null 2>&1 &!
 fi
 
 function rcu() {
@@ -29,7 +49,7 @@ function rcu() {
   cargo install-update --all
 }
 
-if [[ "$CLAUDECODE" != "1" ]]; then
+if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
   alias cd="z"
 fi
 
@@ -101,14 +121,28 @@ F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
 
-eval "$(op completion zsh)"; compdef _op op
-eval "$(workmux completions zsh)"
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
-type starship_zle-keymap-select >/dev/null || eval "$(starship init zsh)"
+if command -v op >/dev/null 2>&1; then
+  eval "$(op completion zsh)"
+  (( $+functions[compdef] )) && compdef _op op
+fi
+
+if command -v workmux >/dev/null 2>&1; then
+  eval "$(workmux completions zsh)"
+fi
+
+if command -v wt >/dev/null 2>&1; then
+  eval "$(command wt config shell init zsh)"
+fi
+
+if command -v starship >/dev/null 2>&1 && (( ! $+functions[starship_zle-keymap-select] )); then
+  eval "$(starship init zsh)"
+fi
 
 function zvm_after_init() {
-  eval "$(atuin init zsh)"
-  if [[ "$CLAUDECODE" != "1" ]]; then
+  if command -v atuin >/dev/null 2>&1; then
+    eval "$(atuin init zsh)"
+  fi
+  if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
     _ZO_DOCTOR=0
     eval "$(zoxide init zsh)"
   fi
