@@ -111,16 +111,9 @@ if command -v eza >/dev/null 2>&1; then
   alias lt="eza -T --icons"
 fi
 
-{{- if eq $profile "arch" }}
-alias ta="tmux a"
-{{- end }}
-
 if command -v posting >/dev/null 2>&1; then
   alias pe="nvim ~/.local/share/posting/default"
 fi
-{{- if eq $profile "arch" }}
-alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"
-{{- end }}
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
 alias ze="chezmoi edit ~/.zshrc"
 
@@ -128,17 +121,9 @@ alias reload="source ~/.zshrc"
 
 alias sail="./vendor/bin/sail"
 
-{{- if eq $profile "arch" }}
-alias tsd="sudo tailscale down"
-alias tsu="sudo tailscale up --accept-dns --accept-routes"
-{{- end }}
-
 if command -v cursor-agent >/dev/null 2>&1; then
   alias ca="cursor-agent --yolo"
 fi
-{{- if eq $profile "arch" }}
-alias wm='workmux'
-{{- end }}
 
 if command -v yazi >/dev/null 2>&1; then
   function y() {
@@ -174,12 +159,6 @@ if command -v op >/dev/null 2>&1; then
   eval "$(op completion zsh)"
   (( $+functions[compdef] )) && compdef _op op
 fi
-
-{{- if eq $profile "arch" }}
-if command -v workmux >/dev/null 2>&1; then
-  eval "$(workmux completions zsh)"
-fi
-{{- end }}
 
 if command -v wt >/dev/null 2>&1; then
   eval "$(command wt config shell init zsh)"
