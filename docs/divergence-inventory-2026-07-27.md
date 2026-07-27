@@ -16,7 +16,7 @@ values stay in unmanaged local overlays.
 
 ## Current health and drift
 
-| ID | Machine | Current source | Managed target status | Notes |
+| ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
 | S01 | Windows | 7e8c212 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. |
 | S02 | WSL | 7e8c212 | Clean | Native source clone at ~/.local/share/chezmoi. The formerly divergent ~/.config, ~/.config/gh, and ~/.config/herdr directory modes are normalized to 0755. |
