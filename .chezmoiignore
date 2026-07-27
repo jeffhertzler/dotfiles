@@ -18,6 +18,8 @@ README.md
 {{- if or (eq $profile "wsl") (eq $profile "windows") }}
 !.config/lazygit
 !.config/lazygit/config.yml
+!.config/nvim
+!.config/nvim/**
 {{- end }}
 !.config/starship.toml
 !.config/shell
