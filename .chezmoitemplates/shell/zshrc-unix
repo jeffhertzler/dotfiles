@@ -38,26 +38,6 @@ fi
 alias au="antidote update"
 alias gou="SHELL_PROFILE=/tmp/go-installer-profile bash <(curl -sL https://git.io/go-installer)"
 
-function piu() {
-  if command -v mise >/dev/null 2>&1; then
-    command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
-  elif command -v volta >/dev/null 2>&1; then
-    command volta install @earendil-works/pi-coding-agent@latest
-  else
-    print -u2 "piu: neither mise nor volta is available"
-    return 127
-  fi
-}
-
-if command -v uv >/dev/null 2>&1; then
-  alias uvu="uv tool upgrade --all"
-fi
-
-if command -v herdr-session-picker >/dev/null 2>&1; then
-  alias hs="herdr-session-picker"
-fi
-alias rmrf="rm -rf"
-
 # Put the named Herdr session in each workspace's sidebar metadata.
 if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]]; then
   command herdr workspace report-metadata "$HERDR_WORKSPACE_ID" \
@@ -65,76 +45,16 @@ if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]];
     --seq "$(date +%s)" >/dev/null 2>&1 &!
 fi
 
-function rcu() {
-  if command -v rustup >/dev/null 2>&1; then
-    command rustup update
-  fi
-  if command -v cargo-install-update >/dev/null 2>&1; then
-    command cargo install-update --all
-  fi
-}
-
 if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
   alias cd="z"
 fi
 
-alias cm="chezmoi"
-
-if command -v bat >/dev/null 2>&1; then
-  alias cat="bat"
-fi
-
-alias gb="git branch"
-alias gbd="git branch -D"
-
-alias gco="git checkout"
-alias gcob="git checkout -b"
-alias gcod="git checkout develop"
-alias gcom="git checkout main"
-
-alias gc="git commit"
-alias gci="git commit --allow-empty -m 'ci: bump'"
-alias gcm="git commit -m"
-
-alias gcp="git cherry-pick"
-
-alias gl="git pull"
-alias gp="git push"
-
-if command -v lazydocker >/dev/null 2>&1; then
-  alias lad="lazydocker"
-fi
-
-if command -v eza >/dev/null 2>&1; then
-  alias ls="eza"
-  alias la="eza -laag --icons"
-  alias lt="eza -T --icons"
-fi
-
-if command -v posting >/dev/null 2>&1; then
-  alias pe="nvim ~/.local/share/posting/default"
-fi
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
 alias ze="chezmoi edit ~/.zshrc"
 
 alias reload="source ~/.zshrc"
 
 alias sail="./vendor/bin/sail"
-
-if command -v cursor-agent >/dev/null 2>&1; then
-  alias ca="cursor-agent --yolo"
-fi
-
-if command -v yazi >/dev/null 2>&1; then
-  function y() {
-	  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	  yazi "$@" --cwd-file="$tmp"
-	  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		  builtin cd -- "$cwd"
-	  fi
-	  rm -f -- "$tmp"
-  }
-fi
 
 F=~/.private.zsh; [ -f $F ] && . $F
 {{- if eq $profile "wsl" }}
