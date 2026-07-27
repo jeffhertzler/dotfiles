@@ -69,7 +69,7 @@ Kinds:
 | D10 | Project overlays | Greenlight and Vimme live under ~/.config/shell and are managed on WSL, Mac, and Arch. Each exits without side effects unless its ~/dev checkout exists. OpenCode's portable ocp/ocw helper now lives at ~/.config/shell/opencode.sh on all four machines; obsolete .ocprofile.zsh files were moved into local backups. | Decided and implemented | Keep checkout-specific behavior guarded and portable shell helpers under XDG config. |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
 | D12 | XDG root | Managed app configs use ~/.config. Windows sets XDG_CONFIG_HOME in Git Bash and as a user environment variable for Neovim. | Intentional | Keep. Existing long-lived Windows processes may need restart to see the environment variable. |
-| D13 | Git common core | Name, email, default branch, pull behavior, excludes file, and ~/.config/git/local.config include are shared. opencode.json is not globally ignored; any local-only project config must use that repository's .git/info/exclude. The one discovered project opencode.json is intentionally tracked, so it needs no private exclusion. | Intentional | Keep global ignores limited to universally disposable state. |
+| D13 | Git common core | Name, email, default branch, pull behavior, excludes file, and ~/.config/git/local.config include are shared. WSL keeps its gh credential-helper command in that unmanaged local overlay rather than the shared file; no credential is stored in Chezmoi. opencode.json is not globally ignored; any local-only project config must use that repository's .git/info/exclude. The one discovered project opencode.json is intentionally tracked, so it needs no private exclusion. | Intentional | Keep global ignores limited to universally disposable state and machine-specific authentication plumbing in local.config. |
 | D14 | Git credentials | Only Arch writes explicit gh credential helpers for GitHub and Gist. | Historical | Use gh credential helpers everywhere gh is installed, or rely on each platform's native helper? |
 | D15 | Git LFS | Git LFS filters are emitted for Windows, Mac, and Arch, but not WSL. | Conservative | Add WSL after confirming git-lfs installation? |
 | D16 | Greenlight Git include | The ~/dev/greenlight include exists on Mac and Arch only. | Historical | Share it with other machines that contain that checkout? |
@@ -176,6 +176,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - D08 shared-shell backups use timestamp 20260727-210115 for common.sh and
   ~/.zshrc.
 - Previous Neovim tree: ~/.config/nvim.pre-chezmoi-20260727-070409
+- GitHub credential-helper backup: ~/.local/state/dotfiles-backups/20260727-github-credential-helper/config. The local.config overlay did not previously exist; it was created to hold gh's helper command outside managed state.
 
 ### macOS
 
