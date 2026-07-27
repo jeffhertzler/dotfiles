@@ -1,0 +1,3 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+[data]
+    profile = {{ $profile | quote }}
