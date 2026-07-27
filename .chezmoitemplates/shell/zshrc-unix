@@ -30,12 +30,32 @@ setopt SHARE_HISTORY
 
 [[ -r "$HOME/.config/shell/common.sh" ]] && source "$HOME/.config/shell/common.sh"
 
+# Activate machine-managed development tools before testing optional commands.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
+
 alias au="antidote update"
 alias gou="SHELL_PROFILE=/tmp/go-installer-profile bash <(curl -sL https://git.io/go-installer)"
-alias piu="volta install @earendil-works/pi-coding-agent@latest"
-alias uvu="uv tool upgrade --all"
 
-alias hs="herdr-session-picker"
+function piu() {
+  if command -v mise >/dev/null 2>&1; then
+    command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
+  elif command -v volta >/dev/null 2>&1; then
+    command volta install @earendil-works/pi-coding-agent@latest
+  else
+    print -u2 "piu: neither mise nor volta is available"
+    return 127
+  fi
+}
+
+if command -v uv >/dev/null 2>&1; then
+  alias uvu="uv tool upgrade --all"
+fi
+
+if command -v herdr-session-picker >/dev/null 2>&1; then
+  alias hs="herdr-session-picker"
+fi
 alias rmrf="rm -rf"
 
 # Put the named Herdr session in each workspace's sidebar metadata.
@@ -46,8 +66,12 @@ if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]];
 fi
 
 function rcu() {
-  rustup update
-  cargo install-update --all
+  if command -v rustup >/dev/null 2>&1; then
+    command rustup update
+  fi
+  if command -v cargo-install-update >/dev/null 2>&1; then
+    command cargo install-update --all
+  fi
 }
 
 if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
@@ -56,7 +80,9 @@ fi
 
 alias cm="chezmoi"
 
-alias cat="bat"
+if command -v bat >/dev/null 2>&1; then
+  alias cat="bat"
+fi
 
 alias gb="git branch"
 alias gbd="git branch -D"
@@ -75,48 +101,60 @@ alias gcp="git cherry-pick"
 alias gl="git pull"
 alias gp="git push"
 
-alias lad="lazydocker"
+if command -v lazydocker >/dev/null 2>&1; then
+  alias lad="lazydocker"
+fi
 
-alias ls="eza"
-alias la="eza -laag --icons"
-alias lt="eza -T --icons"
+if command -v eza >/dev/null 2>&1; then
+  alias ls="eza"
+  alias la="eza -laag --icons"
+  alias lt="eza -T --icons"
+fi
 
 {{- if eq $profile "arch" }}
 alias ta="tmux a"
 {{- end }}
 
-alias pe="nvim ~/.local/share/posting/default"
+if command -v posting >/dev/null 2>&1; then
+  alias pe="nvim ~/.local/share/posting/default"
+fi
 {{- if eq $profile "arch" }}
 alias te="nvim ~/.local/share/chezmoi/dot_config/tmux/tmux.conf"
 {{- end }}
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
-alias ze="nvim ~/.local/share/chezmoi/dot_zshrc"
+alias ze="chezmoi edit ~/.zshrc"
 
 alias reload="source ~/.zshrc"
 
 alias sail="./vendor/bin/sail"
 
+{{- if eq $profile "arch" }}
 alias tsd="sudo tailscale down"
 alias tsu="sudo tailscale up --accept-dns --accept-routes"
+{{- end }}
 
-alias ocp="oc -P personal"
-alias ocw="oc -P work"
-alias ca="cursor-agent --yolo"
+if command -v cursor-agent >/dev/null 2>&1; then
+  alias ca="cursor-agent --yolo"
+fi
 {{- if eq $profile "arch" }}
 alias wm='workmux'
 {{- end }}
 
-function y() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
-}
+if command -v yazi >/dev/null 2>&1; then
+  function y() {
+	  local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	  yazi "$@" --cwd-file="$tmp"
+	  if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+		  builtin cd -- "$cwd"
+	  fi
+	  rm -f -- "$tmp"
+  }
+fi
 
 F=~/.private.zsh; [ -f $F ] && . $F
-{{- if eq $profile "arch" }}
+{{- if eq $profile "wsl" }}
+F=~/.wsl.zsh; [ -f $F ] && . $F
+{{- else if eq $profile "arch" }}
 F=~/.arch.zsh; [ -f $F ] && . $F
 {{- else if eq $profile "macos" }}
 F=~/.mac.zsh; [ -f $F ] && . $F
@@ -126,6 +164,11 @@ F=~/.vimme.zsh; [ -f $F ] && . $F
 F=~/.ocprofile.zsh; [ -f $F ] && . $F
 F=~/.jabba/jabba.sh; [ -f $F ] && . $F
 F=~/.bun/_bun; [ -f $F ] && . $F
+
+if (( $+functions[oc] )); then
+  alias ocp="oc -P personal"
+  alias ocw="oc -P work"
+fi
 
 if command -v op >/dev/null 2>&1; then
   eval "$(op completion zsh)"

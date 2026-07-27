@@ -19,10 +19,6 @@ function nvu() {
   return "$exit_code"
 }
 
-function piu() {
-  command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
-}
-
 # Launch the Windows-hosted PoE2 intelligence app from its project directory.
 export POE2="/mnt/c/Users/Jeff Hertzler/Documents/poe2-item-intelligence"
 
