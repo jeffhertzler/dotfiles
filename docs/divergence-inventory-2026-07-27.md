@@ -218,7 +218,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr command-shell backups: ~/.local/state/dotfiles-backups/20260727-herdr-command-shell/config.toml on WSL, Mac, and Arch.
 - AgentBridge registry backups: ~/.local/state/dotfiles-backups/20260727-agentbridge-registry on WSL, Mac, and Arch; each contains only the managed targets changed on that profile.
 - Session-picker retirement backups: ~/.local/state/dotfiles-backups/20260727-retire-herdr-session-picker on WSL, Mac, and Arch; Arch also retains the retired helper itself. WSL was applied through its existing user context after transient interop launch failures cleared, without terminating the distribution.
-- Simple-cleanup backups: ~/.local/state/dotfiles-backups/20260727-simple-cleanups contains the prior Git config and common.sh on WSL; the prior managed Git and Bottom configs plus a marker that Mac's Git local overlay did not exist; and the prior Bottom config plus unmanaged Git local overlay on Arch. WSL also gained Ubuntu's git-lfs 3.7.1 package.
+- Simple-cleanup backups: ~/.local/state/dotfiles-backups/20260727-simple-cleanups contains the prior Git config and common.sh on WSL; the prior managed Git and Bottom configs plus a marker that Mac's Git local overlay did not exist; and the prior managed Git and Bottom configs plus unmanaged Git local overlay on Arch. WSL also gained Ubuntu's git-lfs 3.7.1 package.
 
 ### Arch
 
