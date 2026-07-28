@@ -85,16 +85,13 @@ return {
         desc = "Neogit Status",
       },
       { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "Neogit Commit" },
-    },
-    init = function()
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "LazyVimKeymaps",
-        once = true,
-        callback = function()
-          -- Lazygit remains available through the Herdr/tmux popup.
-          pcall(vim.keymap.del, "n", "<leader>gG")
+      {
+        "<leader>gG",
+        function()
+          Snacks.lazygit()
         end,
-      })
-    end,
+        desc = "Lazygit (cwd)",
+      },
+    },
   },
 }
