@@ -1,6 +1,6 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 [settings]
-idiomatic_version_file_enable_tools = ["java", "node"]
+idiomatic_version_file_enable_tools = ["java", "node", "python"]
 
 [settings.java]
 shorthand_vendor = "temurin"
@@ -12,8 +12,9 @@ set_gobin = false
 corepack = true
 
 [tools]
-{{- if eq $profile "windows" }}
 go = "latest"
+python = "latest"
+{{- if eq $profile "windows" }}
 node = "lts"
 "github:tree-sitter/tree-sitter" = { version = "v0.26.11", bin = "tree-sitter.exe" }
 "npm:neovim" = "latest"
@@ -21,7 +22,6 @@ node = "lts"
 {{- else if eq $profile "wsl" }}
 "github:jesseduffield/lazygit" = "latest"
 "github:tree-sitter/tree-sitter" = "v0.26.11"
-go = "latest"
 node = "lts"
 "npm:neovim" = "latest"
 rust = "stable"
@@ -29,7 +29,6 @@ python = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 chezmoi = "2.71.1"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
-go = "latest"
 java = ["17", "11"]
 maven = "latest"
 {{- end }}

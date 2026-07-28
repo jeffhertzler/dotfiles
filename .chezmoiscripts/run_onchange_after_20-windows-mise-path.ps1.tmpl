@@ -1,0 +1,29 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "windows" -}}
+$ErrorActionPreference = "Stop"
+
+$miseShims = Join-Path $env:LOCALAPPDATA "mise\shims"
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$entries = @($userPath -split ";" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$normalizedMiseShims = $miseShims.TrimEnd("\", "/")
+$otherEntries = @($entries | Where-Object {
+  -not ([string]::Equals(
+    $_.TrimEnd("\", "/"),
+    $normalizedMiseShims,
+    [StringComparison]::OrdinalIgnoreCase
+  ))
+})
+$desiredPath = (@($miseShims) + $otherEntries) -join ";"
+
+if (-not ([string]::Equals($userPath, $desiredPath, [StringComparison]::Ordinal))) {
+  $backupDirectory = Join-Path $HOME ".local\state\dotfiles\backups"
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $backupPath = Join-Path $backupDirectory "windows-user-path-$timestamp.txt"
+  New-Item -ItemType Directory -Path $backupDirectory -Force | Out-Null
+  [IO.File]::WriteAllText($backupPath, $userPath)
+
+  [Environment]::SetEnvironmentVariable("Path", $desiredPath, "User")
+  Write-Host "Moved Mise shims to the front of the Windows user PATH"
+  Write-Host "Previous user PATH: $backupPath"
+}
+{{- end }}
