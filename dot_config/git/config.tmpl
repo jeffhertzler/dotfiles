@@ -11,7 +11,7 @@
 	helper = !/usr/bin/gh auth git-credential
 {{ end -}}
 
-{{ if or (eq $profile "arch") (eq $profile "macos") (eq $profile "windows") -}}
+{{ if or (eq $profile "arch") (eq $profile "macos") (eq $profile "windows") (eq $profile "wsl") -}}
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	process = git-lfs filter-process
@@ -28,17 +28,6 @@
 [user]
 	name = Jeff Hertzler
 	email = jeffhertzler@gmail.com
-
-{{ if or (eq $profile "arch") (eq $profile "macos") -}}
-[includeIf "gitdir:~/dev/greenlight/"]
-	path = ~/dev/greenlight/.gitconfig
-{{ end -}}
-
-{{ if eq $profile "macos" -}}
-[diff "lockb"]
-	textconv = bun
-	binary = true
-{{ end -}}
 
 # This file is intentionally unmanaged and may contain machine-specific values.
 [include]
