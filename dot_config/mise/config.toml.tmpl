@@ -20,4 +20,5 @@ python = "latest"
 chezmoi = "2.71.1"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
 java = ["17", "11"]
+maven = "latest"
 {{- end }}
