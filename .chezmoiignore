@@ -73,7 +73,6 @@ docs
 !.local/bin
 .local/bin/*
 !.local/bin/herdr-directional-split.mjs
-!.local/bin/herdr-navigate.mjs
 !.local/bin/herdr-popup-close.mjs
 !.local/bin/herdr-popup-picker
 !.local/bin/herdr-reorder.mjs

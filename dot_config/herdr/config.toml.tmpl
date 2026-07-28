@@ -1,11 +1,9 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 {{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
-{{- $navigate := "~/.local/bin/herdr-navigate.mjs" -}}
 {{- $popupPicker := printf "%s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
 {{- if eq $profile "windows" -}}
 {{-   $directionalSplit = printf "node \"%s/.local/bin/herdr-directional-split.mjs\"" .chezmoi.homeDir -}}
-{{-   $navigate = printf "node \"%s/.local/bin/herdr-navigate.mjs\"" .chezmoi.homeDir -}}
 {{-   $popupPicker = "C:/PROGRA~1/Git/bin/bash.exe \"%USERPROFILE%/.local/bin/herdr-popup-picker\"" -}}
 {{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
 {{- else if eq $profile "arch" -}}
@@ -109,30 +107,6 @@ description = "open popup launcher"
 width = "90%"
 height = "90%"
 
-[[keys.command]]
-key = "ctrl+h"
-type = "shell"
-command = '{{ $navigate }} left'
-description = "navigate left (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+j"
-type = "shell"
-command = '{{ $navigate }} down'
-description = "navigate down (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+k"
-type = "shell"
-command = '{{ $navigate }} up'
-description = "navigate up (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+l"
-type = "shell"
-command = '{{ $navigate }} right'
-description = "navigate right (neovim/herdr)"
-
 {{ if eq $profile "arch" -}}
 [[keys.command]]
 key = "prefix+shift+g"
@@ -151,6 +125,30 @@ key = "prefix+ctrl+x"
 type = "plugin_action"
 command = "worktrunk.remove"
 description = "worktree: remove with hooks"
+
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left"
+description = "navigate left (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down"
+description = "navigate down (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up"
+description = "navigate up (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right"
+description = "navigate right (neovim/herdr)"
 
 [[keys.command]]
 key = "alt+h"
