@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `baab6f6` on `normalize/multi-platform`
+Source baseline: `4f06982` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -140,7 +140,7 @@ applies, or removes anything.
 | Herdr plugins | Four private compatibility clones linked locally | Four upstream plugins | Four upstream plugins | Four upstream plugins |
 | Tunnel | None | systemd user-service implementation | SSH ControlMaster implementation | None |
 | LazyDocker/Posting | None | None | Managed | Managed |
-| tmux/Workmux | None | tmux installed, config not managed | executables may remain, config retired | Managed as intentional legacy |
+| tmux/Workmux | None | tmux installed, config not managed | tmux installed, Workmux removed | Managed as intentional legacy |
 | Worktrunk user config | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config plus Ultralight hooks and seed helper |
 
 ### Required conditionals
@@ -188,6 +188,7 @@ a promise that Chezmoi installs every dependency.
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
 | Atuin | WinGet | direct release | Homebrew | pacman |
+| LazyJira | not installed | not installed | trusted Homebrew formula | not installed |
 | Bat | WinGet | apt | Homebrew | pacman |
 | Yazi | WinGet | direct release | Homebrew | pacman |
 | jq / zoxide | WinGet | direct release | Homebrew | pacman |
@@ -206,7 +207,10 @@ a promise that Chezmoi installs every dependency.
   into WSL projects.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
   copies have been removed.
-- macOS Homebrew reports an obsolete/untrusted `loadstar81/wkhtmltopdf` tap.
+- macOS package drift is resolved: obsolete Cargo copies, Workmux, the old
+  wkhtmltopdf cask/tap, deprecated Homebrew taps, and orphaned `icu4c@75` have
+  been removed. LazyJira remains intentionally installed and only its specific
+  third-party formula is trusted. `brew doctor` is clean.
 - macOS Bun has been upgraded from 1.0.0 to 1.3.14 through its official
   self-updater.
 - Arch uses Volta for Node, npm, npx, and Pi. The unused Hermes installation,
@@ -215,6 +219,9 @@ a promise that Chezmoi installs every dependency.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
+- Atuin remains installed on macOS for local shell history, but its unused and
+  failing background daemon service has been removed. Automatic sync remains
+  disabled in the shared configuration.
 - Broader Mise adoption remains deliberately deferred. It may eventually provide
   a consistent programming-language manager without needing to own standalone
   applications.
@@ -326,15 +333,10 @@ Likewise, `.profile` and Jabba have not yet been proven dead.
 
 ## Installation gaps and optional enhancements
 
-Required or worth correcting:
-
-- Remove the stale macOS Homebrew tap after interactively uninstalling its old
-  `wkhtmltopdf0125` cask, which requires administrator authentication.
-- Decide whether the Windows ble.sh bootstrap should remain install-only or
-  gain an explicit update policy. It currently preserves the working version.
-
 Optional:
 
+- Decide whether the Windows ble.sh bootstrap should remain install-only or
+  gain an explicit update policy. It currently preserves the working version.
 - Add Yazi media/PDF/archive preview dependencies where those previews are
   genuinely useful.
 - Install Go on native Windows if Windows-local Go development becomes useful.
@@ -359,7 +361,9 @@ Each step should be previewed narrowly and verified on all affected profiles.
 6. **Complete:** all four plugins are desired everywhere; monthly reconciliation
    updates Unix upstream installs and Windows private branches while preserving
    explicit review for public-upstream merges and plugin removal.
-7. Resolve package-manager drift on macOS, Arch, and WSL.
+7. **Complete:** WSL Mise discovery is isolated from Windows; Arch uses Volta
+   instead of Hermes; Bun is current; Windows can bootstrap ble.sh; and macOS
+   package ownership, obsolete taps, and retained LazyJira trust are clean.
 8. Add optional Yazi preview tools only where desired.
 9. Run `chezmoi diff`, narrow applies, `chezmoi verify --exclude=dirs`, and
    `chezmoi status --exclude=dirs` on Windows, WSL, macOS, and Arch before
