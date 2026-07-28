@@ -29,6 +29,14 @@ docs
 !.config/herdr
 .config/herdr/*
 !.config/herdr/config.toml
+!.config/herdr/plugins/
+.config/herdr/plugins/*
+!.config/herdr/plugins/config/
+.config/herdr/plugins/config/*
+!.config/herdr/plugins/config/herdr-splits/
+!.config/herdr/plugins/config/herdr-splits/herdr-splits.conf
+!.config/herdr/plugins/config/worktrunk/
+!.config/herdr/plugins/config/worktrunk/config.toml
 {{- end }}
 {{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.config/nvim

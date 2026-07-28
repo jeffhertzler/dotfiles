@@ -2,10 +2,12 @@
 {{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
 {{- $popupPicker := printf "%s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
+{{- $herdrSplitsSuffix := "" -}}
 {{- if eq $profile "windows" -}}
 {{-   $directionalSplit = printf "node \"%s/.local/bin/herdr-directional-split.mjs\"" .chezmoi.homeDir -}}
 {{-   $popupPicker = "C:/PROGRA~1/Git/bin/bash.exe \"%USERPROFILE%/.local/bin/herdr-popup-picker\"" -}}
 {{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
+{{-   $herdrSplitsSuffix = "-windows" -}}
 {{- else if eq $profile "arch" -}}
 {{-   $popupPicker = printf "HERDR_POPUP_ENABLE_WORKMUX=1 %s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- end -}}
@@ -107,7 +109,54 @@ description = "open popup launcher"
 width = "90%"
 height = "90%"
 
-{{ if eq $profile "arch" -}}
+[[keys.command]]
+key = "ctrl+h"
+type = "plugin_action"
+command = "herdr-splits.nav-left{{ $herdrSplitsSuffix }}"
+description = "navigate left (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+j"
+type = "plugin_action"
+command = "herdr-splits.nav-down{{ $herdrSplitsSuffix }}"
+description = "navigate down (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+k"
+type = "plugin_action"
+command = "herdr-splits.nav-up{{ $herdrSplitsSuffix }}"
+description = "navigate up (neovim/herdr)"
+
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-splits.nav-right{{ $herdrSplitsSuffix }}"
+description = "navigate right (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+h"
+type = "plugin_action"
+command = "herdr-splits.resize-left{{ $herdrSplitsSuffix }}"
+description = "resize left (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+j"
+type = "plugin_action"
+command = "herdr-splits.resize-down{{ $herdrSplitsSuffix }}"
+description = "resize down (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+k"
+type = "plugin_action"
+command = "herdr-splits.resize-up{{ $herdrSplitsSuffix }}"
+description = "resize up (neovim/herdr)"
+
+[[keys.command]]
+key = "alt+l"
+type = "plugin_action"
+command = "herdr-splits.resize-right{{ $herdrSplitsSuffix }}"
+description = "resize right (neovim/herdr)"
+
 [[keys.command]]
 key = "prefix+shift+g"
 type = "plugin_action"
@@ -127,74 +176,25 @@ command = "worktrunk.remove"
 description = "worktree: remove with hooks"
 
 [[keys.command]]
-key = "ctrl+h"
-type = "plugin_action"
-command = "herdr-splits.nav-left"
-description = "navigate left (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+j"
-type = "plugin_action"
-command = "herdr-splits.nav-down"
-description = "navigate down (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+k"
-type = "plugin_action"
-command = "herdr-splits.nav-up"
-description = "navigate up (neovim/herdr)"
-
-[[keys.command]]
-key = "ctrl+l"
-type = "plugin_action"
-command = "herdr-splits.nav-right"
-description = "navigate right (neovim/herdr)"
-
-[[keys.command]]
-key = "alt+h"
-type = "plugin_action"
-command = "herdr-splits.resize-left"
-description = "resize left (neovim/herdr)"
-
-[[keys.command]]
-key = "alt+j"
-type = "plugin_action"
-command = "herdr-splits.resize-down"
-description = "resize down (neovim/herdr)"
-
-[[keys.command]]
-key = "alt+k"
-type = "plugin_action"
-command = "herdr-splits.resize-up"
-description = "resize up (neovim/herdr)"
-
-[[keys.command]]
-key = "alt+l"
-type = "plugin_action"
-command = "herdr-splits.resize-right"
-description = "resize right (neovim/herdr)"
-
-[[keys.command]]
 key = "prefix+alt+shift+h"
 type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full left"
+command = '{{ $directionalSplit }} full left'
 description = "split full-height pane left"
 
 [[keys.command]]
 key = "prefix+alt+shift+j"
 type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full down"
+command = '{{ $directionalSplit }} full down'
 description = "split full-width pane down"
 
 [[keys.command]]
 key = "prefix+alt+shift+k"
 type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full up"
+command = '{{ $directionalSplit }} full up'
 description = "split full-width pane up"
 
 [[keys.command]]
 key = "prefix+alt+shift+l"
 type = "shell"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-directional-split.mjs full right"
+command = '{{ $directionalSplit }} full right'
 description = "split full-height pane right"
-{{ end -}}

@@ -1,0 +1,30 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if ne $profile "windows" }}
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v herdr >/dev/null 2>&1; then
+  echo "herdr plugin reconciliation requires herdr on PATH" >&2
+  exit 1
+fi
+
+{{ range .herdrPlugins -}}
+{{ if has $profile .profiles -}}
+plugin_id={{ .id | quote }}
+plugin_source={{ .source | quote }}
+plugin_json=$(herdr plugin list --plugin "$plugin_id" --json)
+
+if ! printf '%s' "$plugin_json" | grep -Fq "\"plugin_id\":\"$plugin_id\""; then
+  echo "Installing Herdr plugin $plugin_id from $plugin_source"
+  herdr plugin install "$plugin_source" --yes
+elif ! printf '%s' "$plugin_json" | grep -Fq '"enabled":true'; then
+  echo "Enabling Herdr plugin $plugin_id"
+  herdr plugin enable "$plugin_id"
+fi
+
+{{ end -}}
+{{ end -}}
+# A running server picks up the new registry immediately. No server is also a
+# valid state during bootstrap, so a reload failure is intentionally harmless.
+herdr server reload-config >/dev/null 2>&1 || true
+{{- end }}
