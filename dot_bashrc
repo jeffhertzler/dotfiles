@@ -1,13 +1,5 @@
-# Lightweight Git Bash baseline: no shell framework.
-[[ $- == *i* ]] || return 0
-
-# Herdr's Windows preview may omit USER from a new ConPTY environment.
-export USER="${USER:-${USERNAME:-$(id -un)}}"
-
-# Do not inherit Codex/Herdr's host-side request to disable terminal color.
-unset NO_COLOR
-
-# Native Windows tools needed by Herdr and Neovim.
+# Native Windows CLI paths must also be available to noninteractive login
+# shells, including automation and the dotfiles doctor.
 if [[ -d "$HOME/AppData/Local/Programs/Herdr/bin" ]]; then
   export PATH="$HOME/AppData/Local/Programs/Herdr/bin:$PATH"
 fi
@@ -17,7 +9,19 @@ fi
 if [[ -d "/c/Program Files/starship/bin" ]]; then
   export PATH="/c/Program Files/starship/bin:$PATH"
 fi
+if [[ -d "/c/Program Files/GitHub CLI" ]]; then
+  export PATH="/c/Program Files/GitHub CLI:$PATH"
+fi
 export PATH="$HOME/.opencode/bin:$PATH"
+
+# Lightweight Git Bash baseline: no shell framework.
+[[ $- == *i* ]] || return 0
+
+# Herdr's Windows preview may omit USER from a new ConPTY environment.
+export USER="${USER:-${USERNAME:-$(id -un)}}"
+
+# Do not inherit Codex/Herdr's host-side request to disable terminal color.
+unset NO_COLOR
 
 # Load the Bash line editor early, then attach it after prompt configuration.
 if [[ -r "$HOME/.local/share/blesh/ble.sh" ]]; then
