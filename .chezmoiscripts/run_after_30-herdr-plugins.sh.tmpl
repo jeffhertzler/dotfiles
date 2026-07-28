@@ -4,25 +4,34 @@
 set -euo pipefail
 
 if ! command -v herdr >/dev/null 2>&1; then
-  echo "herdr plugin reconciliation requires herdr on PATH" >&2
+  echo "Herdr plugin reconciliation requires herdr on PATH" >&2
   exit 1
 fi
 
 {{ range .herdrPlugins -}}
-{{ if has $profile .profiles -}}
 plugin_id={{ .id | quote }}
 plugin_source={{ .source | quote }}
 plugin_json=$(herdr plugin list --plugin "$plugin_id" --json)
+plugin_present=false
+if printf '%s' "$plugin_json" | grep -Fq "\"plugin_id\":\"$plugin_id\""; then
+  plugin_present=true
+fi
 
-if ! printf '%s' "$plugin_json" | grep -Fq "\"plugin_id\":\"$plugin_id\""; then
-  echo "Installing Herdr plugin $plugin_id from $plugin_source"
-  herdr plugin install "$plugin_source" --yes
-elif ! printf '%s' "$plugin_json" | grep -Fq '"enabled":true'; then
+echo "Updating Herdr plugin $plugin_id from $plugin_source"
+if ! herdr plugin install "$plugin_source" --yes; then
+  if [[ $plugin_present == false ]]; then
+    echo "Could not install required Herdr plugin $plugin_id" >&2
+    exit 1
+  fi
+  echo "Could not update $plugin_id; keeping the installed copy" >&2
+fi
+
+plugin_json=$(herdr plugin list --plugin "$plugin_id" --json)
+if ! printf '%s' "$plugin_json" | grep -Fq '"enabled":true'; then
   echo "Enabling Herdr plugin $plugin_id"
   herdr plugin enable "$plugin_id"
 fi
 
-{{ end -}}
 {{ end -}}
 # A running server picks up the new registry immediately. No server is also a
 # valid state during bootstrap, so a reload failure is intentionally harmless.

@@ -1,31 +1,21 @@
 herdrPlugins:
   - id: edi.layout-tools
     source: edouard-andrei/herdr-layout-tools
-    profiles:
-      - arch
-      - macos
-      - windows
-      - wsl
     windowsLink: dev/herdr-layout-tools-windows
     windowsRepo: jeffhertzler/herdr-layout-tools-windows
     windowsRef: agent/windows-support
   - id: herdr-splits
     source: lmilojevicc/herdr-splits.nvim
-    profiles:
-      - arch
-      - macos
-      - windows
-      - wsl
     windowsLink: dev/herdr-splits-windows
     windowsRepo: jeffhertzler/herdr-splits-windows
     windowsRef: agent/windows-support
   - id: worktrunk
     source: devashish2203/herdr-worktrunk
-    profiles:
-      - arch
-      - macos
-      - windows
-      - wsl
     windowsLink: dev/herdr-worktrunk-windows
     windowsRepo: jeffhertzler/herdr-worktrunk-windows
+    windowsRef: agent/windows-support
+  - id: rjyo.window-title-sync
+    source: rjyo/herdr-window-title-sync
+    windowsLink: dev/herdr-window-title-sync-windows
+    windowsRepo: jeffhertzler/herdr-window-title-sync-windows
     windowsRef: agent/windows-support

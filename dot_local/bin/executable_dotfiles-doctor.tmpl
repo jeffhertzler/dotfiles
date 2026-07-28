@@ -278,9 +278,7 @@ elif ! printf '%s' "$plugin_json" | jq -e '.result.plugins | type == "array"' >/
 else
   desired_plugins=(
 {{ range .herdrPlugins -}}
-{{ if has $profile .profiles }}
     {{ .id | quote }}
-{{ end -}}
 {{ end -}}
   )
 
@@ -313,7 +311,6 @@ fi
 {{ if eq $profile "windows" -}}
 section 'Windows Herdr compatibility clones'
 {{ range .herdrPlugins -}}
-{{ if has $profile .profiles }}
 plugin_clone="$HOME/{{ .windowsLink }}"
 if [[ ! -f $plugin_clone/herdr-plugin.toml ]]; then
   fail "{{ .id }} clone is missing: $plugin_clone"
@@ -333,12 +330,17 @@ else
   else
     fail "{{ .id }} has unexpected origin: ${clone_origin:-none}"
   fi
+  clone_upstream=$(git -C "$plugin_clone" remote get-url upstream 2>/dev/null)
+  if [[ $clone_upstream == *{{ .source | quote }}* ]]; then
+    pass "{{ .id }} upstream matches {{ .source }}"
+  else
+    fail "{{ .id }} has unexpected upstream: ${clone_upstream:-none}"
+  fi
   clone_changes=$(git -C "$plugin_clone" status --short 2>/dev/null)
   if [[ -n $clone_changes ]]; then
     warn "{{ .id }} compatibility clone has uncommitted changes"
   fi
 fi
-{{ end -}}
 {{ end -}}
 
 section 'Windows environment'
