@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `052ba01` on `normalize/multi-platform`
+Source baseline: `bf03374` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -142,7 +142,7 @@ applies, or removes anything.
 | Tunnel | None | systemd user-service implementation | SSH ControlMaster implementation | None |
 | LazyDocker/Posting | None | None | Managed | Managed |
 | tmux/Workmux | None | tmux installed, config not managed | executables may remain, config retired | Managed as intentional legacy |
-| Worktrunk user config | Plugin bridge only | Plugin bridge only | Plugin bridge only | Full user config and seed helper |
+| Worktrunk user config | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config plus Ultralight hooks and seed helper |
 
 ### Required conditionals
 
@@ -155,19 +155,17 @@ These differences should remain conditional:
 - WSL and macOS tunnel implementations
 - Platform shell overlays
 - Arch-only tmux/Workmux legacy configuration
+- Arch-only Ultralight Worktrunk hooks and symlink seeder
 - Mac/Arch-only workstation applications
 - Optional integrations guarded by executable or file availability
 
-### Conditionals that can probably disappear
+### Conditionals removed during this cleanup
 
-- `dot_config/git/config.tmpl` only emits shared behavior for all four supported
-  profiles and can become a plain file.
-- The repeated profile arrays in `.chezmoidata/herdr-plugins.yaml` are identical
-  for every desired plugin.
-- Much of `.chezmoiignore` repeats the same shared allowlist for Windows, WSL,
-  and macOS.
-- Duplicate portable aliases in more than one Unix overlay can move into the
-  shared shell file after a narrow compatibility check.
+- Git configuration is now a plain shared source file.
+- Herdr's desired plugin inventory no longer repeats identical profile arrays.
+- `.chezmoiignore` now describes a shared base with narrow exclusions.
+- Portable aliases formerly repeated in Unix overlays now live in shared shell
+  layers with capability or profile guards.
 
 ## Tool installation and provenance
 
@@ -187,7 +185,7 @@ a promise that Chezmoi installs every dependency.
 | Node | WinGet | Mise | Volta | local Hermes shim shadows Volta |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
-| Worktrunk | WinGet | Cargo | Homebrew | direct/local |
+| Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
 | Atuin | WinGet | direct release | Homebrew | pacman |
 | Bat | WinGet | apt | Homebrew plus old Cargo copy | pacman |
@@ -210,8 +208,7 @@ a promise that Chezmoi installs every dependency.
 - macOS Homebrew reports an obsolete/untrusted `loadstar81/wkhtmltopdf` tap.
 - Arch's `node` and `npm` resolve through Hermes Node 22 shims even though Volta
   owns Node 24. This is the clearest active toolchain ambiguity.
-- Arch Worktrunk is one release behind the other machines at the audited
-  snapshot.
+- Worktrunk is aligned at 0.69.2 on all four profiles.
 - Windows ble.sh is manually present under `~/.local/share/blesh`; no package or
   bootstrap mechanism currently declares it.
 - Broader Mise adoption remains deliberately deferred. It may eventually provide
@@ -337,7 +334,7 @@ Likewise, `.profile` and Jabba have not yet been proven dead.
 
 Required or worth correcting:
 
-- Align Arch's Worktrunk and `herdr-splits` versions.
+- Align Arch's `herdr-splits` version.
 - Resolve whether Arch uses Hermes or Volta as the actual Node owner.
 - Prevent WSL from unintentionally consuming native Windows Mise configuration.
 - Clean obsolete macOS Cargo duplicates and the stale Homebrew tap.
@@ -365,7 +362,8 @@ Each step should be previewed narrowly and verified on all affected profiles.
    stale Refactoring extra is gone while the explicit plugin disable remains.
 4. **Complete:** Atuin contains only intentional settings; redundant Bat/Yazi
    themes and duplicate `nvu`, `ha`, `hat`, and Greenlight pull logic are gone.
-5. Decide the Worktrunk configuration boundary, then align the Arch binary.
+5. **Complete:** portable Worktrunk layout/schema settings are shared; the
+   Unix-only Ultralight hooks remain on Arch, and all four profiles run 0.69.2.
 6. Define Herdr plugin update, version, ref-verification, and extra-plugin
    policy.
 7. Resolve package-manager drift on macOS, Arch, and WSL.
