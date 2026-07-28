@@ -34,6 +34,7 @@ settings belong in the unmanaged `~/.config/git/local.config` file.
 
 ## LazyGit layout
 
-All supported profiles set `XDG_CONFIG_HOME` to `~/.config` and manage one
-`.config/lazygit/config.yml`. Arch and macOS use the Neovim bridge; native
-Windows and WSL use LazyGit's built-in `nvim` editor preset.
+All supported profiles set `XDG_CONFIG_HOME` to `~/.config`, manage one
+`.config/lazygit/config.yml`, and use the same custom Neovim bridge. Unix
+invokes the bridge directly; native Windows wraps it with Git Bash because
+LazyGit launches editor commands through `cmd.exe` there.
