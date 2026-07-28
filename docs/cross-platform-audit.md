@@ -364,7 +364,9 @@ Each step should be previewed narrowly and verified on all affected profiles.
 7. **Complete:** WSL Mise discovery is isolated from Windows; Arch uses Volta
    instead of Hermes; Bun is current; Windows can bootstrap ble.sh; and macOS
    package ownership, obsolete taps, and retained LazyJira trust are clean.
-8. Add optional Yazi preview tools only where desired.
+8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
+   not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
+   merely for cross-platform parity.
 9. Run `chezmoi diff`, narrow applies, `chezmoi verify --exclude=dirs`, and
    `chezmoi status --exclude=dirs` on Windows, WSL, macOS, and Arch before
    merging `normalize/multi-platform`.
