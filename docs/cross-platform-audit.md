@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `e37cfe5` on `normalize/multi-platform`
+Source baseline: `baab6f6` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -181,17 +181,17 @@ a promise that Chezmoi installs every dependency.
 | Herdr | official preview installer | direct release | direct release | direct/local |
 | OpenCode | official installer | official installer | official installer | official installer |
 | Pi | Mise | Mise | Volta | Volta |
-| Node | WinGet | Mise | Volta | local Hermes shim shadows Volta |
-| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | direct `~/.bun`, 1.0.0 | direct `~/.bun`, 1.3.9 |
+| Node | WinGet | Mise | Volta | Volta |
+| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | direct `~/.bun`, 1.3.9 |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
 | Atuin | WinGet | direct release | Homebrew | pacman |
-| Bat | WinGet | apt | Homebrew plus old Cargo copy | pacman |
+| Bat | WinGet | apt | Homebrew | pacman |
 | Yazi | WinGet | direct release | Homebrew | pacman |
 | jq / zoxide | WinGet | direct release | Homebrew | pacman |
-| fzf / fd / ripgrep | WinGet | apt/direct packages | mixed Homebrew and old Cargo | pacman |
+| fzf / fd / ripgrep | WinGet | apt/direct packages | Homebrew | pacman |
 | LLVM | WinGet | system packages as needed | Homebrew/system as needed | pacman/system as needed |
 | 1Password CLI | available | apt | available | pacman |
 
@@ -199,17 +199,16 @@ a promise that Chezmoi installs every dependency.
 
 - Windows has both `python` 3.12 and `python3` 3.14 resolution. This may be
   intentional, but the command distinction should be documented or normalized.
-- WSL can discover the native Windows Mise config when launched beneath a
-  `/mnt/c/Users/...` working directory. It currently duplicates only the Pi pin,
-  but this is unintended cross-environment coupling.
-- macOS still has old Cargo-installed copies of tools also managed elsewhere.
-  Old Cargo `fd` and `rg` currently win command resolution because Homebrew
-  versions of those two are absent.
+- WSL now sets a Mise discovery ceiling at its Linux home and the mounted
+  Windows home, preventing native Windows global configuration from leaking
+  into WSL projects.
+- macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
+  copies have been removed.
 - macOS Homebrew reports an obsolete/untrusted `loadstar81/wkhtmltopdf` tap.
-- macOS Bun 1.0.0 is substantially older than the WSL and Arch copies, although
-  it parses the current Window Title Sync script and reaches the Herdr API.
-- Arch's `node` and `npm` resolve through Hermes Node 22 shims even though Volta
-  owns Node 24. This is the clearest active toolchain ambiguity.
+- macOS Bun has been upgraded from 1.0.0 to 1.3.14 through its official
+  self-updater.
+- Arch uses Volta for Node, npm, npx, and Pi. The unused Hermes installation,
+  its private runtime, and its command shims have been removed.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
 - Windows ble.sh is manually present under `~/.local/share/blesh`; no package or
   bootstrap mechanism currently declares it.
@@ -326,9 +325,8 @@ Likewise, `.profile` and Jabba have not yet been proven dead.
 
 Required or worth correcting:
 
-- Resolve whether Arch uses Hermes or Volta as the actual Node owner.
-- Prevent WSL from unintentionally consuming native Windows Mise configuration.
-- Clean obsolete macOS Cargo duplicates and the stale Homebrew tap.
+- Remove the stale macOS Homebrew tap after interactively uninstalling its old
+  `wkhtmltopdf0125` cask, which requires administrator authentication.
 - Make Windows ble.sh installation reproducible if Git Bash remains a supported
   first-class environment.
 
