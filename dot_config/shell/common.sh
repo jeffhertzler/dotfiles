@@ -53,10 +53,6 @@ if command -v uv >/dev/null 2>&1; then
   alias uvu='uv tool upgrade --all'
 fi
 
-if command -v herdr-session-picker >/dev/null 2>&1; then
-  alias hs='herdr-session-picker'
-fi
-
 if command -v bat >/dev/null 2>&1; then
   alias cat='bat'
 fi

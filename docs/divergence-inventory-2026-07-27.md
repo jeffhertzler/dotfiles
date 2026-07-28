@@ -83,7 +83,7 @@ Kinds:
 | D24 | Starship | The same ~/.config/starship.toml is managed on all supported profiles. | Intentional | Keep. |
 | D25 | Herdr core | The same core UI, theme, history, and navigation keys are managed on Windows, WSL, Mac, and Arch. | Intentional | Keep. |
 | D26 | Herdr Windows terminal | Windows alone sets Git Bash as Herdr's shell, new_cwd=follow, and preview update channel. | Required/intentional | Review preview-channel preference separately from the shell requirement. |
-| D27 | Herdr advanced commands | Local left/up directional splits plus tab/workspace reordering and their Node helpers are shared by Windows, WSL, Mac, and Arch. Reordering uses a per-user runtime/temp lock keyed to the Herdr socket, including native Windows named pipes. Arch alone retains plugin-dependent full-layout splits, the popup launcher, and Worktrunk actions. | Partially decided and implemented | Review the popup launcher and session picker next. |
+| D27 | Herdr advanced commands | Local left/up directional splits plus tab/workspace reordering and their Node helpers are shared by Windows, WSL, Mac, and Arch. Reordering uses a per-user runtime/temp lock keyed to the Herdr socket, including native Windows named pipes. The low-value session picker and its `hs` alias were retired. Arch alone retains plugin-dependent full-layout splits, the popup launcher, and Worktrunk actions. | Partially decided and implemented | Review the popup launcher next. |
 | D28 | Herdr plugin subtree | Herdr plugin actions and plugin configuration are Arch-only. The installed plugins are user-shared under ~/.config/herdr/plugins and remain outside Chezmoi ownership. | Conservative | Decide whether Mac should share the plugin set. |
 | D29 | Herdr plugin installer | The obsolete session-by-session plugin bootstrap was removed. The former `R` status meant Chezmoi would run the run-after script; it did not indicate an old target file. Arch already has the four plugins installed in shared user scope. | Decided and implemented | Keep plugin installation outside Chezmoi unless a new shared-user bootstrap is deliberately designed. |
 | D30 | Tunnel command | WSL uses systemd user services with tailscale/lan routes. Mac uses SSH ControlMaster sockets with tailscale/lan/remote routes. Windows and Arch do not receive tunnel. | Required | Keep separate implementations behind one command name. |
@@ -105,7 +105,7 @@ Kinds:
 | D46 | Pi ownership | Windows, WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. | Decided and implemented | Keep the shared portable configuration enabled on all four machines. |
 | D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL, Mac, and Windows outside Chezmoi. Unix copies use mode 0600; Windows inherits only SYSTEM, Administrators, and the user with full control. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
 | D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
-| D49 | Local helper scripts | lazygit-nvim is shared by Windows, WSL, Mac, and Arch because all four LazyGit configs invoke it. tunnel remains profile-specific on WSL/Mac. tmux helpers and worktrunk-seed remain Arch-only legacy. Herdr advanced helpers and agent-review remain under review. | Partially decided and implemented | Review the Herdr helper group with D27/D28, then agent-review with D48. |
+| D49 | Local helper scripts | lazygit-nvim is shared by Windows, WSL, Mac, and Arch because all four LazyGit configs invoke it. tunnel remains profile-specific on WSL/Mac. tmux helpers and worktrunk-seed remain Arch-only legacy. The low-value herdr-session-picker was retired; the popup helper and agent-review remain under review. | Partially decided and implemented | Review herdr-popup-picker with D27/D28, then agent-review with D48. |
 | D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core and reordering, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, bottom, LazyDocker, Posting, Yazi, tunnel, and lazygit-nvim. It intentionally no longer manages legacy tmux/Workmux. It still ignores agents, SSH, and the remaining local helpers. | Conservative choices plus explicit legacy, Pi, and Herdr decisions | This remains the main list to reconsider if greater unification is desired. |
 | D51 | WSL allowlist | WSL manages Git, gh config, LazyGit and its Neovim bridge, Herdr core and reordering, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Pi, LazyGit, and Herdr decisions | Decide which remaining Mac/Arch tools should join the WSL baseline. |
 | D52 | Windows allowlist | Windows manages Git, LazyGit and its Git-Bash-launched Neovim bridge, Herdr core and reordering, Neovim, OpenCode, Pi, Starship/common shell, and Git Bash startup. | Conservative plus explicit Pi, LazyGit, and Herdr decisions | Decide whether to install/share gh or other native tools. |
@@ -128,7 +128,8 @@ Kinds:
 | worktrunk-seed | Worktrunk-specific | Managed only on Arch with the legacy Worktrunk setup. |
 | herdr-directional-split.mjs | Portable Herdr behavior with an optional plugin-dependent mode | Managed on all four machines. Local left/up commands are shared; full-layout commands stay Arch-only with edi.layout-tools. |
 | herdr-reorder.mjs | Portable Herdr tab and workspace/worktree-group reordering | Managed on all four machines with shared prefix+ctrl+h/l/k/j bindings. Its lock lives under XDG_RUNTIME_DIR or the OS temp directory and is keyed to the socket path. |
-| herdr-popup-picker, herdr-session-picker | Remaining Herdr advanced behavior | Continue D27/D28. The popup requires Bash 4 features and optional tools; session-picker requires jq and fzf. |
+| herdr-popup-picker | Remaining Herdr advanced behavior | Continue D27/D28. The Arch-only popup requires Bash 4 features and optional tools. |
+| herdr-session-picker | Low-value fuzzy session attachment helper | Retired from source and live Arch state together with its shared `hs` alias. |
 | agent-review | Shared Neovim feature with a currently Unix/GNU-specific Bash client | Defer to D48. A cross-platform implementation should avoid Bash 4, jq, and GNU base64 requirements. |
 
 ## Deferred actual changes
@@ -169,6 +170,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr reordering pipe-fix backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs.
 - Herdr Windows command-shell backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-windows-command-shell/config.toml.
 - AgentBridge Windows registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-agentbridge-windows-registry contains the prior server.lua and lazygit-nvim targets.
+- Session-picker retirement backup: %LOCALAPPDATA%/dotfiles-backups/20260727-retire-herdr-session-picker/common.sh.
 
 ### WSL
 
@@ -215,6 +217,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr reordering pipe-fix backups: ~/.local/state/dotfiles-backups/20260727-herdr-reorder-pipe-fix/herdr-reorder.mjs on WSL, Mac, and Arch.
 - Herdr command-shell backups: ~/.local/state/dotfiles-backups/20260727-herdr-command-shell/config.toml on WSL, Mac, and Arch.
 - AgentBridge registry backups: ~/.local/state/dotfiles-backups/20260727-agentbridge-registry on WSL, Mac, and Arch; each contains only the managed targets changed on that profile.
+- Session-picker retirement backups: ~/.local/state/dotfiles-backups/20260727-retire-herdr-session-picker on Mac and Arch; Arch also retains the retired helper itself. WSL rollout remains pending because the running distribution stopped accepting new interop commands during this change.
 
 ### Arch
 
@@ -234,7 +237,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, Worktrunk, local directional-split, and Herdr-reordering helpers; next review popup/session helpers, then agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
+2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, Worktrunk, local directional-split, Herdr-reordering, and retirement of the session picker; next review the popup helper, then agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
