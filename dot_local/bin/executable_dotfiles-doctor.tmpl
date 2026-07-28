@@ -277,8 +277,7 @@ elif ! printf '%s' "$plugin_json" | jq -e '.result.plugins | type == "array"' >/
   fail 'Herdr returned an unexpected plugin-list payload'
 else
   desired_plugins=(
-{{ range .herdrPlugins -}}
-    {{ .id | quote }}
+{{ range .herdrPlugins }}    {{ .id | quote }}
 {{ end -}}
   )
 
