@@ -33,8 +33,8 @@ The central design is sound:
   is the primary workspace manager.
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
-to later programming-language migrations into Mise and runtime-installed CLI
-ownership.
+to the per-project macOS/Arch Node transition from Volta and runtime-installed
+CLI ownership.
 
 ## Supported profiles
 
@@ -181,12 +181,12 @@ a promise that Chezmoi installs every dependency.
 | Herdr | official preview installer | direct release | direct release | direct/local |
 | OpenCode | official installer | official installer | official installer | official installer |
 | Pi | Mise | Mise | Volta | Volta |
-| Node | WinGet | Mise | Volta | Volta |
+| Node | Mise | Mise | Volta | Volta |
 | Mise | WinGet | direct installer | Homebrew | pacman |
 | Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
 | Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
-| Python | Windows packages | Mise | Homebrew | pacman |
+| Python | Mise 3.14.6; Windows packages retained | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
 | Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
@@ -201,10 +201,18 @@ a promise that Chezmoi installs every dependency.
 
 ### Notable version and manager drift
 
-- Windows retains the standalone Python 3.12 installation for `python`, `pip`,
-  and `pip3`; the newer Python Install Manager owns `python3` and makes 3.14 the
-  `py` default. This is documented command ownership rather than a PATH fault;
-  neither runtime should be removed without checking the native Python app.
+- Python 3.14.6 is owned by Mise for interactive development on all four
+  profiles, and `.python-version` is enabled as a common project declaration.
+  Windows PowerShell, Git Bash, and WSL-to-Windows interop resolve `python`,
+  `python3`, `pip`, and `pip3` through the same Mise runtime. The native
+  `poe2-item-intelligence` application passed its full 572-test suite there.
+- Windows retains its standalone Python 3.12 and Python Install Manager trees as
+  rollback state for now. A Windows-only reconciliation script puts Mise's
+  shims first in the persistent user `PATH` without deleting or reordering any
+  other entry, and backs up the previous value before changing it.
+- Homebrew and pacman Python installations remain installed for package-owned
+  utilities even though Mise wins in development shells. Arch's independent
+  `/usr/bin/pynvim-python` provider remains available to Neovim.
 - Mise discovery ceilings now live in its shell-independent early-init
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
@@ -388,8 +396,11 @@ login-shell fallback.
 
 Optional:
 
-- Consider later migrations of Node, Python, and runtime-installed CLIs into
-  Mise one owner at a time; current managers remain intentional until then.
+- Migrate macOS and Arch projects from Volta to standard Mise-readable Node
+  declarations one project at a time, then reconcile Volta's global CLI
+  inventory before removal.
+- Consider later migrations of runtime-installed CLIs into Mise one owner at a
+  time; current standalone application managers remain intentional.
 
 ## Recommended cleanup sequence
 
@@ -411,9 +422,10 @@ Each step should be previewed narrowly and verified on all affected profiles.
    explicit review for public-upstream merges and plugin removal.
 7. **Complete:** Mise discovery is shell-independent and WSL is isolated from
    Windows; macOS and Arch use Mise-managed Temurin 17/11 and Maven 3.9.16;
-   all four profiles use Mise-managed Go; Jabba is retired; Arch uses Volta
-   instead of Hermes; Bun is current; Windows can bootstrap ble.sh; and macOS
-   package ownership, obsolete taps, and retained LazyJira trust are clean.
+   all four profiles use Mise-managed Go and Python; Jabba is retired; Arch
+   uses Volta instead of Hermes; Bun is current; Windows can bootstrap ble.sh;
+   and macOS package ownership, obsolete taps, and retained LazyJira trust are
+   clean.
 8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
    not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
    merely for cross-platform parity.
