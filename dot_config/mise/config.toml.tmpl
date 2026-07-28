@@ -8,10 +8,8 @@ shorthand_vendor = "temurin"
 [settings.go]
 set_gobin = false
 
-{{- if ne $profile "windows" }}
 [settings.node]
 corepack = true
-{{- end }}
 
 [tools]
 {{- if eq $profile "windows" }}
