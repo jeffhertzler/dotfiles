@@ -32,9 +32,10 @@ The central design is sound:
 - Arch retains tmux and Workmux as intentional legacy configuration while Herdr
   is the primary workspace manager.
 
-The remaining work is cleanup rather than recovery. The largest open area is
-package-manager drift, followed by optional preview tooling and final branch
-verification.
+The remaining work is cleanup rather than recovery. Open decisions are limited
+to Greenlight's `gggm` helper, Arch's `.profile`/Jabba startup artifacts, and the
+Windows ble.sh update policy. Broader Mise adoption and native-Windows Go remain
+explicitly deferred.
 
 ## Supported profiles
 
@@ -309,26 +310,27 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
   checked-in Bat themes and two unused Yazi theme variants were removed.
 - `nvu` has one Linux/x86-64 definition in the common shell layer.
 - `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
-- The `gou` alias executes an old `git.io` installer and should be reconsidered
-  now that Go is manager-owned on some systems.
+- The unused `gou` curl-to-shell installer alias has been removed. Go upgrades
+  remain the responsibility of each machine's declared runtime owner.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight's `gggm` mutates global Git email and is brittle compared with a
   repository-local identity mechanism.
 
-## Confirmed cleanup candidates
+## Cleanup candidates
 
-These changes are low-risk once previewed individually:
+These candidates were previewed individually; only the explicitly marked item
+still has remaining work:
 
-1. Simplify `.chezmoiignore` to a shared-base model.
-2. Convert `dot_config/git/config.tmpl` to a plain Chezmoi source file.
-3. Remove the empty Yazi keymap.
-4. Remove the stale Neoconf file.
-5. Resolve the contradictory LazyVim Refactoring enable/disable declarations.
-6. Reduce Atuin configuration to intentional non-default settings.
-7. Remove unused Yazi and Bat theme files, unless they are deliberately kept as
-   ready alternatives.
-8. Deduplicate portable shell aliases and fix the two Greenlight helper issues.
-9. Replace or retire the legacy Go installer alias.
+1. **Complete:** simplify `.chezmoiignore` to a shared-base model.
+2. **Complete:** convert the shared Git config template to a plain source file.
+3. **Complete:** remove the empty Yazi keymap.
+4. **Complete:** remove the stale Neoconf file.
+5. **Complete:** resolve contradictory LazyVim Refactoring declarations.
+6. **Complete:** reduce Atuin to intentional non-default settings.
+7. **Complete:** remove unused Yazi and Bat theme files.
+8. **Partial:** portable aliases and duplicate Greenlight pull logic are clean;
+   replace or retire the global-identity mutation in `gggm`.
+9. **Complete:** retire the legacy Go installer alias.
 
 The Arch tmux and Workmux sources are not dead configuration. They are retained
 legacy by explicit policy and should not be removed as part of general cleanup.
@@ -340,8 +342,6 @@ Optional:
 
 - Decide whether the Windows ble.sh bootstrap should remain install-only or
   gain an explicit update policy. It currently preserves the working version.
-- Add Yazi media/PDF/archive preview dependencies where those previews are
-  genuinely useful.
 - Install Go on native Windows if Windows-local Go development becomes useful.
 - Adopt Mise for programming-language runtimes on more profiles after a separate
   design pass.
