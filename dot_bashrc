@@ -49,6 +49,12 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init bash)"
 fi
 
+# ble.sh is already loaded above, which gives Atuin accurate command timing and
+# preserves Bash's ignorespace behavior.
+if command -v atuin >/dev/null 2>&1; then
+  eval "$(atuin init bash)"
+fi
+
 # Native Windows cannot reliably inspect Git Bash's logical cwd after `cd`.
 # Report it through OSC 7 so Herdr can refresh workspace Git metadata.
 __herdr_report_cwd() {

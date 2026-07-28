@@ -39,10 +39,10 @@ docs
 {{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.config/bat
 !.config/bat/**
-{{- end }}
-{{- if eq $profile "macos" }}
 !.config/atuin
 !.config/atuin/**
+{{- end }}
+{{- if eq $profile "macos" }}
 !.config/lazydocker
 !.config/lazydocker/config.yml
 !.config/posting

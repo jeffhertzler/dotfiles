@@ -10,6 +10,7 @@ export LANG="${LANG:-en_US.UTF-8}"
 
 path=(
   "$HOME/.local/bin"
+  "$HOME/.atuin/bin"
   "$HOME/.opencode/bin"
   "$HOME/.local/share/mise/shims"
   "$VOLTA_HOME/bin"
