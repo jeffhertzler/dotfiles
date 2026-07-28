@@ -186,7 +186,7 @@ a promise that Chezmoi installs every dependency.
 | Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
 | Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
-| Python | Mise 3.14.6; Windows packages retained | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
+| Python | Mise 3.14.6 | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
 | Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
@@ -206,10 +206,13 @@ a promise that Chezmoi installs every dependency.
   Windows PowerShell, Git Bash, and WSL-to-Windows interop resolve `python`,
   `python3`, `pip`, and `pip3` through the same Mise runtime. The native
   `poe2-item-intelligence` application passed its full 572-test suite there.
-- Windows retains its standalone Python 3.12 and Python Install Manager trees as
-  rollback state for now. A Windows-only reconciliation script puts Mise's
-  shims first in the persistent user `PATH` without deleting or reordering any
-  other entry, and backs up the previous value before changing it.
+- Windows's standalone Python 3.12, legacy launcher, Python Install Manager, and
+  manager-owned 3.14 runtime were removed after the Mise runtime passed the
+  native application's full suite both before and after cleanup. The Windows
+  `py`/`pymanager` commands are intentionally absent. A Windows-only
+  reconciliation script keeps Mise's shims first in the persistent user `PATH`
+  without deleting or reordering any other entry, and backs up the previous
+  value before changing it.
 - Homebrew and pacman Python installations remain installed for package-owned
   utilities even though Mise wins in development shells. Arch's independent
   `/usr/bin/pynvim-python` provider remains available to Neovim.
