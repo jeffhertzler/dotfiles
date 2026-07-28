@@ -237,7 +237,10 @@ a promise that Chezmoi installs every dependency.
   project-pinned tools during a staged migration. This is substantive
   compatibility state, not merely an old installer: the checked-out projects
   contain exact `package.json.volta` pins ranging from Node 10 through 24, plus
-  npm and Yarn pins. Mise does not interpret the Volta field directly.
+  npm and Yarn pins. Mise does not interpret the Volta field directly. During
+  the transition, Volta's static shim precedes Mise's static shim so untouched
+  projects keep working; interactive `mise activate zsh` places a migrated
+  project's concrete Mise tool path ahead of both.
 - Mise's standard Node version-file support is enabled on every profile, so
   `.nvmrc`, `.node-version`, `.tool-versions`, and `package.json.devEngines`
   can become the common project mechanism. Corepack is enabled for Unix
