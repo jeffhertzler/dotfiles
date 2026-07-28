@@ -251,6 +251,16 @@ a promise that Chezmoi installs every dependency.
   excluded from the repository.
 - Git configuration is a plain shared Chezmoi source file.
 
+### Pi
+
+- `openai-codex-personal` is the canonical shared default provider.
+- `/profile work --project` stores the normal work override in a repository's
+  local `.pi/settings.json`; `/profile work` remains available for an ad hoc
+  global switch.
+- An ad hoc global switch updates the managed user settings file, so it may
+  appear as temporary Chezmoi drift. Do not promote that transient work choice
+  into the shared source; the next explicit apply restores the personal default.
+
 ### Neovim
 
 - The shared LazyVim tree works on all four profiles.
