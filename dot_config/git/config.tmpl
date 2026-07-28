@@ -2,15 +2,6 @@
 [core]
 	excludesFile = ~/.config/git/ignore
 
-{{ if eq $profile "arch" -}}
-[credential "https://github.com"]
-	helper =
-	helper = !/usr/bin/gh auth git-credential
-[credential "https://gist.github.com"]
-	helper =
-	helper = !/usr/bin/gh auth git-credential
-{{ end -}}
-
 {{ if or (eq $profile "arch") (eq $profile "macos") (eq $profile "windows") (eq $profile "wsl") -}}
 [filter "lfs"]
 	clean = git-lfs clean -- %f

@@ -70,17 +70,17 @@ Kinds:
 | D10 | Project overlays | Greenlight and Vimme live under ~/.config/shell and are managed on WSL, Mac, and Arch. Each exits without side effects unless its ~/dev checkout exists. OpenCode's portable ocp/ocw helper now lives at ~/.config/shell/opencode.sh on all four machines; obsolete .ocprofile.zsh files were moved into local backups. | Decided and implemented | Keep checkout-specific behavior guarded and portable shell helpers under XDG config. |
 | D11 | Private shell data | .private.zsh is ignored unless CHEZMOI_INCLUDE_SECRETS=1, and the deny-by-default profiles ignore it regardless. | Conservative | Define one explicit secret-management policy for every machine. |
 | D12 | XDG root | Managed app configs use ~/.config. Windows sets XDG_CONFIG_HOME in Git Bash and as a user environment variable for Neovim. | Intentional | Keep. Existing long-lived Windows processes may need restart to see the environment variable. |
-| D13 | Git common core | Name, email, default branch, pull behavior, excludes file, and ~/.config/git/local.config include are shared. WSL keeps its gh credential-helper command in that unmanaged local overlay rather than the shared file; no credential is stored in Chezmoi. opencode.json is not globally ignored; any local-only project config must use that repository's .git/info/exclude. The one discovered project opencode.json is intentionally tracked, so it needs no private exclusion. | Intentional | Keep global ignores limited to universally disposable state and machine-specific authentication plumbing in local.config. |
-| D14 | Git credentials | Only Arch writes explicit gh credential helpers for GitHub and Gist. | Historical | Use gh credential helpers everywhere gh is installed, or rely on each platform's native helper? |
+| D13 | Git common core | Name, email, default branch, pull behavior, excludes file, and ~/.config/git/local.config include are shared. WSL and Arch keep their gh credential-helper commands in that unmanaged local overlay rather than the shared file; no credential is stored in Chezmoi. opencode.json is not globally ignored; any local-only project config must use that repository's .git/info/exclude. The one discovered project opencode.json is intentionally tracked, so it needs no private exclusion. | Intentional | Keep global ignores limited to universally disposable state and machine-specific authentication plumbing in local.config. |
+| D14 | Git credentials | Unmanaged ~/.config/git/local.config files explicitly retain HTTPS fallback: Windows resets to Git Credential Manager, macOS resets to Keychain, and WSL and Arch use URL-scoped gh helpers for GitHub and Gist. | Decided and implemented | Keep legacy HTTPS repositories working while all authentication plumbing remains outside Chezmoi. |
 | D15 | Git LFS | Windows, WSL, Mac, and Arch render the same Git LFS filters. WSL was added after confirming the executable and filter behavior. | Decided and implemented | Keep the filters unified while Git LFS remains installed on every supported profile. |
 | D16 | Greenlight Git include | The checkout-specific ~/dev/greenlight include was removed from the shared template. Mac and Arch retain it in their unmanaged ~/.config/git/local.config files, which the shared Git config already includes. Chezmoi does not own or copy the project-owned ~/dev/greenlight/.gitconfig. | Decided and implemented | Keep checkout-specific includes in the unmanaged local overlay. |
 | D17 | lockb Git diff | The stale Mac-only Bun lockb textconv was removed. No bun.lockb files were found under Windows Documents or Mac ~/dev. | Decided and implemented | Restore only if a real binary Bun lockfile needs text conversion again. |
 | D18 | Delta | Delta config and Catppuccin include were removed because Delta was not active. | Intentional during this pass | Reconsider only if Delta is deliberately adopted again. |
 | D19 | Machine Git data | Arch stores its CodeRabbit machine ID and Pop!_OS mount include in unmanaged ~/.config/git/local.config, mode 0600. | Intentional | Keep machine IDs and machine paths out of the public source. |
 | D20 | LazyGit | All four profiles use the same custom lazygit-nvim behavior. Unix renders direct helper commands; native Windows renders the same commands through Git Bash because LazyGit launches them through cmd.exe. Two source templates still encode only that launcher difference. | Functionally unified; structural cleanup pending | Collapse the duplicate templates only after interactive LazyGit-to-Neovim behavior is accepted on each platform. |
-| D21 | GitHub CLI config | GitHub CLI is installed on all four machines, and all four manage only ~/.config/gh/config.yml at mode 0600. Native Windows uses the existing user-level XDG_CONFIG_HOME so gh reads the shared XDG path. hosts.yml and authentication remain unmanaged; the new Windows installation still needs an interactive login. | Decided and implemented; Windows auth pending | Keep non-secret config shared and authenticate each machine outside Chezmoi. |
-| D22 | SSH config | ~/.ssh/config and known_hosts remain completely unmanaged. | Explicit prior decision | Keep. |
-| D23 | SSH keys | The old public-key file and 1Password-backed private-key template remain in source. Deny-by-default profiles ignore .ssh, so Arch is the only current profile that can manage them. | Historical/high priority | Remove legacy key management, or define a deliberate cross-machine key policy? |
+| D21 | GitHub CLI config | GitHub CLI is installed on all four machines, and all four manage only ~/.config/gh/config.yml at mode 0600 with SSH as the preferred Git protocol. Native Windows uses the existing user-level XDG_CONFIG_HOME so gh reads the shared XDG path. hosts.yml and API authentication remain unmanaged; the Windows CLI still needs an interactive API login. | Decided and implemented; Windows API auth pending | Prefer SSH for new GitHub operations while retaining machine-local HTTPS helpers for legacy remotes. |
+| D22 | SSH config | ~/.ssh/config and known_hosts remain completely unmanaged. GitHub's published Ed25519 host fingerprint was verified before github.com was accepted locally on each machine. | Explicit prior decision | Keep SSH host policy machine-local. |
+| D23 | SSH keys | Windows, WSL, macOS, and Arch have the same existing RSA key, now registered with GitHub and verified for SSH authentication on all four systems. The public-key file and 1Password-backed private-key template remain in source, but only Arch can currently manage them because the other profiles ignore .ssh. | Operationally unified; storage ownership deferred | Keep the shared identity working; revisit raw-key storage versus agent-backed delivery separately. |
 | D24 | Starship | The same ~/.config/starship.toml is managed on all supported profiles. | Intentional | Keep. |
 | D25 | Herdr core | The same core UI, theme, history, and navigation keys are managed on Windows, WSL, Mac, and Arch. | Intentional | Keep. |
 | D26 | Herdr Windows terminal | Windows alone sets Git Bash as Herdr's shell, new_cwd=follow, and the preview update channel. Native Windows releases are currently preview-only and Herdr rejects the stable channel there. | Required/intentional | Keep until Herdr publishes stable native Windows releases. |
@@ -173,6 +173,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - AgentBridge Windows registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-agentbridge-windows-registry contains the prior server.lua and lazygit-nvim targets.
 - Session-picker retirement backup: %LOCALAPPDATA%/dotfiles-backups/20260727-retire-herdr-session-picker/common.sh.
 - Bat/gh convergence registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-bat-gh-convergence/HKCU-Environment-before.reg. BAT_CONFIG_PATH was previously unset; remove that user variable to roll back the Windows Bat path override.
+- Git transport-policy backup: %LOCALAPPDATA%/dotfiles-backups/20260727-git-transport-policy records that the unmanaged Git local overlay did not previously exist.
 
 ### WSL
 
@@ -189,6 +190,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
   ~/.zshrc.
 - Previous Neovim tree: ~/.config/nvim.pre-chezmoi-20260727-070409
 - GitHub credential-helper backup: ~/.local/state/dotfiles-backups/20260727-github-credential-helper/config. The local.config overlay did not previously exist; it was created to hold gh's helper command outside managed state.
+- Git transport-policy backup: ~/.local/state/dotfiles-backups/20260727-git-transport-policy/local.config.
 
 ### macOS
 
@@ -209,6 +211,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
   ~/.local/state/chezmoi-backups/greenlight-tput-*.
 - Earlier inline backup filenames are the original path plus
   .pre-chezmoi-TIMESTAMP; the D10 backup directories above retain named copies.
+- Git transport-policy backup: ~/.local/state/dotfiles-backups/20260727-git-transport-policy/local.config.
 - Mac ~/.config/tmux and ~/.config/workmux were deleted directly, not moved to
   Trash. Their configuration remains in the Arch-only source; TPM plugins can
   be reinstalled but the deleted plugin clones are not directly recoverable.
@@ -237,6 +240,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - D06 static-PATH backup: ~/.zshenv.pre-chezmoi-20260727-164606.
 - D08 shared-shell backups use timestamp 20260727-170116 for common.sh and
   ~/.zshrc.
+- Git transport-policy backup: ~/.local/state/dotfiles-backups/20260727-git-transport-policy/local.config. The earlier Arch-only helper move is also backed up under 20260727-arch-gh-helper-local.
 
 ## Review order
 
