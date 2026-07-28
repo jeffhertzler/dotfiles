@@ -1,9 +1,13 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 {{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
+{{- $popupPicker := printf "%s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
 {{- if eq $profile "windows" -}}
 {{-   $directionalSplit = printf "node \"%s/.local/bin/herdr-directional-split.mjs\"" .chezmoi.homeDir -}}
+{{-   $popupPicker = "C:/PROGRA~1/Git/bin/bash.exe \"%USERPROFILE%/.local/bin/herdr-popup-picker\"" -}}
 {{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
+{{- else if eq $profile "arch" -}}
+{{-   $popupPicker = printf "HERDR_POPUP_ENABLE_WORKMUX=1 %s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- end -}}
 onboarding = false
 
@@ -95,15 +99,15 @@ type = "shell"
 command = '{{ $reorder }} workspace down'
 description = "move workspace / worktree group down"
 
-{{ if eq $profile "arch" -}}
 [[keys.command]]
 key = "prefix+p"
 type = "popup"
-command = "{{ .chezmoi.homeDir }}/.local/bin/herdr-popup-picker"
+command = '{{ $popupPicker }}'
 description = "open popup launcher"
 width = "90%"
 height = "90%"
 
+{{ if eq $profile "arch" -}}
 [[keys.command]]
 key = "prefix+shift+g"
 type = "plugin_action"

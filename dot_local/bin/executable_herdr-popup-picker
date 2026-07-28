@@ -2,6 +2,12 @@
 set -euo pipefail
 
 self=$(realpath "$0")
+if command -v cygpath >/dev/null 2>&1; then
+  # fzf parses callback commands once before Bash evaluates them. Use the
+  # space-free Windows short path so the user's home directory survives both
+  # parsing passes.
+  self=$(cygpath -u "$(cygpath -m -s "$self")")
+fi
 
 # Herdr's detached server may not have inherited a locale. Unicode TUIs such as
 # btop refuse to start under the resulting POSIX locale.
@@ -116,9 +122,25 @@ known_id() {
   [[ -n ${title[$1]+x} ]]
 }
 
+is_enabled() {
+  [[ $1 != workmux || ${HERDR_POPUP_ENABLE_WORKMUX:-0} == 1 ]]
+}
+
 is_available() {
-  local binary=${executable[$1]}
-  [[ -z $binary ]] || command -v "$binary" >/dev/null 2>&1
+  local id=$1 binary=${executable[$1]}
+  is_enabled "$id" || return 1
+  case $id in
+    github-dashboard) command -v gh >/dev/null 2>&1 && gh dash --help >/dev/null 2>&1 ;;
+    github-news) command -v gh >/dev/null 2>&1 && gh news --help >/dev/null 2>&1 ;;
+    *) [[ -z $binary ]] || command -v "$binary" >/dev/null 2>&1 ;;
+  esac
+}
+
+required_command() {
+  case $1 in
+    github-dashboard|github-news) printf '%s' "${command_line[$1]}" ;;
+    *) printf '%s' "${executable[$1]}" ;;
+  esac
 }
 
 emit_item() {
@@ -146,13 +168,13 @@ emit_items() {
   local view=$1 id
   case $view in
     root)
-      for id in "${root_ids[@]}"; do emit_item "$id" root; done
+      for id in "${root_ids[@]}"; do is_enabled "$id" && emit_item "$id" root; done
       ;;
     git)
       for id in "${git_ids[@]}"; do emit_item "$id" git; done
       ;;
     all)
-      for id in "${all_ids[@]}"; do emit_item "$id" all; done
+      for id in "${all_ids[@]}"; do is_enabled "$id" && emit_item "$id" all; done
       ;;
     *) return 2 ;;
   esac
@@ -164,7 +186,7 @@ preview_item() {
   if is_available "$id"; then
     availability="${good}available${reset}"
   else
-    availability="${bad}not installed: ${executable[$id]}${reset}"
+    availability="${bad}not installed: $(required_command "$id")${reset}"
   fi
 
   printf '\n  %b%s  %s%b\n\n' "$accent" "${icon[$id]}" "${title[$id]}" "$reset"
@@ -190,10 +212,14 @@ run_item() {
     printf 'Unknown popup command: %s\n' "$id" >&2
     return 2
   }
+  is_enabled "$id" || {
+    printf '%s is disabled for this profile.\n' "${title[$id]}" >&2
+    return 2
+  }
   [[ $id != git-menu ]] || return 2
 
   if ! is_available "$id"; then
-    printf '\n%s is not installed or not available on PATH.\n' "${executable[$id]}" >&2
+    printf '\n%s is not installed or not available on PATH.\n' "$(required_command "$id")" >&2
     printf 'Press any key to close…' >&2
     IFS= read -rsn1 || true
     printf '\n' >&2
@@ -243,7 +269,7 @@ fzf_action() {
         'Launcher › :d') become_action docker ;;
         'Launcher › :j') become_action jira ;;
         'Launcher › :t') become_action processes ;;
-        'Launcher › :w') become_action workmux ;;
+        'Launcher › :w') if is_enabled workmux; then become_action workmux; else printf ignore; fi ;;
         'Launcher › :y') become_action files ;;
         'Launcher › :g') git_action ;;
         'Launcher › :q') printf abort ;;
@@ -350,7 +376,7 @@ case ${1:-} in
     ;;
   --choose)
     [[ $# == 2 ]] || exit 2
-    known_id "$2" || exit 2
+    known_id "$2" && is_enabled "$2" || exit 2
     printf '%s\n' "$2"
     ;;
   --fzf-action)
