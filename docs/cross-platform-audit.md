@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `b300c98` on `normalize/multi-platform`
+Source baseline: `c5f190d` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -33,8 +33,8 @@ The central design is sound:
   is the primary workspace manager.
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
-to dormant Mac Jabba state and the Windows ble.sh update policy. Broader Mise
-adoption and native-Windows Go remain explicitly deferred.
+to the Windows ble.sh update policy, later programming-language migrations into
+Mise, and optional native-Windows Go.
 
 ## Supported profiles
 
@@ -182,6 +182,8 @@ a promise that Chezmoi installs every dependency.
 | OpenCode | official installer | official installer | official installer | official installer |
 | Pi | Mise | Mise | Volta | Volta |
 | Node | WinGet | Mise | Volta | Volta |
+| Mise | WinGet | direct installer | Homebrew | pacman |
+| Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
@@ -202,9 +204,17 @@ a promise that Chezmoi installs every dependency.
   and `pip3`; the newer Python Install Manager owns `python3` and makes 3.14 the
   `py` default. This is documented command ownership rather than a PATH fault;
   neither runtime should be removed without checking the native Python app.
-- WSL now sets a Mise discovery ceiling at its Linux home and the mounted
+- Mise discovery ceilings now live in its shell-independent early-init
+  `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
   into WSL projects.
+- Mise configuration is shared and profile-aware without changing existing tool
+  ownership: Windows and WSL retain their prior tools, while macOS and Arch now
+  use Mise for Temurin Java 17 and 11. Plain version declarations align with
+  existing `.java-version` files, and `java.shorthand_vendor = "temurin"` keeps
+  the selected distribution explicit.
+- Jabba is retired on macOS and Arch. Its shell integration and managed source
+  are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
   copies have been removed.
 - macOS package drift is resolved: obsolete Cargo copies, Workmux, the old
@@ -222,9 +232,8 @@ a promise that Chezmoi installs every dependency.
 - Atuin remains installed on macOS for local shell history, but its unused and
   failing background daemon service has been removed. Automatic sync remains
   disabled in the shared configuration.
-- Broader Mise adoption remains deliberately deferred. It may eventually provide
-  a consistent programming-language manager without needing to own standalone
-  applications.
+- Further Mise adoption remains incremental. It manages programming-language
+  runtimes and selected runtime-installed CLIs, not standalone applications.
 
 ## Application findings
 
@@ -332,9 +341,10 @@ These candidates were previewed and completed individually:
 
 The Arch tmux and Workmux sources are not dead configuration. They are retained
 legacy by explicit policy and should not be removed as part of general cleanup.
-Arch Jabba actively selects Temurin 11 and retains JDKs 8, 17, and 21. The
-redundant `.profile` has been removed: Zsh receives Volta from `.zshenv`, and
-the supported workflows do not require a separate POSIX login-shell fallback.
+Jabba has been replaced by Mise-managed Temurin 17 and 11 on macOS and Arch.
+The redundant `.profile` has also been removed: Zsh receives Volta from
+`.zshenv`, and the supported workflows do not require a separate POSIX
+login-shell fallback.
 
 ## Installation gaps and optional enhancements
 
@@ -343,8 +353,11 @@ Optional:
 - Decide whether the Windows ble.sh bootstrap should remain install-only or
   gain an explicit update policy. It currently preserves the working version.
 - Install Go on native Windows if Windows-local Go development becomes useful.
-- Adopt Mise for programming-language runtimes on more profiles after a separate
-  design pass.
+- Decide whether Maven should move into Mise on macOS and Arch. macOS currently
+  has Homebrew Maven; Arch has no global Maven, although projects with `mvnw`
+  work correctly.
+- Consider later migrations of Node, Python, Go, and runtime-installed CLIs into
+  Mise one owner at a time; current managers remain intentional until then.
 
 ## Recommended cleanup sequence
 
@@ -364,9 +377,11 @@ Each step should be previewed narrowly and verified on all affected profiles.
 6. **Complete:** all four plugins are desired everywhere; monthly reconciliation
    updates Unix upstream installs and Windows private branches while preserving
    explicit review for public-upstream merges and plugin removal.
-7. **Complete:** WSL Mise discovery is isolated from Windows; Arch uses Volta
-   instead of Hermes; Bun is current; Windows can bootstrap ble.sh; and macOS
-   package ownership, obsolete taps, and retained LazyJira trust are clean.
+7. **Complete:** Mise discovery is shell-independent and WSL is isolated from
+   Windows; macOS and Arch use Mise-managed Temurin 17/11 instead of Jabba;
+   Arch uses Volta instead of Hermes; Bun is current; Windows can bootstrap
+   ble.sh; and macOS package ownership, obsolete taps, and retained LazyJira
+   trust are clean.
 8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
    not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
    merely for cross-platform parity.
