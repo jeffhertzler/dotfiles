@@ -1,6 +1,6 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 {{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
-{{- $popupPicker := printf "%s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
+{{- $popupPicker := "~/.local/bin/herdr-popup-picker" -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
 {{- $herdrSplitsSuffix := "" -}}
 {{- if eq $profile "windows" -}}
@@ -9,7 +9,7 @@
 {{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
 {{-   $herdrSplitsSuffix = "-windows" -}}
 {{- else if eq $profile "arch" -}}
-{{-   $popupPicker = printf "HERDR_POPUP_ENABLE_WORKMUX=1 %s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
+{{-   $popupPicker = "HERDR_POPUP_ENABLE_WORKMUX=1 ~/.local/bin/herdr-popup-picker" -}}
 {{- end -}}
 onboarding = false
 
