@@ -4,6 +4,10 @@
 export COLORTERM="${COLORTERM:-truecolor}"
 export TERM_PROGRAM="${TERM_PROGRAM:-xterm-256}"
 
+# Do not let Mise discover the native Windows global config while traversing
+# upward from projects under the mounted Windows home.
+export MISE_CEILING_PATHS="$HOME:/mnt/c/Users/Jeff Hertzler"
+
 # Launch the Windows-hosted PoE2 intelligence app from its project directory.
 export POE2="/mnt/c/Users/Jeff Hertzler/Documents/poe2-item-intelligence"
 
