@@ -15,8 +15,10 @@ corepack = true
 go = "latest"
 node = "lts"
 python = "latest"
+uv = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:neovim" = "latest"
+"pipx:pynvim" = "latest"
 {{- if eq $profile "windows" }}
 "github:tree-sitter/tree-sitter" = { version = "v0.26.11", bin = "tree-sitter.exe" }
 {{- else if eq $profile "wsl" }}

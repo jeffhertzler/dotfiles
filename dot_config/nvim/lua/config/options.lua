@@ -57,6 +57,11 @@ if mise ~= "" then
   end
 end
 
+local python_host = vim.fn.exepath("pynvim-python")
+if python_host ~= "" then
+  vim.g.python3_host_prog = python_host
+end
+
 vim.opt.relativenumber = false
 vim.opt.showtabline = 0
 vim.opt.swapfile = false

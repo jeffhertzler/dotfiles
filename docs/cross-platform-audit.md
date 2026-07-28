@@ -272,6 +272,10 @@ a promise that Chezmoi installs every dependency.
 - The Neovim Node host and its default Node LTS runtime are owned by Mise on all
   four profiles. Neovim explicitly selects Mise's Node, while macOS and Arch
   retain Volta only for untouched project pins during the staged migration.
+- The Neovim Python host is an isolated Mise `pipx:pynvim` tool on all four
+  profiles. Neovim selects its `pynvim-python` executable directly rather than
+  depending on mutable packages inside a development Python runtime. Mise also
+  owns the shared `uv` installer used by its `pipx` backend.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
