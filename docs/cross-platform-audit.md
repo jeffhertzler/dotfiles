@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `4f06982` on `normalize/multi-platform`
+Source baseline: `b300c98` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -300,6 +300,9 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
 
 - Atuin works across Bash and Zsh, including the corrected Git Bash Ctrl-R
   binding through ble.sh.
+- Git Bash exposes native Herdr, LLVM, Starship, GitHub CLI, and OpenCode paths
+  before its interactive-shell guard, so automation and interactive terminals
+  resolve the same required tools.
 - The checked-in Atuin file now contains only the intentional local-history,
   session-up-arrow, style, Enter-accept, and record-sync settings.
 - Bat uses its bundled Catppuccin Mocha theme on all four profiles; redundant
@@ -367,9 +370,10 @@ Each step should be previewed narrowly and verified on all affected profiles.
 8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
    not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
    merely for cross-platform parity.
-9. Run `chezmoi diff`, narrow applies, `chezmoi verify --exclude=dirs`, and
-   `chezmoi status --exclude=dirs` on Windows, WSL, macOS, and Arch before
-   merging `normalize/multi-platform`.
+9. **Complete:** Windows, WSL, macOS, and Arch have clean source worktrees,
+   empty Chezmoi diffs/status, successful verification, and zero doctor
+   failures. Windows retains four expected warnings until parent applications
+   restart and inherit its persistent Yazi, Bat, and Worktrunk environment.
 
 ## Verification policy
 
