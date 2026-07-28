@@ -228,8 +228,28 @@ a promise that Chezmoi installs every dependency.
   third-party formula is trusted. `brew doctor` is clean.
 - macOS Bun has been upgraded from 1.0.0 to 1.3.14 through its official
   self-updater.
-- Arch uses Volta for Node, npm, npx, and Pi. The unused Hermes installation,
-  its private runtime, and its command shims have been removed.
+- Native Windows and WSL use Mise for Node. Windows has no checked-out projects
+  with Volta, `.nvmrc`, `.node-version`, or `.tool-versions` Node pins, so its
+  standalone Node installation is now only a removable fallback. Mise also owns
+  the Neovim Node host and Tree-sitter CLI there instead of Node-global npm
+  state.
+- macOS and Arch still use Volta for Node, npm, npx, Yarn, and existing
+  project-pinned tools during a staged migration. This is substantive
+  compatibility state, not merely an old installer: the checked-out projects
+  contain exact `package.json.volta` pins ranging from Node 10 through 24, plus
+  npm and Yarn pins. Mise does not interpret the Volta field directly.
+- Mise's standard Node version-file support is enabled on every profile, so
+  `.nvmrc`, `.node-version`, `.tool-versions`, and `package.json.devEngines`
+  can become the common project mechanism. Corepack is enabled for Unix
+  Mise-installed Node versions. Native Windows temporarily retains its existing
+  Corepack installation because Corepack's enable hook otherwise targets the
+  protected standalone Node directory; package-manager ownership should be
+  revisited when that fallback installation is removed. macOS and Arch can
+  therefore migrate projects incrementally while Volta remains available for
+  untouched `package.json.volta` projects; Volta should not be removed until
+  those projects and its global CLI inventory have been reconciled.
+- The unused Hermes installation, its private runtime, and its command shims
+  have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream

@@ -1,5 +1,6 @@
 # Native Windows CLI paths must also be available to noninteractive login
 # shells, including automation and the dotfiles doctor.
+export PATH="$HOME/AppData/Local/mise/shims:$PATH"
 if [[ -d "$HOME/AppData/Local/Programs/Herdr/bin" ]]; then
   export PATH="$HOME/AppData/Local/Programs/Herdr/bin:$PATH"
 fi
