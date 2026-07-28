@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
-Snapshot date: 2026-07-27
-Configuration baseline: a9ba68c on normalize/multi-platform
+Snapshot date: 2026-07-28
+Configuration baseline: f7eb179 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | a9ba68c | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit/Yazi-to-Neovim routing, local directional splits, named-pipe-safe Herdr reordering, and the portable Neovim registry are active. Windows renders helper commands through native launchers because Herdr and native applications run custom commands through cmd.exe. |
-| S02 | WSL | a9ba68c | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit-to-Neovim, local directional splits, Herdr reordering, and the portable AgentBridge registry are active. |
-| S03 | macOS | a9ba68c | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit-to-Neovim, local directional splits, Herdr reordering, and the portable AgentBridge registry are active. |
-| S04 | Arch | a9ba68c | Clean | LazyGit-to-Neovim, Herdr reordering, and the portable AgentBridge registry are shared; plugin-dependent full-layout splits remain Arch-only. |
+| S01 | Windows | f7eb179 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit/Yazi-to-Neovim routing, local directional splits, named-pipe-safe Herdr reordering, and the portable Neovim registry are active. Windows renders helper commands through native launchers because Herdr and native applications run custom commands through cmd.exe. |
+| S02 | WSL | f7eb179 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
+| S03 | macOS | f7eb179 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
+| S04 | Arch | f7eb179 | Clean | LazyGit/Yazi-to-Neovim routing, Herdr reordering, and the portable Neovim registry are shared; plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -266,6 +266,8 @@ work npm configuration separately rather than changing it as part of Pi setup.
 
 These commits are intentionally small so individual choices can be reverted or
 rewritten during review:
+
+- f7eb179 share neovim target routing with yazi
 
 - d6b9bdf add safe multi-platform profile scaffold
 - 8bde75f enable shared starship config for wsl and windows
