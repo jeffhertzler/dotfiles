@@ -27,6 +27,14 @@ normalization work; simplifying that scaffold is tracked in the
 
 Machine-local SSH configuration and credentials are intentionally not managed.
 
+## Health check
+
+Run `dotfiles-doctor` from any supported shell for a read-only report covering
+required tools, resolved versions and paths, Git and Chezmoi state, Herdr
+plugins, and optional Yazi preview support. It exits nonzero for required or
+managed-state failures; optional capabilities are reported without failing the
+check.
+
 ## Git layout
 
 Portable identity, defaults, and global ignores live in `.config/git`. Profile

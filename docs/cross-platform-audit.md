@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `cb9a738` on `normalize/multi-platform`
+Source baseline: `9b7539f` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -110,6 +110,23 @@ The following intentionally remain outside ordinary Chezmoi management:
 The RSA SSH key pair has an opt-in 1Password-backed Chezmoi bootstrap path. It
 is ignored unless `CHEZMOI_INCLUDE_SECRETS=1`; raw local key storage and direct
 machine-to-machine recovery remain acceptable.
+
+### Read-only health check
+
+`dotfiles-doctor` is managed on all four profiles and was verified from native
+Windows/Git Bash, WSL, macOS, and Arch. It reports:
+
+- Required executable versions and the exact paths selected by each shell
+- Optional runtime and Yazi preview capabilities
+- GitHub's preferred transport and the unmanaged local Git overlay
+- Chezmoi source state, target status, and verification
+- Desired, missing, disabled, and extra Herdr plugins
+- Windows compatibility-clone refs/remotes and persistent environment variables
+
+`[FAIL]` results produce a nonzero exit status. `[WARN]` identifies state that
+deserves attention but is not necessarily broken, while `[--]` records an
+optional capability that is not installed. The command never installs, updates,
+applies, or removes anything.
 
 ## Managed behavior by platform
 
@@ -339,9 +356,9 @@ Optional:
 
 Each step should be previewed narrowly and verified on all affected profiles.
 
-1. Add a read-only `dotfiles doctor` command that reports required tools,
-   resolved versions/paths, Windows environment variables, Chezmoi status,
-   Herdr plugin sources, and optional Yazi dependencies.
+1. **Complete:** `dotfiles-doctor` reports required tools, resolved
+   versions/paths, Windows environment variables, Chezmoi state, Herdr plugin
+   sources, and optional Yazi dependencies on all four profiles.
 2. Simplify `.chezmoiignore` and remove the redundant Git template conditional.
 3. Remove the confirmed dead Neovim/Yazi configuration and resolve the
    Refactoring contradiction.
