@@ -5,8 +5,12 @@ idiomatic_version_file_enable_tools = ["java"]
 [settings.java]
 shorthand_vendor = "temurin"
 
+[settings.go]
+set_gobin = false
+
 [tools]
 {{- if eq $profile "windows" }}
+go = "latest"
 "npm:@earendil-works/pi-coding-agent" = "0.82.1"
 {{- else if eq $profile "wsl" }}
 "github:jesseduffield/lazygit" = "latest"
@@ -19,6 +23,7 @@ python = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 chezmoi = "2.71.1"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
+go = "latest"
 java = ["17", "11"]
 maven = "latest"
 {{- end }}

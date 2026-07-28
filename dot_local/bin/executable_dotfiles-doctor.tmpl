@@ -159,6 +159,7 @@ check_tool 'OpenCode' opencode
 check_tool 'Pi' pi
 check_tool 'Node.js' node
 check_tool 'Mise' mise
+check_tool 'Go' go
 check_alternative 'Python' python3 python
 check_tool 'Starship' starship
 check_tool 'Atuin' atuin
@@ -195,7 +196,6 @@ esac
 
 section 'Optional and bootstrap tools'
 check_optional_tool '1Password CLI' op
-check_optional_tool 'Go' go
 check_optional_tool 'Volta' volta
 if [[ $profile == arch ]]; then
   check_optional_tool 'tmux (retained legacy)' tmux

@@ -13,6 +13,7 @@ if [[ -d "/c/Program Files/GitHub CLI" ]]; then
   export PATH="/c/Program Files/GitHub CLI:$PATH"
 fi
 export PATH="$HOME/.opencode/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
 
 # Lightweight Git Bash baseline: no shell framework.
 [[ $- == *i* ]] || return 0

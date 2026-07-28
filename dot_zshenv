@@ -3,7 +3,6 @@
 export BUN_INSTALL="$HOME/.bun"
 export VOLTA_HOME="$HOME/.volta"
 export COMPOSER_BIN="$HOME/.config/composer/vendor/bin"
-export GOPATH="$HOME/go"
 
 # Herdr's noninteractive SSH bridge may not receive a client locale.
 export LANG="${LANG:-en_US.UTF-8}"
@@ -18,8 +17,7 @@ path=(
   "$HOME/.opencode/bin"
   "$BUN_INSTALL/bin"
   "$HOME/.cargo/bin"
-  "$HOME/.go/bin"
-  "$GOPATH/bin"
+  "$HOME/go/bin"
   "$COMPOSER_BIN"
   $path
 )
