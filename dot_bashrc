@@ -49,4 +49,38 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init bash)"
 fi
 
+# Native Windows cannot reliably inspect Git Bash's logical cwd after `cd`.
+# Report it through OSC 7 so Herdr can refresh workspace Git metadata.
+__herdr_report_cwd() {
+  [[ -n ${HERDR_PANE_ID-} ]] || return
+
+  local windows_path uri_path character escape
+  local LC_ALL=C encoded= index
+  windows_path=$(cygpath -m -- "$PWD") || return
+  uri_path="/$windows_path"
+
+  for ((index = 0; index < ${#uri_path}; index++)); do
+    character=${uri_path:index:1}
+    case $character in
+    [-A-Za-z0-9._~/:])
+      encoded+=$character
+      ;;
+    *)
+      printf -v escape '%%%02X' "'$character"
+      encoded+=$escape
+      ;;
+    esac
+  done
+
+  printf '\033]7;file://%s\033\\' "$encoded"
+}
+
+if [[ -n ${HERDR_PANE_ID-} ]]; then
+  if [[ ${BLE_VERSION-} ]]; then
+    blehook PRECMD+='__herdr_report_cwd'
+  else
+    PROMPT_COMMAND+=(__herdr_report_cwd)
+  fi
+fi
+
 [[ ! ${BLE_VERSION-} ]] || ble-attach
