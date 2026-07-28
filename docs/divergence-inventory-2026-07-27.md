@@ -175,6 +175,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Bat/gh convergence registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-bat-gh-convergence/HKCU-Environment-before.reg. BAT_CONFIG_PATH was previously unset; remove that user variable to roll back the Windows Bat path override.
 - Git transport-policy backup: %LOCALAPPDATA%/dotfiles-backups/20260727-git-transport-policy records that the unmanaged Git local overlay did not previously exist and retains the former dotfiles repository config.
 - 1Password CLI 2.34.1 was installed through WinGet package AgileBits.1Password.CLI; `winget uninstall --id AgileBits.1Password.CLI --exact` removes it.
+- The formatting-only config.yml rewrite made by Windows `gh auth login` is backed up under %LOCALAPPDATA%/dotfiles-backups/20260727-gh-login-rewrite; the managed config was restored without affecting keyring authentication.
 
 ### WSL
 
