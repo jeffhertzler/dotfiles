@@ -1,0 +1,23 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+[settings]
+idiomatic_version_file_enable_tools = ["java"]
+
+[settings.java]
+shorthand_vendor = "temurin"
+
+[tools]
+{{- if eq $profile "windows" }}
+"npm:@earendil-works/pi-coding-agent" = "0.82.1"
+{{- else if eq $profile "wsl" }}
+"github:jesseduffield/lazygit" = "latest"
+"github:tree-sitter/tree-sitter" = "v0.26.11"
+go = "latest"
+node = "lts"
+"npm:neovim" = "latest"
+rust = "stable"
+python = "latest"
+"npm:@earendil-works/pi-coding-agent" = "latest"
+chezmoi = "2.71.1"
+{{- else if or (eq $profile "macos") (eq $profile "arch") }}
+java = ["temurin-17", "temurin-11"]
+{{- end }}
