@@ -56,6 +56,17 @@ alias reload="source ~/.zshrc"
 
 alias sail="./vendor/bin/sail"
 
+{{ if or (eq $profile "wsl") (eq $profile "macos") }}
+# Herdr clients for the Arch host. SSH owns direct versus Tailscale routing.
+function ha() {
+  command herdr --remote arch --remote-keybindings server "$@"
+}
+
+function hat() {
+  command herdr --remote archt --remote-keybindings server "$@"
+}
+{{ end }}
+
 F=~/.private.zsh; [ -f $F ] && . $F
 {{- if eq $profile "wsl" }}
 F=~/.wsl.zsh; [ -f $F ] && . $F

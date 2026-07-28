@@ -85,3 +85,21 @@ if command -v yazi >/dev/null 2>&1; then
     rm -f -- "$tmp"
   }
 fi
+
+# WSL and the Arch host use the upstream Linux x86_64 AppImage.
+if [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = x86_64 ]; then
+  function nvu() {
+    local tmp exit_code
+    tmp="$(mktemp)" || return 1
+
+    command curl -fL \
+      "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage" \
+      -o "$tmp" &&
+      mkdir -p "$HOME/.local/bin" &&
+      command install -m 755 "$tmp" "$HOME/.local/bin/nvim"
+    exit_code=$?
+
+    rm -f "$tmp"
+    return "$exit_code"
+  }
+fi

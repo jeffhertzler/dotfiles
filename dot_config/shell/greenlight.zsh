@@ -67,8 +67,6 @@ ggpull() {
   (cd "$GG/frontend/risk" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}frontend/settings${normal}..."
   (cd "$GG/frontend/settings" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
-  echo "pulling ${bold}frontend/settings${normal}..."
-  (cd "$GG/frontend/settings" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}frontend/training${normal}..."
   (cd "$GG/frontend/training" && echo "${bold}$(git branch --show-current)${normal}" && git pull)
   echo "pulling ${bold}gateways/graphql${normal}..."
