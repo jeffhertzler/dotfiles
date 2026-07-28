@@ -35,16 +35,12 @@ if vim.fn.has("win32") == 1 then
     vim.opt.shellxquote = ""
   end
 elseif vim.fn.executable("volta") == 1 and vim.fn.executable("which") == 1 then
-  -- Arch and macOS use Volta's Node 22 for Node-backed editor tooling. If
-  -- Volta is absent or incomplete, leave Neovim's inherited PATH untouched.
+  -- Arch and macOS retain Volta's Node 22 for Node-backed editor tooling while
+  -- project runtimes migrate incrementally. The Neovim host itself is managed
+  -- by Mise and is discovered through Mise's ordinary PATH shim.
   local node22 = vim.fn.trim(vim.fn.system({ "volta", "run", "--node", "22", "which", "node" }))
   if vim.v.shell_error == 0 and vim.fn.executable(node22) == 1 then
     prepend_path(vim.fs.dirname(node22))
-  end
-
-  local node_host = vim.fn.trim(vim.fn.system({ "volta", "which", "neovim-node-host" }))
-  if vim.v.shell_error == 0 and vim.fn.executable(node_host) == 1 then
-    vim.g.node_host_prog = node_host
   end
 end
 
