@@ -2,6 +2,8 @@
 {{- if eq $profile "windows" -}}
 $ErrorActionPreference = "Stop"
 
+# Automatic refresh period: {{ now | date "2006-01" }}
+
 $herdr = Get-Command herdr -ErrorAction SilentlyContinue
 if (-not $herdr) {
   throw "Herdr plugin reconciliation requires herdr on PATH"

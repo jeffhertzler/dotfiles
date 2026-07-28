@@ -3,6 +3,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Automatic refresh period: {{ now | date "2006-01" }}
+
 if ! command -v herdr >/dev/null 2>&1; then
   echo "Herdr plugin reconciliation requires herdr on PATH" >&2
   exit 1
