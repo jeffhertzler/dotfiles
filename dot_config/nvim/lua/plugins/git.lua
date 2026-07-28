@@ -85,13 +85,6 @@ return {
         desc = "Neogit Status",
       },
       { "<leader>gc", "<cmd>Neogit commit<cr>", desc = "Neogit Commit" },
-      {
-        "<leader>gG",
-        function()
-          Snacks.lazygit()
-        end,
-        desc = "Lazygit (cwd)",
-      },
     },
   },
 }

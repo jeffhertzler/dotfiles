@@ -1,167 +1,171 @@
 #!/bin/sh
 
-mode=$1
-shift
+mode=${1:-}
+[ "$#" -gt 0 ] && shift
 
 log_file="${XDG_RUNTIME_DIR:-/tmp}/lazygit-nvim.log"
+server=
+launcher_kind=standalone
+launcher_buf=
 
 log() {
   printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$log_file"
 }
 
+usage() {
+  log "invalid invocation mode=${mode:-<none>} args=$*"
+  exit 1
+}
+
+case "$mode" in
+edit | dir)
+  [ "$#" -eq 1 ] || usage "$@"
+  ;;
+line | wait)
+  [ "$#" -eq 2 ] || usage "$@"
+  ;;
+*)
+  usage "$@"
+  ;;
+esac
+
 live_nvim_server() {
   [ -n "$1" ] && nvim --headless --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
 }
 
-native_nvim=0
-server=
-target_kind=none
-
-if [ -n "${NVIM:-}" ]; then
-  server=$NVIM
-  native_nvim=1
-  target_kind=native
-else
+resolve_herdr_target() {
   herdr_pane=${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}
-  if [ -n "$herdr_pane" ]; then
-    if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-      registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
-    elif [ "${OS:-}" = Windows_NT ]; then
-      registry_dir=${TMPDIR:-/tmp}/herdr-nvim
-    else
-      registry_dir=/tmp/herdr-nvim-$(id -u)
-    fi
-    safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.-' '_')
-    registry_file=$registry_dir/$safe_pane.server
+  [ -n "$herdr_pane" ] || return 1
 
-    if [ -r "$registry_file" ]; then
-      IFS= read -r server <"$registry_file" || server=
-      if live_nvim_server "$server"; then
-        target_kind=herdr
-      else
-        server=
-        rm -f "$registry_file"
-      fi
-    fi
+  if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
+  elif [ "${OS:-}" = Windows_NT ]; then
+    registry_dir=${TMPDIR:-/tmp}/herdr-nvim
+  else
+    registry_dir=/tmp/herdr-nvim-$(id -u)
   fi
 
-  if [ -z "$server" ]; then
-    server=$(~/.local/bin/tmux-nvim-server 2>/dev/null)
-    if [ -n "$server" ]; then
-      target_kind=tmux
-    fi
+  safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.-' '_')
+  registry_file=$registry_dir/$safe_pane.server
+  [ -r "$registry_file" ] || return 1
+
+  IFS= read -r candidate <"$registry_file" || candidate=
+  if live_nvim_server "$candidate"; then
+    server=$candidate
+    launcher_kind=herdr_popup
+    return 0
   fi
-fi
 
-log "mode=$mode server=${server:-<none>} target_kind=$target_kind pane=${TMUX_PANE:-<none>} popup=${TMUX_POPUP_PANE:-<none>} tmux_target=${TMUX_NVM_TARGET:-<none>} herdr_target=${HERDR_ACTIVE_PANE_ID:-<none>} args=$*"
+  rm -f "$registry_file"
+  return 1
+}
 
-if [ -z "$server" ]; then
+resolve_tmux_target() {
+  candidate=$("$HOME/.local/bin/tmux-nvim-server" 2>/dev/null) || candidate=
+  [ -n "$candidate" ] || return 1
+
+  server=$candidate
+  launcher_kind=tmux_popup
+}
+
+resolve_target() {
+  if [ -n "${NVIM:-}" ]; then
+    server=$NVIM
+    launcher_kind=nvim_terminal
+    return
+  fi
+
+  resolve_herdr_target && return
+  resolve_tmux_target || true
+}
+
+open_local_editor() {
   case "$mode" in
-  edit)
+  edit | dir)
     exec nvim -- "$1"
     ;;
   line | wait)
     exec nvim "+$1" -- "$2"
     ;;
-  dir)
-    exec nvim -- "$1"
-    ;;
   esac
-fi
+}
 
-if [ "$native_nvim" -eq 1 ]; then
-  terminal_buf=$(nvim --headless --server "$server" --remote-expr 'bufnr()' 2>/dev/null) || terminal_buf=
-  log "native terminal buf=${terminal_buf:-<none>}"
+nvim_rpc() {
+  nvim --headless --server "$server" "$@"
+}
 
+open_in_target() {
   case "$mode" in
-  edit)
-    nvim --headless --server "$server" --remote "$1"
+  edit | dir)
+    nvim_rpc --remote "$1"
     ;;
   line | wait)
-    nvim --headless --server "$server" --remote "$2" &&
-      nvim --headless --server "$server" --remote-send "<cmd>$1<cr>"
-    ;;
-  dir)
-    nvim --headless --server "$server" --remote "$1"
-    ;;
-  *)
-    log "unknown native mode=$mode"
-    exit 1
+    nvim_rpc --remote "$2" && nvim_rpc --remote-send "<cmd>$1<cr>"
     ;;
   esac
+}
 
-  status=$?
+capture_launcher_state() {
+  [ "$launcher_kind" = nvim_terminal ] || return
+  launcher_buf=$(nvim_rpc --remote-expr 'bufnr()' 2>/dev/null) || launcher_buf=
+  log "Neovim terminal buf=${launcher_buf:-<none>}"
+}
 
-  case "$terminal_buf" in
+close_nvim_terminal() {
+  case "$launcher_buf" in
   '' | *[!0-9]*)
-    log "skip native terminal close invalid_buf=${terminal_buf:-<none>} status=$status"
-    ;;
-  *)
-    if [ "$status" -eq 0 ]; then
-      # Quit promptly when Lazygit has resumed, with the proven delay retained
-      # as a no-op fallback when the first key arrives before it is ready.
-      nvim --headless --server "$server" --remote-expr \
-        "luaeval('(function() local buf = $terminal_buf; local function quit() if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == [[terminal]] then local chan = vim.bo[buf].channel; if chan > 0 then pcall(vim.api.nvim_chan_send, chan, [[q]]) end end end; vim.defer_fn(quit, 100); vim.defer_fn(quit, 250); return 0 end)()')" \
-        >/dev/null 2>&1 && log "queued native lazygit quit buf=$terminal_buf" || log "failed native lazygit quit buf=$terminal_buf"
-    fi
+    log "skip Neovim terminal close invalid_buf=${launcher_buf:-<none>}"
+    return
     ;;
   esac
 
-  exit "$status"
+  nvim_rpc --remote-expr \
+    "luaeval(\"require('config.lazygit').close_terminal(_A)\", $launcher_buf)" \
+    >/dev/null 2>&1 && log "queued Neovim terminal close buf=$launcher_buf" || log "failed Neovim terminal close buf=$launcher_buf"
+}
+
+close_herdr_popup() {
+  log "close Herdr popup target=${HERDR_ACTIVE_PANE_ID:-<none>}"
+  if command -v node >/dev/null 2>&1 && node "$HOME/.local/bin/herdr-popup-close.mjs" >/dev/null 2>&1; then
+    log "sent Herdr popup close"
+  else
+    log "failed Herdr popup close"
+  fi
+}
+
+close_tmux_popup() {
+  log "close tmux popup target=${TMUX_NVM_TARGET:-<none>}"
+  [ -n "${TMUX_NVM_TARGET:-}" ] || return
+  tmux run-shell -b "sleep 0.1; tmux display-popup -C >/dev/null 2>&1 || true" >/dev/null 2>&1
+}
+
+close_launcher() {
+  case "$launcher_kind" in
+  nvim_terminal)
+    close_nvim_terminal
+    ;;
+  herdr_popup)
+    close_herdr_popup
+    ;;
+  tmux_popup)
+    close_tmux_popup
+    ;;
+  esac
+}
+
+resolve_target
+log "mode=$mode server=${server:-<none>} launcher=$launcher_kind pane=${TMUX_PANE:-<none>} popup=${TMUX_POPUP_PANE:-<none>} tmux_target=${TMUX_NVM_TARGET:-<none>} herdr_target=${HERDR_ACTIVE_PANE_ID:-<none>} args=$*"
+
+if [ -z "$server" ]; then
+  open_local_editor "$@"
 fi
 
-close_editor_popup() {
-  case "$target_kind" in
-  tmux)
-    log "close tmux popup target=${TMUX_NVM_TARGET:-<none>}"
-    if [ -n "${TMUX_NVM_TARGET:-}" ]; then
-      tmux run-shell -b "sleep 0.1; tmux display-popup -C >/dev/null 2>&1 || true" >/dev/null 2>&1
-    fi
-    ;;
-  herdr)
-    log "close Herdr popup target=${HERDR_ACTIVE_PANE_ID:-<none>}"
-    if [ -n "${HERDR_SOCKET_PATH:-}" ] && command -v python3 >/dev/null 2>&1; then
-      python3 - <<'PY' >/dev/null 2>&1
-import json
-import os
-import socket
-
-request = {
-    "id": "lazygit-editor-close",
-    "method": "popup.close",
-    "params": {},
-}
-with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-    client.settimeout(1)
-    client.connect(os.environ["HERDR_SOCKET_PATH"])
-    client.sendall((json.dumps(request) + "\n").encode())
-PY
-    fi
-    ;;
-  esac
-}
-
-case "$mode" in
-edit)
-  nvim --headless --server "$server" --remote "$1"
-  ;;
-line | wait)
-  nvim --headless --server "$server" --remote "$2" &&
-    nvim --headless --server "$server" --remote-send "<cmd>$1<cr>"
-  ;;
-dir)
-  nvim --headless --server "$server" --remote "$1"
-  ;;
-*)
-  log "unknown mode=$mode"
-  exit 1
-  ;;
-esac
-
+capture_launcher_state
+open_in_target "$@"
 status=$?
 
 if [ "$status" -eq 0 ]; then
-  close_editor_popup
+  close_launcher
 fi
 
 exit "$status"
