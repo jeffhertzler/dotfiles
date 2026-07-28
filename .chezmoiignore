@@ -38,11 +38,6 @@ docs
 .arch.zsh
 {{- end }}
 
-# macOS and Arch use Volta and retain a POSIX login-shell fallback.
-{{- if not (or (eq $profile "macos") (eq $profile "arch")) }}
-.profile
-{{- end }}
-
 # Arch retains the legacy workstation, Jabba, and tmux/Workmux configuration.
 {{- if ne $profile "arch" }}
 .jabba

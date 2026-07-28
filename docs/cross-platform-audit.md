@@ -333,8 +333,8 @@ These candidates were previewed and completed individually:
 The Arch tmux and Workmux sources are not dead configuration. They are retained
 legacy by explicit policy and should not be removed as part of general cleanup.
 Arch Jabba actively selects Temurin 11 and retains JDKs 8, 17, and 21. The
-shared Mac/Arch `.profile` is the POSIX login-shell fallback for Volta; Zsh uses
-the equivalent `.zshenv` setup.
+redundant `.profile` has been removed: Zsh receives Volta from `.zshenv`, and
+the supported workflows do not require a separate POSIX login-shell fallback.
 
 ## Installation gaps and optional enhancements
 
