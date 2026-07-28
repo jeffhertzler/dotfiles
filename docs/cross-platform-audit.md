@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `bf03374` on `normalize/multi-platform`
+Source baseline: `e37cfe5` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -32,10 +32,9 @@ The central design is sound:
 - Arch retains tmux and Workmux as intentional legacy configuration while Herdr
   is the primary workspace manager.
 
-The remaining work is cleanup rather than recovery. The biggest opportunities
-are simplifying the Chezmoi allowlist, removing confirmed dead configuration,
-making installation drift visible, and defining an explicit Herdr plugin update
-policy.
+The remaining work is cleanup rather than recovery. The largest open area is
+package-manager drift, followed by optional preview tooling and final branch
+verification.
 
 ## Supported profiles
 
@@ -138,7 +137,7 @@ applies, or removes anything.
 | LazyGit | Shared; commands wrapped through Git Bash | Shared Unix commands | Shared Unix commands | Shared Unix commands |
 | Yazi | Shared; native opener and Git Bash Neovim bridge | Shared; `xdg-open` | Shared; `open` | Shared; `xdg-open` |
 | Herdr | Shared core; preview channel and Git Bash shell | Shared core | Shared core | Shared core plus legacy popup entry |
-| Herdr plugins | Three private compatibility clones linked locally | Three upstream plugins | Three upstream plugins | Three upstream plugins plus one unmanaged extra |
+| Herdr plugins | Four private compatibility clones linked locally | Four upstream plugins | Four upstream plugins | Four upstream plugins |
 | Tunnel | None | systemd user-service implementation | SSH ControlMaster implementation | None |
 | LazyDocker/Posting | None | None | Managed | Managed |
 | tmux/Workmux | None | tmux installed, config not managed | executables may remain, config retired | Managed as intentional legacy |
@@ -183,6 +182,7 @@ a promise that Chezmoi installs every dependency.
 | OpenCode | official installer | official installer | official installer | official installer |
 | Pi | Mise | Mise | Volta | Volta |
 | Node | WinGet | Mise | Volta | local Hermes shim shadows Volta |
+| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | direct `~/.bun`, 1.0.0 | direct `~/.bun`, 1.3.9 |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
@@ -206,6 +206,8 @@ a promise that Chezmoi installs every dependency.
   Old Cargo `fd` and `rg` currently win command resolution because Homebrew
   versions of those two are absent.
 - macOS Homebrew reports an obsolete/untrusted `loadstar81/wkhtmltopdf` tap.
+- macOS Bun 1.0.0 is substantially older than the WSL and Arch copies, although
+  it parses the current Window Title Sync script and reaches the Herdr API.
 - Arch's `node` and `npm` resolve through Hermes Node 22 shims even though Volta
   owns Node 24. This is the clearest active toolchain ambiguity.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
@@ -224,7 +226,7 @@ a promise that Chezmoi installs every dependency.
 - The same RSA key is used across the four setups and is registered with GitHub.
 - Credentials, account records, SSH config, and known-host policy are correctly
   excluded from the repository.
-- The shared Git template no longer appears to require templating.
+- Git configuration is a plain shared Chezmoi source file.
 
 ### Neovim
 
@@ -233,11 +235,8 @@ a promise that Chezmoi installs every dependency.
   Go is unavailable.
 - LazyGit, Yazi, and Agent Review can target an existing Neovim instance.
 - `lazy-lock.json` is intentionally unmanaged runtime state.
-- Confirmed cleanup candidates:
-  - `dot_config/nvim/dot_neoconf.json` configures retired Neoconf/Neodev
-    behavior even though LazyDev replaced it.
-  - `dot_config/nvim/lazyvim.json` enables the Refactoring extra while
-    `lua/plugins/disabled.lua` disables `refactoring.nvim`.
+- Retired Neoconf/Neodev configuration and the contradictory Refactoring extra
+  declaration are gone; the intentional `refactoring.nvim` disable remains.
 
 ### LazyGit and Yazi
 
@@ -266,16 +265,13 @@ uneven:
 These are optional enhancements, not blockers. Ordinary terminal copy/paste and
 Yazi file yank/paste already work without adding Wayland/X11 clipboard tools.
 
-Confirmed Yazi cleanup candidates:
-
-- `dot_config/yazi/keymap.toml` is empty.
-- Two alternate theme files are deployed but never selected.
+The empty Yazi keymap and two unselected theme variants have been removed.
 
 ### Herdr and plugins
 
 Shared behavior now includes directional pane movement, pane resizing,
 full-height layouts, Worktrunk access, popup picking, and LazyGit/Yazi bridges.
-Windows uses private compatibility forks for the three desired plugins; Unix
+Windows uses private compatibility forks for the four desired plugins; Unix
 profiles use upstream repositories.
 
 The desired inventory contains:
@@ -283,17 +279,13 @@ The desired inventory contains:
 - `edi.layout-tools`
 - `herdr-splits`
 - `worktrunk`
+- `rjyo.window-title-sync`
 
-Remaining policy gaps:
-
-- Unix reconciliation installs and enables missing plugins but does not update
-  existing checkouts or remove extras.
-- Windows reconciliation links local clones but does not verify that each clone
-  is on the documented branch/ref/commit.
-- Arch has `herdr-splits` 0.5.0 while the other profiles have 0.5.1.
-- Arch also has an unmanaged `rjyo.window-title-sync` plugin. Decide whether it
-  should become desired everywhere, remain an explicit Arch extra, or be
-  removed.
+The first Chezmoi apply each month updates Unix plugins from their upstream
+default refs and fast-forwards Windows compatibility clones from their private
+branches. Windows public upstreams are fetched but never auto-merged. The
+doctor validates desired/enabled state plus Windows branch, origin, upstream,
+and cleanliness. Undeclared plugins are reported but require explicit removal.
 
 ### Shell and small tools
 
@@ -334,7 +326,6 @@ Likewise, `.profile` and Jabba have not yet been proven dead.
 
 Required or worth correcting:
 
-- Align Arch's `herdr-splits` version.
 - Resolve whether Arch uses Hermes or Volta as the actual Node owner.
 - Prevent WSL from unintentionally consuming native Windows Mise configuration.
 - Clean obsolete macOS Cargo duplicates and the stale Homebrew tap.
@@ -364,8 +355,9 @@ Each step should be previewed narrowly and verified on all affected profiles.
    themes and duplicate `nvu`, `ha`, `hat`, and Greenlight pull logic are gone.
 5. **Complete:** portable Worktrunk layout/schema settings are shared; the
    Unix-only Ultralight hooks remain on Arch, and all four profiles run 0.69.2.
-6. Define Herdr plugin update, version, ref-verification, and extra-plugin
-   policy.
+6. **Complete:** all four plugins are desired everywhere; monthly reconciliation
+   updates Unix upstream installs and Windows private branches while preserving
+   explicit review for public-upstream merges and plugin removal.
 7. Resolve package-manager drift on macOS, Arch, and WSL.
 8. Add optional Yazi preview tools only where desired.
 9. Run `chezmoi diff`, narrow applies, `chezmoi verify --exclude=dirs`, and
