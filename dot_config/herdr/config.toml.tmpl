@@ -1,5 +1,5 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
-{{- $directionalSplit := "~/.local/bin/herdr-directional-split.mjs" -}}
+{{- $directionalSplit := printf "%s/.local/bin/herdr-directional-split.mjs" .chezmoi.homeDir -}}
 {{- $popupPicker := printf "%s/.local/bin/herdr-popup-picker" .chezmoi.homeDir -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
 {{- $herdrSplitsSuffix := "" -}}
