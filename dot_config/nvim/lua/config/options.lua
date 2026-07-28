@@ -47,9 +47,15 @@ end
 local mise = vim.fn.exepath("mise")
 if mise ~= "" then
   local neovim_package = vim.fn.trim(vim.fn.system({ mise, "where", "npm:neovim" }))
-  local node_host = vim.fs.joinpath(neovim_package, "node_modules", "neovim", "bin", "cli.js")
-  if vim.v.shell_error == 0 and vim.fn.filereadable(node_host) == 1 then
-    vim.g.node_host_prog = node_host
+  local node_hosts = {
+    vim.fs.joinpath(neovim_package, "node_modules", "neovim", "bin", "cli.js"),
+    vim.fs.joinpath(neovim_package, "lib", "node_modules", "neovim", "bin", "cli.js"),
+  }
+  for _, node_host in ipairs(node_hosts) do
+    if vim.v.shell_error == 0 and vim.fn.filereadable(node_host) == 1 then
+      vim.g.node_host_prog = node_host
+      break
+    end
   end
 end
 
