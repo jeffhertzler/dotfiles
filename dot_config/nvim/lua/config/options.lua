@@ -20,10 +20,9 @@ local function prepend_path(path)
 end
 
 if vim.fn.has("win32") == 1 then
-  -- Native Neovim cannot execute npm's PowerShell shim, and Treesitter needs a
-  -- native compiler. Keep these ahead of the Git Bash PATH inherited by Nvim.
+  -- Tree-sitter needs a native compiler even when Nvim is launched outside
+  -- Git Bash, whose startup config already exposes LLVM.
   prepend_path("C:/Program Files/LLVM/bin")
-  prepend_path(vim.fn.expand("$APPDATA/npm/node_modules/tree-sitter-cli"))
 
   local git_bash = "C:/Progra~1/Git/bin/bash.exe"
   if vim.fn.executable(git_bash) == 1 then

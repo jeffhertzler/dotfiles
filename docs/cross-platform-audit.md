@@ -245,6 +245,11 @@ a promise that Chezmoi installs every dependency.
   removed. PowerShell and Git Bash both resolve the Mise shims. Mise also owns
   the Neovim Node host and Tree-sitter CLI there instead of Node-global npm
   state.
+- Windows retains its WinGet LLVM toolchain. Mise's current `clang` and
+  `conda:clang` backends install the correct Conda package but expose a copied
+  executable without its runtime DLL directory, causing `0xC0000135`; adding
+  another PATH workaround would not improve the configuration. Neovim keeps
+  the WinGet LLVM path available for parser builds launched outside Git Bash.
 - macOS and Arch still use Volta for Node, npm, npx, Yarn, and existing
   project-pinned tools during a staged migration. This is substantive
   compatibility state, not merely an old installer: the checked-out projects
