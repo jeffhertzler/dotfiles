@@ -47,6 +47,8 @@ docs
 !.config/lazydocker/config.yml
 !.config/posting
 !.config/posting/config.yaml
+{{- end }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.config/yazi
 !.config/yazi/**
 {{- end }}
