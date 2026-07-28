@@ -23,7 +23,7 @@ if [[ ${1:-} == --server ]]; then
 fi
 
 live_server() {
-  [[ -n $1 ]] && nvim --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
+  [[ -n $1 ]] && nvim --headless --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
 }
 
 discover_server() {
@@ -32,36 +32,17 @@ discover_server() {
     return
   fi
 
+  # Prefer the same exact active target used by external Yazi and LazyGit.
+  # Agent Review additionally supports a unique-server fallback because agents
+  # can invoke it outside the terminal that launched Neovim.
+  source "$HOME/.local/lib/nvim-target.sh"
+  if nvim_target_resolve; then
+    printf '%s' "$NVIM_TARGET_SERVER"
+    return
+  fi
+
   local registry
-  if [[ -n ${XDG_RUNTIME_DIR:-} ]]; then
-    registry="$XDG_RUNTIME_DIR/herdr-nvim"
-  elif [[ ${OS:-} == Windows_NT ]]; then
-    registry="${TMPDIR:-/tmp}/herdr-nvim"
-  else
-    registry="/tmp/herdr-nvim-$(id -u)"
-  fi
-  if [[ -n ${HERDR_PANE_ID:-} ]]; then
-    local pane=${HERDR_PANE_ID//[^[:alnum:]_.-]/_}
-    local file="$registry/$pane.server"
-    if [[ -r $file ]]; then
-      local candidate
-      candidate=$(head -n1 "$file")
-      if live_server "$candidate"; then
-        printf '%s' "$candidate"
-        return
-      fi
-    fi
-  fi
-
-  if [[ -n ${TMUX:-} ]]; then
-    local candidate
-    candidate=$(tmux show-options -wv @nvim_server 2>/dev/null || true)
-    if live_server "$candidate"; then
-      printf '%s' "$candidate"
-      return
-    fi
-  fi
-
+  registry=$(nvim_target_registry_directory)
   local candidates=()
   if [[ -d $registry ]]; then
     while IFS= read -r file; do
@@ -87,10 +68,10 @@ discover_server() {
 
 rpc() {
   local request=$1 encoded expression
-  encoded=$(printf '%s' "$request" | base64 -w0)
+  encoded=$(printf '%s' "$request" | base64 | tr -d '\r\n')
   expression="luaeval(\"vim.json.encode(require([[agent_review.rpc]]).dispatch(vim.json.decode(vim.base64.decode([[$encoded]]))))\")"
   local response
-  response=$(nvim --server "$server" --remote-expr "$expression")
+  response=$(nvim --headless --server "$server" --remote-expr "$expression")
   printf '%s' "$response"
   if printf '%s' "$response" | jq -e 'type == "object" and has("ok") and (.ok == false)' >/dev/null 2>&1; then
     return 1

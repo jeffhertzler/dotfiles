@@ -13,7 +13,12 @@ docs
 # WSL, macOS, and native Windows begin deny-by-default. Their files will be enabled
 # one reviewed layer at a time instead of inheriting the existing Unix setup.
 {{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
+!.agents
+!.agents/**
+{{- else }}
 .agents
+{{- end }}
 .config/*
 !.config/git
 !.config/git/config
@@ -71,6 +76,7 @@ docs
 !.local/bin/herdr-popup-close.mjs
 !.local/bin/herdr-popup-picker
 !.local/bin/herdr-reorder.mjs
+!.local/bin/agent-review
 !.local/bin/lazygit-nvim
 !.local/bin/yazi-nvim
 !.local/lib
