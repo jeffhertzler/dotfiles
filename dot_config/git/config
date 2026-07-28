@@ -1,15 +1,11 @@
-{{- $profile := includeTemplate "profile" . | trim -}}
 [core]
 	excludesFile = ~/.config/git/ignore
 
-{{ if or (eq $profile "arch") (eq $profile "macos") (eq $profile "windows") (eq $profile "wsl") -}}
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	process = git-lfs filter-process
 	required = true
 	smudge = git-lfs smudge -- %f
-{{ end -}}
-
 [github]
 	user = jeffhertzler
 [init]

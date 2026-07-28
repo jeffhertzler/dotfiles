@@ -10,130 +10,56 @@ docs
 .ssh/id_rsa.pub
 {{- end }}
 
-# WSL, macOS, and native Windows begin deny-by-default. Their files will be enabled
-# one reviewed layer at a time instead of inheriting the existing Unix setup.
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.agents
-!.agents/**
+# Generic Linux and unknown platforms are not supported profiles yet.
+{{- if or (eq $profile "linux") (eq $profile "unsupported") }}
+*
 {{- else }}
-.agents
-{{- end }}
-.config/*
-!.config/git
-!.config/git/config
-!.config/git/ignore
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.config/lazygit
-!.config/lazygit/config.yml
-!.config/herdr
-.config/herdr/*
-!.config/herdr/config.toml
-!.config/herdr/plugins/
-.config/herdr/plugins/*
-!.config/herdr/plugins/config/
-.config/herdr/plugins/config/*
-!.config/herdr/plugins/config/herdr-splits/
-!.config/herdr/plugins/config/herdr-splits/herdr-splits.conf
-!.config/herdr/plugins/config/worktrunk/
-!.config/herdr/plugins/config/worktrunk/config.toml
-{{- end }}
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.config/nvim
-!.config/nvim/**
-{{- end }}
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.config/gh
-.config/gh/*
-!.config/gh/config.yml
-{{- end }}
-!.config/opencode
-!.config/opencode/**
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.config/bat
-!.config/bat/**
-!.config/atuin
-!.config/atuin/**
-{{- end }}
-{{- if eq $profile "macos" }}
-!.config/lazydocker
-!.config/lazydocker/config.yml
-!.config/posting
-!.config/posting/config.yaml
-{{- end }}
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.config/yazi
-!.config/yazi/**
-{{- end }}
-!.config/starship.toml
-!.config/shell
-.config/shell/*
-!.config/shell/common.sh
-!.config/shell/opencode.sh
-{{- if ne $profile "windows" }}
-!.config/shell/greenlight.zsh
-!.config/shell/vimme.zsh
-{{- end }}
-.jabba
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.local
-.local/*
-!.local/bin
-.local/bin/*
-!.local/bin/herdr-directional-split.mjs
-!.local/bin/herdr-popup-close.mjs
-!.local/bin/herdr-popup-picker
-!.local/bin/herdr-reorder.mjs
-!.local/bin/agent-review
-!.local/bin/dotfiles-doctor
-!.local/bin/lazygit-nvim
-!.local/bin/yazi-nvim
-!.local/lib
-.local/lib/*
-!.local/lib/nvim-target.sh
-{{- if or (eq $profile "wsl") (eq $profile "macos") }}
-!.local/bin/tunnel
-{{- end }}
-{{- else }}
-.local
-{{- end }}
-.pi
-{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
-!.pi
-!.pi/**
-{{- end }}
-.profile
-{{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
-.zsh_plugins.txt
-{{- end }}
-{{- end }}
 
-# Native Windows uses Git Bash; the Unix profiles use Zsh.
-{{- if ne $profile "windows" }}
+# Native Windows uses Git Bash; WSL, macOS, and Arch share Zsh.
+{{- if eq $profile "windows" }}
+.zshenv
+.zshrc
+.zsh_plugins.txt
+.config/shell/greenlight.zsh
+.config/shell/vimme.zsh
+{{- else }}
 .bash_profile
 .bashrc
 {{- end }}
 
-{{- if or (eq $profile "windows") (eq $profile "linux") (eq $profile "unsupported") }}
-.zshenv
-.zshrc
-{{- end }}
-
-# WSL-only bridge and remote-session helpers.
+# Each Unix profile receives only its own overlay.
 {{- if ne $profile "wsl" }}
 .wsl.zsh
 {{- end }}
-
-# Each Unix system gets only its own profile overlay.
+{{- if ne $profile "macos" }}
+.mac.zsh
+{{- end }}
 {{- if ne $profile "arch" }}
 .arch.zsh
 {{- end }}
 
-{{- if ne $profile "macos" }}
-.mac.zsh
+# Arch retains the legacy workstation and tmux/Workmux configuration.
+{{- if ne $profile "arch" }}
+.profile
+.jabba
+.config/tmux
+.config/workmux
+.config/worktrunk
+.local/bin/tmux-lazygit-popup
+.local/bin/tmux-nvim-server
+.local/bin/tmux-preview-update
+.local/bin/tmux-yazi-split
+.local/bin/worktrunk-seed
 {{- end }}
 
-# Arch owns the workstation helper collection, but not the client-side tunnel.
-{{- if eq $profile "arch" }}
+# LazyDocker and Posting are workstation applications on macOS and Arch.
+{{- if not (or (eq $profile "macos") (eq $profile "arch")) }}
+.config/lazydocker
+.config/posting
+{{- end }}
+
+# The client-side tunnel has separate WSL and macOS implementations.
+{{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
 .local/bin/tunnel
+{{- end }}
 {{- end }}
