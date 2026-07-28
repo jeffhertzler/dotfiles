@@ -67,9 +67,6 @@ docs
 !.local/bin/herdr-directional-split.mjs
 !.local/bin/herdr-reorder.mjs
 !.local/bin/lazygit-nvim
-{{- if eq $profile "wsl" }}
-!.local/bin/bat
-{{- end }}
 {{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.local/bin/tunnel
 {{- end }}
@@ -87,11 +84,6 @@ docs
 {{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
 .zsh_plugins.txt
 {{- end }}
-{{- end }}
-
-# Ubuntu packages bat as batcat; only WSL receives the compatibility symlink.
-{{- if ne $profile "wsl" }}
-.local/bin/bat
 {{- end }}
 
 # Native Windows uses Git Bash; the Unix profiles use Zsh.

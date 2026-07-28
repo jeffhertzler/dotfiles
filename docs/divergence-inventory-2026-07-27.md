@@ -38,7 +38,7 @@ not Worktrunk.
 | Zsh | Absent | Installed | Installed | Installed |
 | Starship | Not found in Git Bash PATH during inventory | Installed | Installed | Installed |
 | Atuin and bottom | Absent | Absent | Installed | Installed |
-| bat | 0.26.1 via WinGet | 0.25.0 via Ubuntu; batcat compatibility symlink | 0.26.1 via Homebrew | Installed |
+| bat | 0.26.1 via WinGet | 0.26.1 official Debian package | 0.26.1 via Homebrew | 0.26.1 |
 | LazyDocker, Posting | Absent | Absent | Installed | Installed |
 | tmux, Workmux | Absent | tmux only | Both | Both |
 | Worktrunk | Absent; wt means Windows Terminal | Absent | Absent | Installed |
@@ -78,7 +78,7 @@ Kinds:
 | D18 | Delta | Delta config and Catppuccin include were removed because Delta was not active. | Intentional during this pass | Reconsider only if Delta is deliberately adopted again. |
 | D19 | Machine Git data | Arch stores its CodeRabbit machine ID and Pop!_OS mount include in unmanaged ~/.config/git/local.config, mode 0600. | Intentional | Keep machine IDs and machine paths out of the public source. |
 | D20 | LazyGit | All four profiles use the same custom lazygit-nvim behavior. Unix renders direct helper commands; native Windows renders the same commands through Git Bash because LazyGit launches them through cmd.exe. Two source templates still encode only that launcher difference. | Functionally unified; structural cleanup pending | Collapse the duplicate templates only after interactive LazyGit-to-Neovim behavior is accepted on each platform. |
-| D21 | GitHub CLI config | GitHub CLI is installed on all four machines, and all four manage only ~/.config/gh/config.yml at mode 0600. Native Windows uses the existing user-level XDG_CONFIG_HOME so gh reads the shared XDG path. hosts.yml and authentication remain unmanaged. | Decided and implemented | Keep non-secret config shared and authenticate each machine outside Chezmoi. |
+| D21 | GitHub CLI config | GitHub CLI is installed on all four machines, and all four manage only ~/.config/gh/config.yml at mode 0600. Native Windows uses the existing user-level XDG_CONFIG_HOME so gh reads the shared XDG path. hosts.yml and authentication remain unmanaged; the new Windows installation still needs an interactive login. | Decided and implemented; Windows auth pending | Keep non-secret config shared and authenticate each machine outside Chezmoi. |
 | D22 | SSH config | ~/.ssh/config and known_hosts remain completely unmanaged. | Explicit prior decision | Keep. |
 | D23 | SSH keys | The old public-key file and 1Password-backed private-key template remain in source. Deny-by-default profiles ignore .ssh, so Arch is the only current profile that can manage them. | Historical/high priority | Remove legacy key management, or define a deliberate cross-machine key policy? |
 | D24 | Starship | The same ~/.config/starship.toml is managed on all supported profiles. | Intentional | Keep. |
@@ -101,7 +101,7 @@ Kinds:
 | D41 | tmux | tmux is preserved as Arch-only legacy configuration. Mac and WSL still have tmux installed. Mac's ~/.config/tmux directory, including downloaded TPM plugin clones, was removed; WSL's independent state remains untouched. | Explicit user decision | Keep the Arch source until eventual retirement. |
 | D42 | Yazi | Mac and Arch manage Yazi. WSL and Windows ignore it. Mac renders open; Linux renders xdg-open. | Required plus conservative | Keep opener split; decide whether to install/share Yazi on WSL. |
 | D43 | Atuin | Mac and Arch manage Atuin; WSL and Windows ignore it. | Conservative | Install/share on WSL and possibly Windows? |
-| D44 | bat and bottom | Windows, WSL, Mac, and Arch manage the same Bat config and Catppuccin Mocha theme. Ubuntu exposes the package as batcat, so WSL alone manages ~/.local/bin/bat as a compatibility symlink. Native Windows uses BAT_CONFIG_PATH to keep Bat on the shared XDG path. The inert Bottom config remains retired. | Decided and implemented | Keep Bat unified; Bottom no longer has managed configuration. |
+| D44 | bat and bottom | Windows, WSL, Mac, and Arch run Bat 0.26.1 with the same managed config and bundled Catppuccin Mocha theme. WSL uses Bat's official Debian package because Ubuntu's older package lacked the shared bundled theme. Native Windows uses BAT_CONFIG_PATH to keep Bat on the shared XDG path. The inert Bottom config remains retired. | Decided and implemented | Keep Bat unified; Bottom no longer has managed configuration. |
 | D45 | LazyDocker and Posting | Mac and Arch manage them; WSL and Windows ignore them. | Conservative | Decide whether these are workstation-only tools. |
 | D46 | Pi ownership | Windows, WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. | Decided and implemented | Keep the shared portable configuration enabled on all four machines. |
 | D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL, Mac, and Windows outside Chezmoi. Unix copies use mode 0600; Windows inherits only SYSTEM, Administrators, and the user with full control. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
@@ -172,6 +172,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - Herdr Windows command-shell backup: %LOCALAPPDATA%/dotfiles-backups/20260727-herdr-windows-command-shell/config.toml.
 - AgentBridge Windows registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-agentbridge-windows-registry contains the prior server.lua and lazygit-nvim targets.
 - Session-picker retirement backup: %LOCALAPPDATA%/dotfiles-backups/20260727-retire-herdr-session-picker/common.sh.
+- Bat/gh convergence registry backup: %LOCALAPPDATA%/dotfiles-backups/20260727-bat-gh-convergence/HKCU-Environment-before.reg. BAT_CONFIG_PATH was previously unset; remove that user variable to roll back the Windows Bat path override.
 
 ### WSL
 
@@ -220,6 +221,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 - AgentBridge registry backups: ~/.local/state/dotfiles-backups/20260727-agentbridge-registry on WSL, Mac, and Arch; each contains only the managed targets changed on that profile.
 - Session-picker retirement backups: ~/.local/state/dotfiles-backups/20260727-retire-herdr-session-picker on WSL, Mac, and Arch; Arch also retains the retired helper itself. WSL was applied through its existing user context after transient interop launch failures cleared, without terminating the distribution.
 - Simple-cleanup backups: ~/.local/state/dotfiles-backups/20260727-simple-cleanups contains the prior Git config and common.sh on WSL; the prior managed Git and Bottom configs plus a marker that Mac's Git local overlay did not exist; and the prior managed Git and Bottom configs plus unmanaged Git local overlay on Arch. WSL also gained Ubuntu's git-lfs 3.7.1 package.
+- Bat/gh convergence installed Bat 0.26.1 through WinGet on Windows, Bat's official Debian package on WSL, and Homebrew on Mac; Arch already had the same Bat release. GitHub CLI 2.96.0 was installed through WinGet on Windows. Windows and WSL had no prior Bat target, and Windows had no prior gh target.
 
 ### Arch
 
