@@ -33,8 +33,8 @@ The central design is sound:
   is the primary workspace manager.
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
-to the Windows ble.sh update policy, later programming-language migrations into
-Mise, and runtime-installed CLI ownership.
+to later programming-language migrations into Mise and runtime-installed CLI
+ownership.
 
 ## Supported profiles
 
@@ -234,6 +234,8 @@ a promise that Chezmoi installs every dependency.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
+  Updates are intentionally explicit through ble.sh's built-in `ble-update`;
+  automatic nightly replacement could destabilize shell bindings.
 - Atuin remains installed on macOS for local shell history, but its unused and
   failing background daemon service has been removed. Automatic sync remains
   disabled in the shared configuration.
@@ -365,8 +367,6 @@ login-shell fallback.
 
 Optional:
 
-- Decide whether the Windows ble.sh bootstrap should remain install-only or
-  gain an explicit update policy. It currently preserves the working version.
 - Consider later migrations of Node, Python, and runtime-installed CLIs into
   Mise one owner at a time; current managers remain intentional until then.
 
