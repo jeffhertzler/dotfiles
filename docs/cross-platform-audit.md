@@ -33,8 +33,8 @@ The central design is sound:
   is the primary workspace manager.
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
-to Arch's `.profile`/Jabba startup artifacts and the Windows ble.sh update
-policy. Broader Mise adoption and native-Windows Go remain explicitly deferred.
+to dormant Mac Jabba state and the Windows ble.sh update policy. Broader Mise
+adoption and native-Windows Go remain explicitly deferred.
 
 ## Supported profiles
 
@@ -332,7 +332,9 @@ These candidates were previewed and completed individually:
 
 The Arch tmux and Workmux sources are not dead configuration. They are retained
 legacy by explicit policy and should not be removed as part of general cleanup.
-Likewise, `.profile` and Jabba have not yet been proven dead.
+Arch Jabba actively selects Temurin 11 and retains JDKs 8, 17, and 21. The
+shared Mac/Arch `.profile` is the POSIX login-shell fallback for Volta; Zsh uses
+the equivalent `.zshenv` setup.
 
 ## Installation gaps and optional enhancements
 
