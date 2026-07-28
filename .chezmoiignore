@@ -7,6 +7,7 @@ docs
 {{- if ne (env "CHEZMOI_INCLUDE_SECRETS") "1" }}
 .private.zsh
 .ssh/id_rsa
+.ssh/id_rsa.pub
 {{- end }}
 
 # WSL, macOS, and native Windows begin deny-by-default. Their files will be enabled
@@ -78,9 +79,7 @@ docs
 !.pi
 !.pi/**
 {{- end }}
-.private.zsh
 .profile
-.ssh
 {{- if not (or (eq $profile "wsl") (eq $profile "macos")) }}
 .zsh_plugins.txt
 {{- end }}
