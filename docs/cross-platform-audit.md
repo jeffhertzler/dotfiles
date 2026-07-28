@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `c5f190d` on `normalize/multi-platform`
+Source baseline: `680a1a2` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -184,6 +184,7 @@ a promise that Chezmoi installs every dependency.
 | Node | WinGet | Mise | Volta | Volta |
 | Mise | WinGet | direct installer | Homebrew | pacman |
 | Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
+| Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
@@ -208,11 +209,11 @@ a promise that Chezmoi installs every dependency.
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
   into WSL projects.
-- Mise configuration is shared and profile-aware without changing existing tool
-  ownership: Windows and WSL retain their prior tools, while macOS and Arch now
-  use Mise for Temurin Java 17 and 11. Plain version declarations align with
-  existing `.java-version` files, and `java.shorthand_vendor = "temurin"` keeps
-  the selected distribution explicit.
+- Mise configuration is shared and profile-aware without changing unrelated
+  tool ownership: Windows and WSL retain their prior tools, while macOS and Arch
+  now use Mise for Temurin Java 17/11 and Maven 3.9.16. Plain Java version
+  declarations align with existing `.java-version` files, and
+  `java.shorthand_vendor = "temurin"` keeps the selected distribution explicit.
 - Jabba is retired on macOS and Arch. Its shell integration and managed source
   are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
@@ -353,9 +354,6 @@ Optional:
 - Decide whether the Windows ble.sh bootstrap should remain install-only or
   gain an explicit update policy. It currently preserves the working version.
 - Install Go on native Windows if Windows-local Go development becomes useful.
-- Decide whether Maven should move into Mise on macOS and Arch. macOS currently
-  has Homebrew Maven; Arch has no global Maven, although projects with `mvnw`
-  work correctly.
 - Consider later migrations of Node, Python, Go, and runtime-installed CLIs into
   Mise one owner at a time; current managers remain intentional until then.
 
@@ -378,10 +376,10 @@ Each step should be previewed narrowly and verified on all affected profiles.
    updates Unix upstream installs and Windows private branches while preserving
    explicit review for public-upstream merges and plugin removal.
 7. **Complete:** Mise discovery is shell-independent and WSL is isolated from
-   Windows; macOS and Arch use Mise-managed Temurin 17/11 instead of Jabba;
-   Arch uses Volta instead of Hermes; Bun is current; Windows can bootstrap
-   ble.sh; and macOS package ownership, obsolete taps, and retained LazyJira
-   trust are clean.
+   Windows; macOS and Arch use Mise-managed Temurin 17/11 and Maven 3.9.16;
+   Jabba is retired; Arch uses Volta instead of Hermes; Bun is current; Windows
+   can bootstrap ble.sh; and macOS package ownership, obsolete taps, and
+   retained LazyJira trust are clean.
 8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
    not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
    merely for cross-platform parity.
