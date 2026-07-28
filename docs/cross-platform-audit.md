@@ -182,7 +182,7 @@ a promise that Chezmoi installs every dependency.
 | OpenCode | official installer | official installer | official installer | official installer |
 | Pi | Mise | Mise | Volta | Volta |
 | Node | WinGet | Mise | Volta | Volta |
-| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | direct `~/.bun`, 1.3.9 |
+| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Windows packages | Mise | Homebrew | pacman |
 | Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
@@ -197,8 +197,10 @@ a promise that Chezmoi installs every dependency.
 
 ### Notable version and manager drift
 
-- Windows has both `python` 3.12 and `python3` 3.14 resolution. This may be
-  intentional, but the command distinction should be documented or normalized.
+- Windows retains the standalone Python 3.12 installation for `python`, `pip`,
+  and `pip3`; the newer Python Install Manager owns `python3` and makes 3.14 the
+  `py` default. This is documented command ownership rather than a PATH fault;
+  neither runtime should be removed without checking the native Python app.
 - WSL now sets a Mise discovery ceiling at its Linux home and the mounted
   Windows home, preventing native Windows global configuration from leaking
   into WSL projects.

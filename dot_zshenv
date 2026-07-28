@@ -8,6 +8,13 @@ export GOPATH="$HOME/go"
 # Herdr's noninteractive SSH bridge may not receive a client locale.
 export LANG="${LANG:-en_US.UTF-8}"
 
+# Stop Mise at the Linux and mounted Windows home boundaries when a WSL shell
+# starts beneath a Windows-hosted project. This must apply to noninteractive
+# shells as well as terminals.
+if [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+  export MISE_CEILING_PATHS="$HOME:/mnt/c/Users/Jeff Hertzler"
+fi
+
 path=(
   "/opt/homebrew/bin"
   "/opt/homebrew/sbin"
