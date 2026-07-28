@@ -1,6 +1,12 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
+{{- $editor := "~/.local/bin/lazygit-nvim" -}}
 {{- if eq $profile "windows" -}}
-{{-   template "lazygit/config-windows.yml" . -}}
-{{- else -}}
-{{-   template "lazygit/config-unix.yml" . -}}
+{{-   $editor = printf "\"C:/Program Files/Git/bin/bash.exe\" \"%s/.local/bin/lazygit-nvim\"" .chezmoi.homeDir -}}
 {{- end -}}
+promptToReturnFromSubprocess: false
+
+os:
+  edit: '{{ $editor }} edit {{ "{{filename}}" }}'
+  editAtLine: '{{ $editor }} line {{ "{{line}}" }} {{ "{{filename}}" }}'
+  editAtLineAndWait: '{{ $editor }} wait {{ "{{line}}" }} {{ "{{filename}}" }}'
+  openDirInEditor: '{{ $editor }} dir {{ "{{dir}}" }}'
