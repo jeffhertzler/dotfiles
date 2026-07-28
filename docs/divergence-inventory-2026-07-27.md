@@ -1,7 +1,7 @@
 # Cross-platform divergence inventory
 
 Snapshot date: 2026-07-28
-Configuration baseline: f7eb179 on normalize/multi-platform
+Configuration baseline: c3ab655 on normalize/multi-platform
 Machines: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 Default disposition: preserve the working state until each row is reviewed.
 
@@ -18,10 +18,10 @@ values stay in unmanaged local overlays.
 
 | ID | Machine | Config baseline | Managed target status | Notes |
 |---|---|---|---|---|
-| S01 | Windows | f7eb179 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared LazyGit/Yazi-to-Neovim routing, local directional splits, named-pipe-safe Herdr reordering, and the portable Neovim registry are active. Windows renders helper commands through native launchers because Herdr and native applications run custom commands through cmd.exe. |
-| S02 | WSL | f7eb179 | Clean | Native source clone at ~/.local/share/chezmoi. Shared LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
-| S03 | macOS | f7eb179 | Clean | Native source clone preserved with a backup branch and stash. Shared Neovim, Pi, LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
-| S04 | Arch | f7eb179 | Clean | LazyGit/Yazi-to-Neovim routing, Herdr reordering, and the portable Neovim registry are shared; plugin-dependent full-layout splits remain Arch-only. |
+| S01 | Windows | c3ab655 | Clean | Uses the Windows worktree at C:/Users/Jeff Hertzler/Documents/dotfiles. Shared Agent Review, LazyGit/Yazi-to-Neovim routing, local directional splits, named-pipe-safe Herdr reordering, and the portable Neovim registry are active. Windows renders helper commands through native launchers because Herdr and native applications run custom commands through cmd.exe. |
+| S02 | WSL | c3ab655 | Clean | Native source clone at ~/.local/share/chezmoi. Shared Agent Review, LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
+| S03 | macOS | c3ab655 | Clean | Native source clone preserved with a backup branch and stash. Shared Agent Review, Neovim, Pi, LazyGit/Yazi-to-Neovim routing, local directional splits, Herdr reordering, and the portable Neovim registry are active. |
+| S04 | Arch | c3ab655 | Clean | Agent Review, LazyGit/Yazi-to-Neovim routing, Herdr reordering, and the portable Neovim registry are shared; plugin-dependent full-layout splits remain Arch-only. |
 
 ## Installed-tool matrix
 
@@ -107,11 +107,11 @@ Kinds:
 | D45 | LazyDocker and Posting | Mac and Arch manage both tools. WSL and Windows ignore them. | Explicit user decision | Keep both tools fully managed on Mac and Arch only. |
 | D46 | Pi ownership | Windows, WSL, Mac, and Arch share the human-authored Pi settings, profiles, keybindings, renderer, and portable extensions. auth.json, caches, logs, trust, model/session runtime state, and generated integrations remain unmanaged. | Decided and implemented | Keep the shared portable configuration enabled on all four machines. |
 | D47 | Pi machine-local state | Arch's auth profiles were copied byte-for-byte to WSL, Mac, and Windows outside Chezmoi. Unix copies use mode 0600; Windows inherits only SYSTEM, Administrators, and the user with full control. herdr-agent-state.ts remains Herdr-managed; Arch's moshi-hooks.ts remains generated and local; workmux-status.ts remains only on legacy Arch and was retired from Mac into the Pi backup. | Explicit user decision | Keep generated integrations and credentials outside Chezmoi. |
-| D48 | Agent skills | .agents is Arch-only. Mac has agent/cursor-agent executables but no ~/.agents directory; WSL and Windows ignore it. | Conservative | Share agent-review skill/config where the clients support it? |
-| D49 | Local helper scripts | lazygit-nvim, yazi-nvim, nvim-target.sh, and herdr-popup-picker are shared by Windows, WSL, Mac, and Arch. LazyGit and external Yazi source one exact-target resolver but retain thin app-specific adapters: LazyGit closes its Neovim/Herdr/tmux launcher, while Yazi emits its own quit event. The popup retains its Bash/fzf UI, checks extension subcommands such as `gh dash` rather than only their host executable, and enables Workmux only from the Arch binding. tunnel remains profile-specific on WSL/Mac. tmux helpers and worktrunk-seed remain Arch-only legacy. The low-value herdr-session-picker was retired; agent-review remains under review. | Partially decided and implemented | Review agent-review with D48 next. |
-| D50 | macOS allowlist | Mac manages Git, gh config, LazyGit, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, LazyDocker, Posting, Yazi, tunnel, and lazygit-nvim. It intentionally no longer manages legacy tmux/Workmux or inert Bottom configuration. It still ignores agents, SSH, and the remaining local helpers. | Conservative choices plus explicit legacy, Pi, Atuin, and Herdr decisions | This remains the main list to reconsider if greater unification is desired. |
-| D51 | WSL allowlist | WSL manages Git, gh config, Atuin, Bat, LazyGit and its Neovim bridge, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, Yazi, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Atuin, Bat, Pi, LazyGit, Yazi, and Herdr decisions | Decide which remaining Mac/Arch tools should join the WSL baseline. |
-| D52 | Windows allowlist | Windows manages Git, gh config, Atuin, Bat, LazyGit and Yazi with their Git-Bash-launched Neovim bridges, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, and Git Bash startup. Atuin uses the existing ble.sh line editor for accurate Bash history hooks. Native launchers use Git Bash's space-free Windows path when cmd.exe parsing requires it. | Conservative plus explicit Atuin, Bat, gh, Pi, LazyGit, Yazi, and Herdr decisions | Decide whether to install/share other native tools. |
+| D48 | Agent Review | Windows, WSL, Mac, and Arch manage the same global ~/.agents/skills/agent-review/SKILL.md, agent-review CLI, Neovim plugin, and Pi feedback extension. Pi 0.82.1 auto-discovers ~/.agents/skills and exposed /skill:agent-review on all four machines. Annotation databases remain local Neovim state. | Decided and implemented | Keep Agent Review available anywhere Pi and Neovim are available. |
+| D49 | Local helper scripts | agent-review, lazygit-nvim, yazi-nvim, nvim-target.sh, and herdr-popup-picker are shared by Windows, WSL, Mac, and Arch. Agent Review uses the shared exact-target resolver before its unique-live-server fallback; all four machines use Bash 5.3 and jq, while newline stripping makes base64 encoding compatible with both GNU/uutils and macOS FreeBSD base64. LazyGit and external Yazi source the same resolver but retain thin app-specific adapters. The popup retains its Bash/fzf UI and enables Workmux only from the Arch binding. tunnel remains profile-specific on WSL/Mac; tmux helpers and worktrunk-seed remain Arch-only legacy. | Decided and implemented | Keep the portable helpers shared and the explicitly legacy/profile-specific helpers scoped. |
+| D50 | macOS allowlist | Mac manages Git, gh config, Agent Review, LazyGit, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, Greenlight/Vimme shell helpers, Atuin, bat, LazyDocker, Posting, Yazi, tunnel, and the shared Neovim bridge helpers. It intentionally no longer manages legacy tmux/Workmux or inert Bottom configuration. It still ignores SSH and the remaining local helpers. | Conservative choices plus explicit legacy, Pi, Atuin, Agent Review, and Herdr decisions | This remains the main list to reconsider if greater unification is desired. |
+| D51 | WSL allowlist | WSL manages Git, gh config, Agent Review, Atuin, Bat, LazyGit and its Neovim bridge, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, Zsh plugins, Yazi, tunnel, and the checkout-guarded Greenlight/Vimme shell helpers. It ignores the remaining workstation tools; the project helpers are present but inert because their ~/dev checkouts are absent. | Conservative choices plus explicit Agent Review, Atuin, Bat, Pi, LazyGit, Yazi, and Herdr decisions | Decide which remaining Mac/Arch tools should join the WSL baseline. |
+| D52 | Windows allowlist | Windows manages Git, gh config, Agent Review, Atuin, Bat, LazyGit and Yazi with their Git-Bash-launched Neovim bridges, Herdr core/reordering/popup and its helper, Neovim, OpenCode, Pi, Starship/common shell, and Git Bash startup. Atuin uses the existing ble.sh line editor for accurate Bash history hooks. Native launchers use Git Bash's space-free Windows path when cmd.exe parsing requires it. | Conservative plus explicit Agent Review, Atuin, Bat, gh, Pi, LazyGit, Yazi, and Herdr decisions | Decide whether to install/share other native tools. |
 | D53 | Nushell | A three-line 2021 TOML-era Nushell config was removed; Nushell was absent and modern Nushell no longer uses that format. | Intentional | Restore only if adopting modern Nushell with a new config. |
 | D54 | Source documentation | docs is ignored by chezmoi so this inventory is not deployed into any home directory. | Intentional | Keep repository documentation outside target state. |
 | D55 | Legacy shell integration | Mac no longer loads tmux/Workmux aliases or Workmux completion. Arch retains them in .arch.zsh rather than the shared template. The Mac tmux and Workmux config directories were removed after the user confirmed they were unnecessary. | Explicit user decision | Preserve only the Arch legacy setup until eventual retirement. |
@@ -135,7 +135,7 @@ Kinds:
 | herdr-reorder.mjs | Portable Herdr tab and workspace/worktree-group reordering | Managed on all four machines with shared prefix+ctrl+h/l/k/j bindings. Its lock lives under XDG_RUNTIME_DIR or the OS temp directory and is keyed to the socket path. |
 | herdr-popup-picker | Portable Herdr command launcher with optional tools | Managed on all four machines at prefix+p. It retains the Bash/fzf UI; macOS uses Homebrew Bash because the system Bash is too old, native Windows launches it through Git Bash, and only Arch enables the legacy Workmux item. |
 | herdr-session-picker | Low-value fuzzy session attachment helper | Retired from source and live Arch state together with its shared `hs` alias. |
-| agent-review | Shared Neovim feature with a currently Unix/GNU-specific Bash client | Defer to D48. A cross-platform implementation should avoid Bash 4, jq, and GNU base64 requirements. |
+| agent-review | Cross-platform agent CLI for persistent Neovim review annotations | Managed on all four machines together with its global Pi skill. It uses Bash 5.3 and jq everywhere, accepts GNU/uutils/FreeBSD base64 output, and shares exact-target resolution with the other Neovim bridges. |
 
 ## Deferred actual changes
 
@@ -257,7 +257,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 ## Review order
 
 1. D01 is decided: use shared application configs with explicit per-machine enablement.
-2. D46 is complete. D49 has resolved LazyGit, tunnel, tmux, Worktrunk, local directional-split, Herdr-reordering, the popup helper, and retirement of the session picker; next review agent-review with D48. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
+2. D46, D48, and D49 are complete. Continue D50 through D52 for remaining applications; D56 keeps broader Mise adoption deferred.
 3. D05, D06, D08, and D10 are complete. Leave legacy tmux/Workmux preserved on Arch.
 4. D27, D28, and D40: consolidate Herdr and Worktrunk behavior.
 5. D14 through D23: finish Git, gh, SSH, and secret policy.
@@ -267,6 +267,7 @@ work npm configuration separately rather than changing it as part of Pi setup.
 These commits are intentionally small so individual choices can be reverted or
 rewritten during review:
 
+- c3ab655 share agent review with every pi setup
 - f7eb179 share neovim target routing with yazi
 
 - d6b9bdf add safe multi-platform profile scaffold
