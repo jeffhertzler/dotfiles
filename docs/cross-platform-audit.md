@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `680a1a2` on `normalize/multi-platform`
+Source baseline: `4bd23dd` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -34,7 +34,7 @@ The central design is sound:
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
 to the Windows ble.sh update policy, later programming-language migrations into
-Mise, and optional native-Windows Go.
+Mise, and runtime-installed CLI ownership.
 
 ## Supported profiles
 
@@ -187,7 +187,7 @@ a promise that Chezmoi installs every dependency.
 | Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Windows packages | Mise | Homebrew | pacman |
-| Go | not installed | Mise | custom `~/.go` | custom `~/.go` |
+| Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
 | Atuin | WinGet | direct release | Homebrew | pacman |
@@ -214,6 +214,10 @@ a promise that Chezmoi installs every dependency.
   now use Mise for Temurin Java 17/11 and Maven 3.9.16. Plain Java version
   declarations align with existing `.java-version` files, and
   `java.shorthand_vendor = "temurin"` keeps the selected distribution explicit.
+- Go 1.26.5 is owned by Mise on all four profiles. GOPATH is left unset so Go
+  uses its standard home-directory default, and `go.set_gobin = false` keeps
+  installed commands in the canonical `~/go/bin`. The retired macOS and Arch
+  SDK trees were moved to each platform's Trash for recovery.
 - Jabba is retired on macOS and Arch. Its shell integration and managed source
   are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
@@ -250,8 +254,8 @@ a promise that Chezmoi installs every dependency.
 ### Neovim
 
 - The shared LazyVim tree works on all four profiles.
-- TypeScript and Python were interactively verified; Go tooling is guarded when
-  Go is unavailable.
+- TypeScript, Python, and Go support are enabled on all four profiles. Native
+  Windows now has the complete LazyVim Go toolset, including gopls.
 - LazyGit, Yazi, and Agent Review can target an existing Neovim instance.
 - `lazy-lock.json` is intentionally unmanaged runtime state.
 - Retired Neoconf/Neodev configuration and the contradictory Refactoring extra
@@ -319,8 +323,8 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
   checked-in Bat themes and two unused Yazi theme variants were removed.
 - `nvu` has one Linux/x86-64 definition in the common shell layer.
 - `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
-- The unused `gou` curl-to-shell installer alias has been removed. Go upgrades
-  remain the responsibility of each machine's declared runtime owner.
+- The unused `gou` curl-to-shell installer alias has been removed. Mise now owns
+  Go upgrades on all four profiles.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight repositories use machine-local path-scoped Git identity includes;
   `gggm` no longer mutates global identity while running `good morning`.
@@ -353,8 +357,7 @@ Optional:
 
 - Decide whether the Windows ble.sh bootstrap should remain install-only or
   gain an explicit update policy. It currently preserves the working version.
-- Install Go on native Windows if Windows-local Go development becomes useful.
-- Consider later migrations of Node, Python, Go, and runtime-installed CLIs into
+- Consider later migrations of Node, Python, and runtime-installed CLIs into
   Mise one owner at a time; current managers remain intentional until then.
 
 ## Recommended cleanup sequence
@@ -377,9 +380,9 @@ Each step should be previewed narrowly and verified on all affected profiles.
    explicit review for public-upstream merges and plugin removal.
 7. **Complete:** Mise discovery is shell-independent and WSL is isolated from
    Windows; macOS and Arch use Mise-managed Temurin 17/11 and Maven 3.9.16;
-   Jabba is retired; Arch uses Volta instead of Hermes; Bun is current; Windows
-   can bootstrap ble.sh; and macOS package ownership, obsolete taps, and
-   retained LazyJira trust are clean.
+   all four profiles use Mise-managed Go; Jabba is retired; Arch uses Volta
+   instead of Hermes; Bun is current; Windows can bootstrap ble.sh; and macOS
+   package ownership, obsolete taps, and retained LazyJira trust are clean.
 8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
    not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
    merely for cross-platform parity.
