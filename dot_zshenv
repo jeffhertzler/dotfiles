@@ -9,6 +9,8 @@ export GOPATH="$HOME/go"
 export LANG="${LANG:-en_US.UTF-8}"
 
 path=(
+  "/opt/homebrew/bin"
+  "/opt/homebrew/sbin"
   "$HOME/.local/bin"
   "$HOME/.atuin/bin"
   "$HOME/.opencode/bin"
