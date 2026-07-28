@@ -89,4 +89,15 @@ if [[ -n ${HERDR_PANE_ID-} ]]; then
   fi
 fi
 
+# ble.sh loads its fzf integration later in idle time, replacing Atuin's
+# Ctrl-R binding after shell startup. Run this only after that delayed import:
+# Atuin searches in insert mode, while normal mode retains vi redo.
+if [[ ${BLE_VERSION-} ]] && declare -F atuin-bind >/dev/null; then
+  __atuin_restore_blesh_ctrl_r() {
+    atuin-bind -m vi-insert '\C-r' atuin-search-viins
+    ble-bind -m vi_nmap -f C-r vi_nmap/redo
+  }
+  ble-import -C __atuin_restore_blesh_ctrl_r integration/fzf-key-bindings
+fi
+
 [[ ! ${BLE_VERSION-} ]] || ble-attach
