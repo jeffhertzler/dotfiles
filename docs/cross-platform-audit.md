@@ -33,9 +33,8 @@ The central design is sound:
   is the primary workspace manager.
 
 The remaining work is cleanup rather than recovery. Open decisions are limited
-to Greenlight's `gggm` helper, Arch's `.profile`/Jabba startup artifacts, and the
-Windows ble.sh update policy. Broader Mise adoption and native-Windows Go remain
-explicitly deferred.
+to Arch's `.profile`/Jabba startup artifacts and the Windows ble.sh update
+policy. Broader Mise adoption and native-Windows Go remain explicitly deferred.
 
 ## Supported profiles
 
@@ -313,13 +312,12 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
 - The unused `gou` curl-to-shell installer alias has been removed. Go upgrades
   remain the responsibility of each machine's declared runtime owner.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
-- Greenlight's `gggm` mutates global Git email and is brittle compared with a
-  repository-local identity mechanism.
+- Greenlight repositories use machine-local path-scoped Git identity includes;
+  `gggm` no longer mutates global identity while running `good morning`.
 
 ## Cleanup candidates
 
-These candidates were previewed individually; only the explicitly marked item
-still has remaining work:
+These candidates were previewed and completed individually:
 
 1. **Complete:** simplify `.chezmoiignore` to a shared-base model.
 2. **Complete:** convert the shared Git config template to a plain source file.
@@ -328,8 +326,8 @@ still has remaining work:
 5. **Complete:** resolve contradictory LazyVim Refactoring declarations.
 6. **Complete:** reduce Atuin to intentional non-default settings.
 7. **Complete:** remove unused Yazi and Bat theme files.
-8. **Partial:** portable aliases and duplicate Greenlight pull logic are clean;
-   replace or retire the global-identity mutation in `gggm`.
+8. **Complete:** portable aliases and Greenlight helpers are deduplicated, and
+   `gggm` relies on path-scoped Git identity instead of global mutation.
 9. **Complete:** retire the legacy Go installer alias.
 
 The Arch tmux and Workmux sources are not dead configuration. They are retained
