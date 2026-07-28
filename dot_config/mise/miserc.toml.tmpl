@@ -1,0 +1,7 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+ceiling_paths = [
+  {{ .chezmoi.homeDir | toJson }},
+{{ if eq $profile "wsl" -}}
+  "/mnt/c/Users/Jeff Hertzler",
+{{ end -}}
+]
