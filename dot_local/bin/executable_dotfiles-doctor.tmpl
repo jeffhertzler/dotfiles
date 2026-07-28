@@ -342,7 +342,7 @@ fi
 {{ end -}}
 
 section 'Windows environment'
-for variable_name in XDG_CONFIG_HOME YAZI_CONFIG_HOME YAZI_FILE_ONE BAT_CONFIG_PATH; do
+for variable_name in XDG_CONFIG_HOME YAZI_CONFIG_HOME YAZI_FILE_ONE BAT_CONFIG_PATH WORKTRUNK_CONFIG_PATH; do
   persistent_value=$(powershell.exe -NoProfile -Command "[Environment]::GetEnvironmentVariable('$variable_name', 'User')" 2>/dev/null | first_line)
   current_value=${!variable_name-}
   if [[ -n $persistent_value ]]; then

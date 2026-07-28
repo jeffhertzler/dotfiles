@@ -1,10 +1,13 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- $wtOpen := "{{" -}}
+{{- $wtClose := "}}" -}}
 # Keep the sibling directory layout used by workmux.
-worktree-path = "{{ repo_path }}/../{{ repo }}__worktrees/{{ branch | sanitize }}"
+worktree-path = "{{ $wtOpen }} repo_path {{ $wtClose }}/../{{ $wtOpen }} repo {{ $wtClose }}__worktrees/{{ $wtOpen }} branch | sanitize {{ $wtClose }}"
 
 # herdr-worktrunk 0.4 expects Worktrunk's original bare-array JSON output.
 [list]
 json-schema = 1
-
+{{ if eq $profile "arch" }}
 [pre-remove]
 opencode = "sh -lc 'oc-cleanup kill >/dev/null 2>&1 || true'"
 
@@ -13,8 +16,8 @@ opencode = "sh -lc 'oc-cleanup kill >/dev/null 2>&1 || true'"
 [[projects."github.com/stingerlabs/ultralight".pre-start]]
 seed = """
 worktrunk-seed \
-  --source {{ primary_worktree_path }} \
-  --destination {{ worktree_path }} \
+  --source {{ $wtOpen }} primary_worktree_path {{ $wtClose }} \
+  --destination {{ $wtOpen }} worktree_path {{ $wtClose }} \
   --copy .env \
   --symlink .cursor/mcp.json \
   --symlink .mcp.json \
@@ -35,4 +38,5 @@ worktrunk-seed \
 environment = "node scripts/local/worktree/sync-env.mjs"
 
 [projects."github.com/stingerlabs/ultralight".pre-remove]
-cleanup = "WM_WORKTREE_PATH={{ worktree_path }} WM_PROJECT_ROOT={{ primary_worktree_path }} node scripts/local/worktree/cleanup.mjs"
+cleanup = "WM_WORKTREE_PATH={{ $wtOpen }} worktree_path {{ $wtClose }} WM_PROJECT_ROOT={{ $wtOpen }} primary_worktree_path {{ $wtClose }} node scripts/local/worktree/cleanup.mjs"
+{{ end -}}

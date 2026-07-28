@@ -44,7 +44,6 @@ docs
 .jabba
 .config/tmux
 .config/workmux
-.config/worktrunk
 .local/bin/tmux-lazygit-popup
 .local/bin/tmux-nvim-server
 .local/bin/tmux-preview-update

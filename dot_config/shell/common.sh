@@ -1,5 +1,6 @@
 # Shared interactive behavior for Bash and Zsh.
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export WORKTRUNK_CONFIG_PATH="${WORKTRUNK_CONFIG_PATH:-$XDG_CONFIG_HOME/worktrunk/config.toml}"
 export VISUAL="nvim"
 export EDITOR="nvim"
 export GIT_EDITOR="nvim"
