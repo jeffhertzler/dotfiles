@@ -1,0 +1,32 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "windows" -}}
+$ErrorActionPreference = "Stop"
+
+$mise = Get-Command mise -ErrorAction SilentlyContinue
+if (-not $mise) {
+  throw "The Neovim Python provider bootstrap requires mise on PATH"
+}
+
+# Mise's pipx backend uses uv, but a newly installed uv may still resolve
+# through Mise's recursive shim in this process. Bootstrap uv first, then put
+# its concrete installation directory ahead of the shims for the pipx install.
+& $mise.Source install uv
+if ($LASTEXITCODE -ne 0) { throw "Failed to install the Mise uv tool" }
+
+$uvPath = (& $mise.Source which uv | Select-Object -First 1)
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($uvPath)) {
+  throw "Could not resolve the Mise uv installation"
+}
+
+$previousPath = $env:PATH
+try {
+  $uvDirectory = Split-Path -Parent $uvPath.Trim()
+  $env:PATH = "$uvDirectory;$previousPath"
+  & $mise.Source install uv pipx:pynvim
+  if ($LASTEXITCODE -ne 0) { throw "Failed to install the Mise pynvim provider" }
+  & $mise.Source reshim
+  if ($LASTEXITCODE -ne 0) { throw "Failed to refresh Mise shims" }
+} finally {
+  $env:PATH = $previousPath
+}
+{{- end }}

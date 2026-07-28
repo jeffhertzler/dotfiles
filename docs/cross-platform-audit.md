@@ -187,6 +187,7 @@ a promise that Chezmoi installs every dependency.
 | Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Mise 3.14.6 | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
+| uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
@@ -214,8 +215,9 @@ a promise that Chezmoi installs every dependency.
   without deleting or reordering any other entry, and backs up the previous
   value before changing it.
 - Homebrew and pacman Python installations remain installed for package-owned
-  utilities even though Mise wins in development shells. Arch's independent
-  `/usr/bin/pynvim-python` provider remains available to Neovim.
+  utilities even though Mise wins in development shells. Arch's pacman
+  `python-pynvim` package is harmless redundant state; Neovim explicitly uses
+  the isolated Mise provider instead of `/usr/bin/pynvim-python`.
 - Mise discovery ceilings now live in its shell-independent early-init
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
@@ -275,7 +277,11 @@ a promise that Chezmoi installs every dependency.
 - The Neovim Python host is an isolated Mise `pipx:pynvim` tool on all four
   profiles. Neovim selects its `pynvim-python` executable directly rather than
   depending on mutable packages inside a development Python runtime. Mise also
-  owns the shared `uv` installer used by its `pipx` backend.
+  owns the shared `uv` installer used by its `pipx` backend. A profile-specific
+  Chezmoi bootstrap runs the shared installation sequence safely: it installs
+  `uv` first, temporarily exposes that concrete binary ahead of Mise's shims,
+  and then installs `pipx:pynvim`. This avoids recursive shim resolution during
+  a fresh setup while leaving the resulting tool ownership fully in Mise.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.

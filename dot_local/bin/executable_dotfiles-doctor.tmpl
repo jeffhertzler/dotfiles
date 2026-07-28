@@ -159,6 +159,7 @@ check_tool 'OpenCode' opencode
 check_tool 'Pi' pi
 check_tool 'Node.js' node
 check_tool 'Mise' mise
+check_tool 'uv' uv
 check_tool 'Go' go
 check_alternative 'Python' python3 python
 check_tool 'Starship' starship
@@ -193,6 +194,23 @@ case $profile in
     check_tool 'Posting' posting
     ;;
 esac
+
+section 'Neovim providers'
+pynvim_host=$(mise which pynvim-python 2>/dev/null | first_line)
+if [[ -n $pynvim_host ]]; then
+  # Git Bash can receive a native Windows path from mise.exe. MSYS accepts the
+  # forward-slash form when invoking the provider directly.
+  pynvim_host=${pynvim_host//\\//}
+  pynvim_version=$("$pynvim_host" -c 'import pynvim; print(pynvim.__version__)' 2>/dev/null | first_line)
+  if [[ -n $pynvim_version ]]; then
+    pass "Mise pynvim provider: $pynvim_version"
+    printf '     %s\n' "$pynvim_host"
+  else
+    fail "Mise pynvim provider could not import pynvim: $pynvim_host"
+  fi
+else
+  fail 'Mise could not resolve the pynvim-python provider'
+fi
 
 section 'Optional and bootstrap tools'
 check_optional_tool '1Password CLI' op
