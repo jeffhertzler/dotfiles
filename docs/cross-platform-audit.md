@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `379f591` on `normalize/multi-platform`
+Source baseline: `052ba01` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -302,15 +302,15 @@ Remaining policy gaps:
 
 - Atuin works across Bash and Zsh, including the corrected Git Bash Ctrl-R
   binding through ble.sh.
-- The checked-in Atuin file is mostly generated/default boilerplate. Only a
-  small number of settings are intentional and need to remain.
-- Bat always selects Catppuccin Mocha, but three unused Catppuccin variants are
-  deployed.
-- `nvu` is duplicated in WSL and Arch overlays.
-- `ha` and `hat` are duplicated in WSL and macOS overlays.
+- The checked-in Atuin file now contains only the intentional local-history,
+  session-up-arrow, style, Enter-accept, and record-sync settings.
+- Bat uses its bundled Catppuccin Mocha theme on all four profiles; redundant
+  checked-in Bat themes and two unused Yazi theme variants were removed.
+- `nvu` has one Linux/x86-64 definition in the common shell layer.
+- `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
 - The `gou` alias executes an old `git.io` installer and should be reconsidered
   now that Go is manager-owned on some systems.
-- Greenlight's `ggpull` pulls `frontend/settings` twice.
+- Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight's `gggm` mutates global Git email and is brittle compared with a
   repository-local identity mechanism.
 
@@ -363,7 +363,8 @@ Each step should be previewed narrowly and verified on all affected profiles.
    with narrow exclusions, and the identical Git configuration is a plain file.
 3. **Complete:** the retired Neoconf file and empty Yazi keymap are removed; the
    stale Refactoring extra is gone while the explicit plugin disable remains.
-4. Reduce Atuin boilerplate and clean unused themes/duplicate helpers.
+4. **Complete:** Atuin contains only intentional settings; redundant Bat/Yazi
+   themes and duplicate `nvu`, `ha`, `hat`, and Greenlight pull logic are gone.
 5. Decide the Worktrunk configuration boundary, then align the Arch binary.
 6. Define Herdr plugin update, version, ref-verification, and extra-plugin
    policy.
