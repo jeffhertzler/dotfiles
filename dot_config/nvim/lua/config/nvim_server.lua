@@ -54,7 +54,7 @@ function M.setup()
     return
   end
   initialized = true
-  local group = vim.api.nvim_create_augroup("AgentBridgeServer", { clear = true })
+  local group = vim.api.nvim_create_augroup("NvimServerRegistry", { clear = true })
   vim.api.nvim_create_autocmd({ "VimEnter", "FocusGained" }, {
     group = group,
     callback = M.publish,
@@ -63,7 +63,7 @@ function M.setup()
     group = group,
     callback = M.remove,
   })
-  vim.schedule(M.publish)
+  M.publish()
 end
 
 return M

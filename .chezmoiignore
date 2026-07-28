@@ -48,7 +48,7 @@ docs
 !.config/posting
 !.config/posting/config.yaml
 {{- end }}
-{{- if or (eq $profile "wsl") (eq $profile "macos") }}
+{{- if or (eq $profile "wsl") (eq $profile "macos") (eq $profile "windows") }}
 !.config/yazi
 !.config/yazi/**
 {{- end }}
@@ -72,6 +72,10 @@ docs
 !.local/bin/herdr-popup-picker
 !.local/bin/herdr-reorder.mjs
 !.local/bin/lazygit-nvim
+!.local/bin/yazi-nvim
+!.local/lib
+.local/lib/*
+!.local/lib/nvim-target.sh
 {{- if or (eq $profile "wsl") (eq $profile "macos") }}
 !.local/bin/tunnel
 {{- end }}

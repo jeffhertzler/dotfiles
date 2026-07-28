@@ -7,10 +7,16 @@ suppress_preload = true
 
 [opener]
 nvim = [
-  { run = '~/.config/yazi/nvim-remote.sh "$@"', desc = "Open in Neovim", block = true, for = "unix" },
+{{- if eq $profile "windows" }}
+  { run = 'C:/PROGRA~1/Git/bin/bash.exe "{{ .chezmoi.homeDir }}/.local/bin/yazi-nvim" %s', desc = "Open in Neovim", block = true, for = "windows" },
+{{- else }}
+  { run = '~/.local/bin/yazi-nvim "$@"', desc = "Open in Neovim", block = true, for = "unix" },
+{{- end }}
 ]
 {{- if eq $profile "macos" }}
 open = [{ run = 'open "$@"', desc = "Open with system handler" }]
+{{- else if eq $profile "windows" }}
+open = [{ run = 'start "" %s1', desc = "Open with system handler", orphan = true, for = "windows" }]
 {{- else }}
 open = [{ run = 'xdg-open "$@"', desc = "Open with system handler" }]
 {{- end }}

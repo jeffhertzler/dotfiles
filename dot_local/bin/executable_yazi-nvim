@@ -1,0 +1,23 @@
+#!/bin/sh
+
+. "$HOME/.local/lib/nvim-target.sh"
+
+quit_yazi() {
+  if [ -n "${YAZI_ID:-}" ] && command -v ya >/dev/null 2>&1; then
+    (
+      sleep 0.2
+      ya emit quit >/dev/null 2>&1 || true
+    ) >/dev/null 2>&1 &
+  fi
+}
+
+nvim_target_resolve || true
+
+if [ -n "$NVIM_TARGET_SERVER" ] &&
+  nvim --headless --server "$NVIM_TARGET_SERVER" --remote "$@" 2>/dev/null; then
+  quit_yazi
+  exit 0
+fi
+
+quit_yazi
+exec nvim "$@"

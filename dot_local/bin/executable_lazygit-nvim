@@ -8,6 +8,8 @@ server=
 launcher_kind=standalone
 launcher_buf=
 
+. "$HOME/.local/lib/nvim-target.sh"
+
 log() {
   printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$log_file"
 }
@@ -28,56 +30,6 @@ line | wait)
   usage "$@"
   ;;
 esac
-
-live_nvim_server() {
-  [ -n "$1" ] && nvim --headless --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
-}
-
-resolve_herdr_target() {
-  herdr_pane=${HERDR_ACTIVE_PANE_ID:-${HERDR_PANE_ID:-}}
-  [ -n "$herdr_pane" ] || return 1
-
-  if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-    registry_dir=$XDG_RUNTIME_DIR/herdr-nvim
-  elif [ "${OS:-}" = Windows_NT ]; then
-    registry_dir=${TMPDIR:-/tmp}/herdr-nvim
-  else
-    registry_dir=/tmp/herdr-nvim-$(id -u)
-  fi
-
-  safe_pane=$(printf '%s' "$herdr_pane" | tr -c 'A-Za-z0-9_.-' '_')
-  registry_file=$registry_dir/$safe_pane.server
-  [ -r "$registry_file" ] || return 1
-
-  IFS= read -r candidate <"$registry_file" || candidate=
-  if live_nvim_server "$candidate"; then
-    server=$candidate
-    launcher_kind=herdr_popup
-    return 0
-  fi
-
-  rm -f "$registry_file"
-  return 1
-}
-
-resolve_tmux_target() {
-  candidate=$("$HOME/.local/bin/tmux-nvim-server" 2>/dev/null) || candidate=
-  [ -n "$candidate" ] || return 1
-
-  server=$candidate
-  launcher_kind=tmux_popup
-}
-
-resolve_target() {
-  if [ -n "${NVIM:-}" ]; then
-    server=$NVIM
-    launcher_kind=nvim_terminal
-    return
-  fi
-
-  resolve_herdr_target && return
-  resolve_tmux_target || true
-}
 
 open_local_editor() {
   case "$mode" in
@@ -153,7 +105,9 @@ close_launcher() {
   esac
 }
 
-resolve_target
+nvim_target_resolve || true
+server=$NVIM_TARGET_SERVER
+launcher_kind=$NVIM_TARGET_LAUNCHER
 log "mode=$mode server=${server:-<none>} launcher=$launcher_kind pane=${TMUX_PANE:-<none>} popup=${TMUX_POPUP_PANE:-<none>} tmux_target=${TMUX_NVM_TARGET:-<none>} herdr_target=${HERDR_ACTIVE_PANE_ID:-<none>} args=$*"
 
 if [ -z "$server" ]; then

@@ -1,2 +1,2 @@
 -- Autocmds are automatically loaded on the VeryLazy event.
--- Agent RPC server publication is owned by agent-bridge.nvim.
+require("config.nvim_server").setup()

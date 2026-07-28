@@ -10,7 +10,7 @@ if (!socketPath) {
 const socketEndpoint =
   process.platform === 'win32' ? `\\\\.\\pipe\\${socketPath}` : socketPath;
 const request = {
-  id: `lazygit-editor-close:${process.pid}`,
+  id: `herdr-popup-close:${process.pid}`,
   method: 'popup.close',
   params: {},
 };

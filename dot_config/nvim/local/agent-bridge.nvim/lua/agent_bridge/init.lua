@@ -180,7 +180,6 @@ function M.setup(opts)
   targets.setup(vim.tbl_deep_extend("force", {}, config.targets, { tmux = config.tmux }))
   prompt.setup(config.prompt, transport.send)
   context_builder.setup({ prompt_buffer = prompt.buffer })
-  require("agent_bridge.server").setup()
   create_command()
   setup_done = true
   return M
