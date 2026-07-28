@@ -1,0 +1,368 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+#!/usr/bin/env bash
+
+# Read-only health report for the shared Chezmoi setup.
+set -u
+
+profile={{ $profile | quote }}
+failures=0
+warnings=0
+
+if [[ -t 1 && -z ${NO_COLOR-} ]]; then
+  green=$'\033[32m'
+  yellow=$'\033[33m'
+  red=$'\033[31m'
+  blue=$'\033[36m'
+  bold=$'\033[1m'
+  reset=$'\033[0m'
+else
+  green=
+  yellow=
+  red=
+  blue=
+  bold=
+  reset=
+fi
+
+section() {
+  printf '\n%s== %s ==%s\n' "$bold" "$1" "$reset"
+}
+
+pass() {
+  printf '%s[OK]%s %s\n' "$green" "$reset" "$1"
+}
+
+info() {
+  printf '%s[INFO]%s %s\n' "$blue" "$reset" "$1"
+}
+
+optional() {
+  printf '%s[--]%s %s\n' "$blue" "$reset" "$1"
+}
+
+warn() {
+  warnings=$((warnings + 1))
+  printf '%s[WARN]%s %s\n' "$yellow" "$reset" "$1"
+}
+
+fail() {
+  failures=$((failures + 1))
+  printf '%s[FAIL]%s %s\n' "$red" "$reset" "$1"
+}
+
+first_line() {
+  local line
+  IFS= read -r line || true
+  printf '%s' "${line%$'\r'}"
+}
+
+command_path() {
+  type -P "$1" 2>/dev/null || command -v "$1" 2>/dev/null
+}
+
+tool_version() {
+  local command_name=$1
+
+  case $command_name in
+    git-lfs) git lfs version 2>/dev/null | first_line ;;
+    gh) gh --version 2>/dev/null | first_line ;;
+    nvim) nvim --version 2>/dev/null | first_line ;;
+    powershell.exe) powershell.exe -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>/dev/null | first_line ;;
+    python|python3) "$command_name" --version 2>&1 | first_line ;;
+    wt|git-wt) "$command_name" --version 2>&1 | first_line ;;
+    *) "$command_name" --version 2>&1 | first_line ;;
+  esac
+}
+
+check_tool() {
+  local label=$1 command_name=$2 path version
+
+  path=$(command_path "$command_name")
+  if [[ -z $path ]]; then
+    fail "$label is missing ($command_name)"
+    return
+  fi
+
+  version=$(tool_version "$command_name")
+  [[ -n $version ]] || version='version unavailable'
+  pass "$label: $version"
+  printf '     %s\n' "$path"
+}
+
+check_optional_tool() {
+  local label=$1 command_name=$2 path version
+
+  path=$(command_path "$command_name")
+  if [[ -z $path ]]; then
+    optional "$label is not installed ($command_name)"
+    return
+  fi
+
+  version=$(tool_version "$command_name")
+  [[ -n $version ]] || version='version unavailable'
+  pass "$label: $version"
+  printf '     %s\n' "$path"
+}
+
+check_alternative() {
+  local label=$1 candidate path version
+  shift
+
+  for candidate in "$@"; do
+    path=$(command_path "$candidate")
+    [[ -n $path ]] || continue
+    version=$(tool_version "$candidate")
+    [[ -n $version ]] || version='version unavailable'
+    pass "$label: $version ($candidate)"
+    printf '     %s\n' "$path"
+    return
+  done
+
+  fail "$label is missing (tried: $*)"
+}
+
+check_optional_alternative() {
+  local label=$1 candidate path version
+  shift
+
+  for candidate in "$@"; do
+    path=$(command_path "$candidate")
+    [[ -n $path ]] || continue
+    version=$(tool_version "$candidate")
+    [[ -n $version ]] || version='version unavailable'
+    pass "$label: $version ($candidate)"
+    printf '     %s\n' "$path"
+    return
+  done
+
+  optional "$label is not installed (tried: $*)"
+}
+
+printf '%sDotfiles doctor%s\n' "$bold" "$reset"
+printf 'Profile: %s\n' "$profile"
+printf 'Host: %s\n' "$(hostname 2>/dev/null || printf unknown)"
+printf 'Shell: Bash %s\n' "${BASH_VERSION-unknown}"
+
+section 'Required tools'
+check_tool 'Git' git
+check_tool 'Git LFS' git-lfs
+check_tool 'GitHub CLI' gh
+check_tool 'Chezmoi' chezmoi
+check_tool 'Neovim' nvim
+check_tool 'LazyGit' lazygit
+check_tool 'Herdr' herdr
+check_tool 'OpenCode' opencode
+check_tool 'Pi' pi
+check_tool 'Node.js' node
+check_alternative 'Python' python3 python
+check_tool 'Starship' starship
+check_tool 'Atuin' atuin
+check_tool 'Bat' bat
+check_tool 'Yazi' yazi
+check_tool 'jq' jq
+check_tool 'zoxide' zoxide
+check_tool 'fzf' fzf
+check_alternative 'fd' fd fdfind
+check_tool 'ripgrep' rg
+if [[ $profile == windows ]]; then
+  check_tool 'Worktrunk' git-wt
+else
+  check_alternative 'Worktrunk' git-wt wt
+fi
+
+case $profile in
+  windows)
+    check_tool 'PowerShell bridge' powershell.exe
+    ;;
+  wsl|macos|arch)
+    check_tool 'Zsh' zsh
+    ;;
+esac
+
+case $profile in
+  macos|arch)
+    check_tool 'LazyDocker' lazydocker
+    check_tool 'Posting' posting
+    ;;
+esac
+
+section 'Optional and bootstrap tools'
+check_optional_tool '1Password CLI' op
+check_optional_tool 'Go' go
+check_optional_tool 'Mise' mise
+check_optional_tool 'Volta' volta
+if [[ $profile == arch ]]; then
+  check_optional_tool 'tmux (retained legacy)' tmux
+  check_optional_tool 'Workmux (retained legacy)' workmux
+fi
+if [[ $profile == wsl || $profile == macos ]]; then
+  if [[ -x $HOME/.local/bin/tunnel ]]; then
+    pass "Tunnel helper: $HOME/.local/bin/tunnel"
+  else
+    fail "Managed tunnel helper is missing: $HOME/.local/bin/tunnel"
+  fi
+fi
+
+section 'Git and GitHub policy'
+git_protocol=$(gh config get git_protocol 2>/dev/null | first_line)
+if [[ $git_protocol == ssh ]]; then
+  pass 'GitHub CLI default protocol is SSH'
+elif [[ -n $git_protocol ]]; then
+  fail "GitHub CLI default protocol is $git_protocol, expected ssh"
+else
+  fail 'Could not read GitHub CLI default protocol'
+fi
+
+git_local=$HOME/.config/git/local.config
+if [[ -f $git_local ]]; then
+  pass "Unmanaged local Git overlay exists: $git_local"
+else
+  warn "Unmanaged local Git overlay is absent: $git_local"
+fi
+
+section 'Chezmoi state'
+source_path=$(chezmoi source-path 2>/dev/null | first_line)
+if [[ -n $source_path && -d $source_path ]]; then
+  pass "Source directory: $source_path"
+  if git -C "$source_path" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    source_branch=$(git -C "$source_path" branch --show-current 2>/dev/null)
+    source_head=$(git -C "$source_path" rev-parse --short HEAD 2>/dev/null)
+    info "Source Git state: ${source_branch:-detached} at ${source_head:-unknown}"
+    source_changes=$(git -C "$source_path" status --short 2>/dev/null)
+    if [[ -n $source_changes ]]; then
+      warn 'Source repository has uncommitted changes'
+      while IFS= read -r line; do printf '     %s\n' "$line"; done <<< "$source_changes"
+    else
+      pass 'Source repository is clean'
+    fi
+  else
+    warn 'Chezmoi source directory is not a Git worktree'
+  fi
+else
+  fail 'Could not resolve the Chezmoi source directory'
+fi
+
+status_output=$(chezmoi status --exclude=dirs 2>&1)
+status_code=$?
+if (( status_code != 0 )); then
+  fail "chezmoi status failed (exit $status_code)"
+  [[ -z $status_output ]] || printf '%s\n' "$status_output" | sed 's/^/     /'
+elif [[ -n $status_output ]]; then
+  fail 'Managed targets differ from the source state'
+  printf '%s\n' "$status_output" | sed 's/^/     /'
+else
+  pass 'Managed targets match the source state'
+fi
+
+verify_output=$(chezmoi verify --exclude=dirs 2>&1)
+verify_code=$?
+if (( verify_code == 0 )); then
+  pass 'Chezmoi verification passed'
+else
+  fail "Chezmoi verification failed (exit $verify_code)"
+  [[ -z $verify_output ]] || printf '%s\n' "$verify_output" | sed 's/^/     /'
+fi
+
+section 'Herdr plugins'
+plugin_json=$(herdr plugin list --json 2>&1)
+plugin_code=$?
+if (( plugin_code != 0 )); then
+  fail "Could not inspect Herdr plugins (exit $plugin_code)"
+  printf '%s\n' "$plugin_json" | sed 's/^/     /'
+elif ! printf '%s' "$plugin_json" | jq -e '.result.plugins | type == "array"' >/dev/null 2>&1; then
+  fail 'Herdr returned an unexpected plugin-list payload'
+else
+  desired_plugins=(
+{{ range .herdrPlugins -}}
+{{ if has $profile .profiles }}
+    {{ .id | quote }}
+{{ end -}}
+{{ end -}}
+  )
+
+  for plugin_id in "${desired_plugins[@]}"; do
+    plugin_entry=$(printf '%s' "$plugin_json" | jq -c --arg id "$plugin_id" '.result.plugins[] | select(.plugin_id == $id)' | first_line)
+    if [[ -z $plugin_entry ]]; then
+      fail "Desired plugin is missing: $plugin_id"
+      continue
+    fi
+
+    plugin_version=$(printf '%s' "$plugin_entry" | jq -r '.version // "unknown"')
+    plugin_kind=$(printf '%s' "$plugin_entry" | jq -r '.source.kind // "unknown"')
+    plugin_root=$(printf '%s' "$plugin_entry" | jq -r '.plugin_root // "unknown"')
+    plugin_enabled=$(printf '%s' "$plugin_entry" | jq -r '.enabled // false')
+    if [[ $plugin_enabled == true ]]; then
+      pass "$plugin_id $plugin_version ($plugin_kind)"
+    else
+      fail "Desired plugin is disabled: $plugin_id $plugin_version ($plugin_kind)"
+    fi
+    printf '     %s\n' "$plugin_root"
+  done
+
+  extra_plugins=$(printf '%s' "$plugin_json" | jq -r --argjson desired "$(printf '%s\n' "${desired_plugins[@]}" | jq -R . | jq -s .)" '.result.plugins[] | select(.plugin_id as $id | $desired | index($id) | not) | .plugin_id')
+  if [[ -n $extra_plugins ]]; then
+    warn 'Herdr has plugins outside the desired shared inventory'
+    while IFS= read -r plugin_id; do printf '     %s\n' "$plugin_id"; done <<< "$extra_plugins"
+  fi
+fi
+
+{{ if eq $profile "windows" -}}
+section 'Windows Herdr compatibility clones'
+{{ range .herdrPlugins -}}
+{{ if has $profile .profiles }}
+plugin_clone="$HOME/{{ .windowsLink }}"
+if [[ ! -f $plugin_clone/herdr-plugin.toml ]]; then
+  fail "{{ .id }} clone is missing: $plugin_clone"
+elif ! git -C "$plugin_clone" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  fail "{{ .id }} clone is not a Git worktree: $plugin_clone"
+else
+  clone_branch=$(git -C "$plugin_clone" branch --show-current 2>/dev/null)
+  clone_head=$(git -C "$plugin_clone" rev-parse --short HEAD 2>/dev/null)
+  clone_origin=$(git -C "$plugin_clone" remote get-url origin 2>/dev/null)
+  if [[ $clone_branch == {{ .windowsRef | quote }} ]]; then
+    pass "{{ .id }} is on {{ .windowsRef }} at $clone_head"
+  else
+    fail "{{ .id }} is on ${clone_branch:-detached}, expected {{ .windowsRef }}"
+  fi
+  if [[ $clone_origin == *{{ .windowsRepo | quote }}* ]]; then
+    pass "{{ .id }} origin matches {{ .windowsRepo }}"
+  else
+    fail "{{ .id }} has unexpected origin: ${clone_origin:-none}"
+  fi
+  clone_changes=$(git -C "$plugin_clone" status --short 2>/dev/null)
+  if [[ -n $clone_changes ]]; then
+    warn "{{ .id }} compatibility clone has uncommitted changes"
+  fi
+fi
+{{ end -}}
+{{ end -}}
+
+section 'Windows environment'
+for variable_name in XDG_CONFIG_HOME YAZI_CONFIG_HOME YAZI_FILE_ONE BAT_CONFIG_PATH; do
+  persistent_value=$(powershell.exe -NoProfile -Command "[Environment]::GetEnvironmentVariable('$variable_name', 'User')" 2>/dev/null | first_line)
+  current_value=${!variable_name-}
+  if [[ -n $persistent_value ]]; then
+    pass "$variable_name (persistent): $persistent_value"
+  else
+    fail "$variable_name has no persistent user value"
+  fi
+  if [[ -n $current_value ]]; then
+    info "$variable_name (current process): $current_value"
+  else
+    warn "$variable_name is absent from this process; restart its parent application to inherit the persistent value"
+  fi
+done
+{{ end -}}
+
+section 'Optional Yazi previews'
+check_optional_tool 'Media previews' ffmpeg
+check_optional_tool 'PDF previews' pdftoppm
+check_optional_tool 'ImageMagick previews' magick
+check_optional_tool 'Terminal image previews' chafa
+check_optional_tool 'SVG previews' resvg
+check_optional_alternative 'Archive previews' 7zz 7z 7za unar bsdtar
+
+printf '\n%sSummary%s: %d failure(s), %d warning(s)\n' "$bold" "$reset" "$failures" "$warnings"
+if (( failures > 0 )); then
+  exit 1
+fi

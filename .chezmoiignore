@@ -85,6 +85,7 @@ docs
 !.local/bin/herdr-popup-picker
 !.local/bin/herdr-reorder.mjs
 !.local/bin/agent-review
+!.local/bin/dotfiles-doctor
 !.local/bin/lazygit-nvim
 !.local/bin/yazi-nvim
 !.local/lib
