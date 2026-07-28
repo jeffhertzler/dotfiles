@@ -31,7 +31,8 @@ alias gl='git pull'
 alias gp='git push'
 
 function piu() {
-  if command -v mise >/dev/null 2>&1; then
+  if command -v mise >/dev/null 2>&1 \
+    && command mise where 'npm:@earendil-works/pi-coding-agent' >/dev/null 2>&1; then
     command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
   elif command -v volta >/dev/null 2>&1; then
     command volta install @earendil-works/pi-coding-agent@latest
