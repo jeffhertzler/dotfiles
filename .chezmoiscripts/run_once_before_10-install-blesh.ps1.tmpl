@@ -1,0 +1,35 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "windows" -}}
+$ErrorActionPreference = "Stop"
+
+$installPath = Join-Path $HOME ".local\share\blesh\ble.sh"
+if (Test-Path -LiteralPath $installPath -PathType Leaf) {
+  Write-Host "ble.sh is already installed"
+  exit 0
+}
+
+$gitBash = Join-Path $env:ProgramFiles "Git\bin\bash.exe"
+if (-not (Test-Path -LiteralPath $gitBash -PathType Leaf)) {
+  throw "Installing ble.sh requires Git Bash at $gitBash"
+}
+
+# Use the project's prebuilt nightly release. The script is intentionally a
+# bootstrap, not an updater: an existing installation is never replaced.
+$installCommand = @'
+set -euo pipefail
+temp_dir=$(mktemp -d)
+trap 'rm -rf -- "$temp_dir"' EXIT
+curl -fL https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz \
+  | tar -xJf - -C "$temp_dir"
+bash "$temp_dir/ble-nightly/ble.sh" --install "$HOME/.local/share"
+'@
+
+& $gitBash -lc $installCommand
+if ($LASTEXITCODE -ne 0) {
+  throw "ble.sh installation failed with exit code $LASTEXITCODE"
+}
+
+if (-not (Test-Path -LiteralPath $installPath -PathType Leaf)) {
+  throw "ble.sh installer completed without creating $installPath"
+}
+{{- end }}

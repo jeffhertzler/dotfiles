@@ -210,8 +210,9 @@ a promise that Chezmoi installs every dependency.
 - Arch uses Volta for Node, npm, npx, and Pi. The unused Hermes installation,
   its private runtime, and its command shims have been removed.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
-- Windows ble.sh is manually present under `~/.local/share/blesh`; no package or
-  bootstrap mechanism currently declares it.
+- Windows ble.sh remains a release-tree installation under
+  `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
+  nightly build when that tree is missing and never replaces an existing copy.
 - Broader Mise adoption remains deliberately deferred. It may eventually provide
   a consistent programming-language manager without needing to own standalone
   applications.
@@ -327,8 +328,8 @@ Required or worth correcting:
 
 - Remove the stale macOS Homebrew tap after interactively uninstalling its old
   `wkhtmltopdf0125` cask, which requires administrator authentication.
-- Make Windows ble.sh installation reproducible if Git Bash remains a supported
-  first-class environment.
+- Decide whether the Windows ble.sh bootstrap should remain install-only or
+  gain an explicit update policy. It currently preserves the working version.
 
 Optional:
 
