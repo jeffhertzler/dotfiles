@@ -1,5 +1,5 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
-{{- if ne $profile "windows" }}
+{{- if ne $profile "windows" -}}
 #!/usr/bin/env bash
 set -euo pipefail
 

@@ -1,5 +1,5 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
-{{- if eq $profile "windows" }}
+{{- if eq $profile "windows" -}}
 $ErrorActionPreference = "Stop"
 
 $herdr = Get-Command herdr -ErrorAction SilentlyContinue
