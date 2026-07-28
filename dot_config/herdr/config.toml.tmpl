@@ -7,15 +7,20 @@
 {{- end -}}
 onboarding = false
 
-{{ if eq $profile "windows" -}}
 [terminal]
+new_cwd = "home"
+{{ if eq $profile "windows" -}}
 default_shell = "C:/Program Files/Git/bin/bash.exe"
-new_cwd = "follow"
+{{ end }}
 
+{{ if eq $profile "windows" -}}
 [update]
 channel = "preview"
 
 {{ end -}}
+[ui]
+prompt_new_workspace_name = true
+
 [ui.sidebar.spaces]
 rows = [["state_icon", "workspace"], ["$session", "branch", "git_status"]]
 
