@@ -66,9 +66,13 @@ tool_version() {
   case $command_name in
     git-lfs) git lfs version 2>/dev/null | first_line ;;
     gh) gh --version 2>/dev/null | first_line ;;
+    go) go version 2>&1 | first_line ;;
     nvim) nvim --version 2>/dev/null | first_line ;;
+    pdftoppm) pdftoppm -v 2>&1 | first_line ;;
+    posting) printf '%s' 'installed (version unavailable)' ;;
     powershell.exe) powershell.exe -NoProfile -Command '$PSVersionTable.PSVersion.ToString()' 2>/dev/null | first_line ;;
     python|python3) "$command_name" --version 2>&1 | first_line ;;
+    tmux) tmux -V 2>&1 | first_line ;;
     wt|git-wt) "$command_name" --version 2>&1 | first_line ;;
     *) "$command_name" --version 2>&1 | first_line ;;
   esac
