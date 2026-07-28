@@ -2,7 +2,7 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `9b7539f` on `normalize/multi-platform`
+Source baseline: `379f591` on `normalize/multi-platform`
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -359,9 +359,10 @@ Each step should be previewed narrowly and verified on all affected profiles.
 1. **Complete:** `dotfiles-doctor` reports required tools, resolved
    versions/paths, Windows environment variables, Chezmoi state, Herdr plugin
    sources, and optional Yazi dependencies on all four profiles.
-2. Simplify `.chezmoiignore` and remove the redundant Git template conditional.
-3. Remove the confirmed dead Neovim/Yazi configuration and resolve the
-   Refactoring contradiction.
+2. **Complete:** `.chezmoiignore` now expresses a shared supported-profile base
+   with narrow exclusions, and the identical Git configuration is a plain file.
+3. **Complete:** the retired Neoconf file and empty Yazi keymap are removed; the
+   stale Refactoring extra is gone while the explicit plugin disable remains.
 4. Reduce Atuin boilerplate and clean unused themes/duplicate helpers.
 5. Decide the Worktrunk configuration boundary, then align the Arch binary.
 6. Define Herdr plugin update, version, ref-verification, and extra-plugin
