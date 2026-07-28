@@ -187,7 +187,7 @@ a promise that Chezmoi installs every dependency.
 | Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
 | Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
 | Python | Mise 3.14.6 | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
-| uv / Neovim Python host | Mise | Mise | Mise | Mise |
+| uv / Neovim Python host | Mise | Mise | Mise provider; Homebrew uv retained | Mise |
 | Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
 | Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
 | Starship | WinGet | direct release | Homebrew | pacman |
@@ -281,7 +281,10 @@ a promise that Chezmoi installs every dependency.
   Chezmoi bootstrap runs the shared installation sequence safely: it installs
   `uv` first, temporarily exposes that concrete binary ahead of Mise's shims,
   and then installs `pipx:pynvim`. This avoids recursive shim resolution during
-  a fresh setup while leaving the resulting tool ownership fully in Mise.
+  a fresh setup while leaving the resulting tool ownership fully in Mise. The
+  explicitly installed Homebrew `uv` remains available on macOS and may win in
+  a noninteractive shell, but the bootstrap resolves Mise's concrete `uv`
+  executable and therefore does not depend on shell PATH order.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.

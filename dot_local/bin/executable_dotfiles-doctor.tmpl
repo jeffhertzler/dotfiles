@@ -196,6 +196,20 @@ case $profile in
 esac
 
 section 'Neovim providers'
+mise_uv=$(mise which uv 2>/dev/null | first_line)
+if [[ -n $mise_uv ]]; then
+  mise_uv=${mise_uv//\\//}
+  mise_uv_version=$("$mise_uv" --version 2>/dev/null | first_line)
+  if [[ -n $mise_uv_version ]]; then
+    pass "Mise uv provider dependency: $mise_uv_version"
+    printf '     %s\n' "$mise_uv"
+  else
+    fail "Mise uv could not run: $mise_uv"
+  fi
+else
+  fail 'Mise could not resolve its uv installation'
+fi
+
 pynvim_host=$(mise which pynvim-python 2>/dev/null | first_line)
 if [[ -n $pynvim_host ]]; then
   # Git Bash can receive a native Windows path from mise.exe. MSYS accepts the
