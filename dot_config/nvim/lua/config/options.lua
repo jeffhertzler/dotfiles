@@ -57,9 +57,18 @@ if mise ~= "" then
   end
 end
 
-local python_host = vim.fn.exepath("pynvim-python")
-if python_host ~= "" then
-  vim.g.python3_host_prog = python_host
+if mise ~= "" then
+  local pynvim_package = vim.fn.trim(vim.fn.system({ mise, "where", "pipx:pynvim" }))
+  local python_hosts = {
+    vim.fs.joinpath(pynvim_package, "bin", "pynvim-python"),
+    vim.fs.joinpath(pynvim_package, "bin", "pynvim-python.exe"),
+  }
+  for _, python_host in ipairs(python_hosts) do
+    if vim.v.shell_error == 0 and vim.fn.executable(python_host) == 1 then
+      vim.g.python3_host_prog = python_host
+      break
+    end
+  end
 end
 
 vim.opt.relativenumber = false
