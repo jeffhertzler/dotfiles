@@ -180,7 +180,7 @@ a promise that Chezmoi installs every dependency.
 | LazyGit | WinGet | Mise | Homebrew | pacman |
 | Herdr | official preview installer | direct release | direct release | direct/local |
 | OpenCode | official installer | official installer | official installer | official installer |
-| Pi | Mise | Mise | Volta | Volta |
+| Pi | Mise | Mise | Mise | Mise |
 | Node | Mise | Mise | Volta | Volta |
 | Mise | WinGet | direct installer | Homebrew | pacman |
 | Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
@@ -260,6 +260,10 @@ a promise that Chezmoi installs every dependency.
   migrate projects incrementally while Volta remains available for untouched
   `package.json.volta` projects; Volta should not be removed until those
   projects and its global CLI inventory have been reconciled.
+- Pi is owned by Mise on all four profiles and is no longer part of the Volta
+  migration. The remaining macOS Volta state is project Node/Yarn history;
+  Arch additionally retains legacy and project-facing global CLIs until their
+  consumers are reviewed individually.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
