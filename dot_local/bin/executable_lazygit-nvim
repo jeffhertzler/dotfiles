@@ -10,7 +10,7 @@ log() {
 }
 
 live_nvim_server() {
-  [ -n "$1" ] && nvim --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
+  [ -n "$1" ] && nvim --headless --server "$1" --remote-expr 'v:servername' >/dev/null 2>&1
 }
 
 native_nvim=0
@@ -143,14 +143,14 @@ PY
 
 case "$mode" in
 edit)
-  nvim --server "$server" --remote "$1"
+  nvim --headless --server "$server" --remote "$1"
   ;;
 line | wait)
-  nvim --server "$server" --remote "$2" &&
-    nvim --server "$server" --remote-send "<cmd>$1<cr>"
+  nvim --headless --server "$server" --remote "$2" &&
+    nvim --headless --server "$server" --remote-send "<cmd>$1<cr>"
   ;;
 dir)
-  nvim --server "$server" --remote "$1"
+  nvim --headless --server "$server" --remote "$1"
   ;;
 *)
   log "unknown mode=$mode"
