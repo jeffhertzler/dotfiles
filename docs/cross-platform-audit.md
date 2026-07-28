@@ -264,9 +264,9 @@ a promise that Chezmoi installs every dependency.
   migration. The remaining macOS Volta state is project Node/Yarn history;
   Arch additionally retains legacy and project-facing global CLIs until their
   consumers are reviewed individually.
-- The Neovim Node host is also owned by Mise on all four profiles. macOS and
-  Arch continue to run Node-backed editor tooling with Volta's Node 22 during
-  the project migration, but the host package is no longer Volta global state.
+- The Neovim Node host and its default Node LTS runtime are owned by Mise on all
+  four profiles. Neovim explicitly selects Mise's Node, while macOS and Arch
+  retain Volta only for untouched project pins during the staged migration.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles.
