@@ -98,8 +98,10 @@ if [ "$native_nvim" -eq 1 ]; then
     ;;
   *)
     if [ "$status" -eq 0 ]; then
+      # Quit promptly when Lazygit has resumed, with the proven delay retained
+      # as a no-op fallback when the first key arrives before it is ready.
       nvim --headless --server "$server" --remote-expr \
-        "luaeval('(function() vim.defer_fn(function() local buf = $terminal_buf; if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == [[terminal]] then local chan = vim.bo[buf].channel; if chan > 0 then vim.api.nvim_chan_send(chan, [[q]]) end end end, 250); return 0 end)()')" \
+        "luaeval('(function() local buf = $terminal_buf; local function quit() if vim.api.nvim_buf_is_valid(buf) and vim.bo[buf].buftype == [[terminal]] then local chan = vim.bo[buf].channel; if chan > 0 then pcall(vim.api.nvim_chan_send, chan, [[q]]) end end end; vim.defer_fn(quit, 100); vim.defer_fn(quit, 250); return 0 end)()')" \
         >/dev/null 2>&1 && log "queued native lazygit quit buf=$terminal_buf" || log "failed native lazygit quit buf=$terminal_buf"
     fi
     ;;
