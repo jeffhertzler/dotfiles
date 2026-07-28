@@ -28,6 +28,7 @@ and the public project as `upstream`:
 | Worktrunk | `jeffhertzler/herdr-worktrunk-windows` | `agent/windows-support` | `~/dev/herdr-worktrunk-windows` |
 
 On a new Windows machine, clone those private repositories at the listed refs
-before applying Chezmoi. The PowerShell reconciler deliberately fails with the
-missing clone and expected ref rather than silently cloning or replacing a
-development checkout.
+before applying Chezmoi. The PowerShell reconciler deliberately fails when the
+expected local plugin manifest is missing rather than silently cloning or
+replacing a development checkout. It does not currently verify the clone's Git
+remote, branch, or commit; that gap is tracked in the cross-platform audit.
