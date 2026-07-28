@@ -44,6 +44,15 @@ elseif vim.fn.executable("volta") == 1 and vim.fn.executable("which") == 1 then
   end
 end
 
+local mise = vim.fn.exepath("mise")
+if mise ~= "" then
+  local neovim_package = vim.fn.trim(vim.fn.system({ mise, "where", "npm:neovim" }))
+  local node_host = vim.fs.joinpath(neovim_package, "node_modules", "neovim", "bin", "cli.js")
+  if vim.v.shell_error == 0 and vim.fn.filereadable(node_host) == 1 then
+    vim.g.node_host_prog = node_host
+  end
+end
+
 vim.opt.relativenumber = false
 vim.opt.showtabline = 0
 vim.opt.swapfile = false
