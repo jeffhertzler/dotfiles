@@ -255,7 +255,7 @@ designed to restore or test declared package state.
 | Python development runtime | Mise | Mise | Mise; Homebrew dependency retained | Mise; pacman system Python retained |
 | Go development runtime | Mise | Mise | Mise | Mise |
 | Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
-| Bun | not required by Windows plugin forks | official installer → Mise | official installer → Mise | official installer → Mise |
+| Bun | Mise | Mise | Mise | Mise |
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
@@ -285,6 +285,7 @@ the versions recorded by package databases.
 | Pi | 0.82.1 | 0.82.1 | 0.82.1 | 0.82.1 |
 | Mise | 2026.7.15 | 2026.7.11 | 2026.7.15 | 2026.7.10 |
 | Interactive Node | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise |
+| Bun | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise |
 | Interactive Python | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise |
 | Go | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise |
 | uv / pynvim provider | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 |
@@ -355,10 +356,11 @@ Mise.
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
   remains intentionally installed and only its specific third-party formula
   is trusted.
-- Bun 1.3.14 is installed through the official installer on WSL, macOS, and
-  Arch because the upstream Herdr title plugin uses it. Bun is a runtime and is
-  available through Mise; moving these three installs into Mise would match the
-  runtime policy and remove another self-managed tree.
+- Bun 1.3.14 is Mise-owned on all four profiles as an intentionally available
+  experimental runtime. The upstream Herdr title plugin uses it on Unix, while
+  the Windows compatibility fork uses Node. All four Bun installations pass;
+  the three former official-installer trees were moved to Trash, and their
+  dedicated PATH and completion setup is gone.
 - Native Windows and WSL use Mise for Node. Windows has no checked-out projects
   with Volta, `.nvmrc`, `.node-version`, or `.tool-versions` Node pins, so its
   standalone Node installation and duplicate npm-global tools have been
@@ -573,9 +575,9 @@ should still be previewed narrowly and verified on the affected machines.
 4. **Runtime-distributed CLIs — complete.** Worktrunk and Dust are Mise-owned on
    all four profiles. The former WSL, macOS, and Arch Rust/Cargo installation
    machinery is gone, as are the obsolete `rcu` and `uvu` helpers.
-5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
-   Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
-   completion setup if no other consumer remains.
+5. **Bun ownership — complete.** Bun is declared through Mise on all four
+   profiles. The Unix title-sync actions pass, and the former official trees,
+   PATH entry, and completion hook are retired.
 6. **macOS dead leaves — complete.** The unused `nvm`, `jenv`, and tmux
    formulae and their empty or absent user state are gone. Mise continues to
    own the active Node and Java runtimes.
