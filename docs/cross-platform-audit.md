@@ -44,8 +44,9 @@ specificity:
    behind Mise's shims for that migration but no longer participates in normal
    Node precedence.
 2. Several installations still have duplicate or untracked owners: macOS has
-   unused `nvm`, `jenv`, and tmux formulae, while WSL and Arch Worktrunk live in
-   direct Cargo inventories.
+   unused `nvm`, `jenv`, and tmux formulae, while WSL and Arch retain Rust
+   installation machinery that may no longer have a consumer now that
+   Worktrunk is Mise-owned.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -217,10 +218,13 @@ conditions.
 Use one owner per executable and choose it in this order:
 
 1. **OS package manager** for system libraries, desktop applications, shells,
-   and standalone CLIs when its version satisfies the configuration.
+   and standalone CLIs that can remain natively owned on every profile where
+   they are used.
 2. **Mise** for programming-language runtimes, project-selected tool versions,
-   runtime-distributed developer CLIs, and the WSL fallback when APT is missing
-   or materially behind a required CLI.
+   and portable developer CLIs. If one supported profile needs Mise to own such
+   a CLI, prefer the same shared Mise declaration everywhere that tool is used
+   instead of maintaining multiple owners, unless a real platform blocker is
+   documented.
 3. **Official application installer/release** only when the application needs a
    preview channel, is absent from the first two layers, or intentionally owns
    its own update lifecycle.
@@ -259,7 +263,7 @@ designed to restore or test declared package state.
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
-| Worktrunk | WinGet | direct Cargo → Mise `aqua:max-sixty/worktrunk` | Homebrew | direct Cargo → Mise `aqua:max-sixty/worktrunk` until pacman is version-compatible |
+| Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Starship / Atuin / Yazi | WinGet | direct releases → Mise `aqua:` | Homebrew | pacman |
 | Bat / fzf / fd / ripgrep | WinGet | APT | Homebrew | pacman |
 | jq / zoxide | WinGet | direct releases → Mise `aqua:` or APT if its version suffices | Homebrew | pacman |
@@ -409,13 +413,14 @@ Mise.
   SQLite adapters.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
-- Worktrunk is aligned at 0.69.2 on all four profiles, but WSL and Arch use
-  direct Cargo inventories. [Worktrunk documents native WinGet, Homebrew,
-  pacman, and Cargo installs](https://github.com/max-sixty/worktrunk#install),
-  while Mise's registry exposes the official Worktrunk
-  release through `aqua:max-sixty/worktrunk`; using that on WSL and Arch would
-  remove two unmanaged installs and eliminate Rust as installation machinery
-  where no checked-out Rust project exists.
+- Worktrunk 0.69.2 is declared once through Mise's
+  `aqua:max-sixty/worktrunk` backend on all four profiles. Its former WinGet,
+  Homebrew, WSL Cargo, and unmanaged Arch installs are gone or moved to Trash.
+  The Mise package exposes both `wt` and `git-wt`, so normal invocation, the Git
+  subcommand, and the Herdr bridge share one executable owner. On Windows the
+  Mise shim intentionally owns the bare `wt` command instead of Windows
+  Terminal; Windows Terminal remains available through its Start-menu entry or
+  explicit executable path.
 - WSL's direct-release Starship, Atuin, Yazi, jq, and zoxide binaries are
   individually current but have no shared declaration or owner. APT is
   materially behind or missing several of them. Mise's registry exposes these
@@ -558,9 +563,9 @@ should still be previewed narrowly and verified on the affected machines.
    on all four profiles. Arch Posting and Harlequin are declared Mise `pipx:`
    tools, with Harlequin's prior database adapters preserved. System Python and
    dependency-owned Node remain on Arch.
-4. **Runtime-distributed CLIs — low risk.** Move WSL/Arch Worktrunk to
-   `aqua:max-sixty/worktrunk`. Then reassess whether WSL Mise Rust, Arch system
-   Rust, `cargo-update`, `rcu`, and `uvu` still have a purpose.
+4. **Runtime-distributed CLIs — Worktrunk complete; cleanup remains.**
+   Worktrunk is Mise-owned on all four profiles. Reassess whether WSL Mise Rust,
+   Arch system Rust, `cargo-update`, `rcu`, and `uvu` still have a purpose.
 5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
    Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
    completion setup if no other consumer remains.
