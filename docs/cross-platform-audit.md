@@ -2,7 +2,8 @@
 
 Last audited: 2026-07-28
 
-Source baseline: `4bd23dd` on `normalize/multi-platform`
+Source branch: `normalize/multi-platform` (use this file's Git commit as the
+audited baseline)
 
 Profiles: native Windows/Git Bash, Ubuntu WSL, macOS, EndeavourOS/Arch
 
@@ -13,9 +14,10 @@ snapshots, completed decisions, rollback history, and current policy.
 
 ## Executive summary
 
-The configuration is healthy and substantially unified. Each of the four
-supported machines has a clean source clone at the audited baseline, and all
-four passed:
+The configuration is healthy and substantially unified. The four supported
+profiles share the same application configuration and differ mainly at real OS
+boundaries. At the final audited commit, each machine has a clean source clone
+and all four pass:
 
 - `chezmoi status --exclude=dirs`
 - `chezmoi verify --exclude=dirs`
@@ -32,9 +34,25 @@ The central design is sound:
 - Arch retains tmux and Workmux as intentional legacy configuration while Herdr
   is the primary workspace manager.
 
-The remaining work is cleanup rather than recovery. Open decisions are limited
-to the per-project macOS/Arch Node transition from Volta and runtime-installed
-CLI ownership.
+This reassessment found that the setup is not yet down to only unavoidable
+specificity:
+
+1. macOS and Arch still have temporary Volta compatibility state, and the
+   current PATH order does **not** implement its stated policy. In an actual
+   `package.json.volta` checkout, a declared Node 20 resolves Mise's global Node
+   24 instead. This must be corrected or the affected projects migrated before
+   Volta can be described as a working fallback.
+2. Several installations have duplicate or untracked owners: macOS has unused
+   `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
+   unused package-owned Go, `uv`, `python-pynvim`, and a shadowed nightly
+   Neovim, while Worktrunk and two Python CLIs live in direct Cargo/uv
+   inventories.
+3. Native package selections are not recorded declaratively. Mise tools are
+   reproducible from this repository, but WinGet, APT, Homebrew, and pacman
+   selections currently require this prose audit or live-machine inspection.
+
+These are bounded ownership and transition issues, not evidence that the shared
+configuration architecture should be redesigned.
 
 ## Supported profiles
 
@@ -55,21 +73,19 @@ against today.
 
 ### Chezmoi selection
 
-`.chezmoiignore` currently provides a deny-by-default allowlist for WSL, macOS,
-and Windows. It was an appropriate migration scaffold, but it now repeats most
-of the shared application set in nested conditions. Arch mostly inherits the
-source tree and then excludes other profiles' shell files.
-
-The end state should be easier to read:
+`.chezmoiignore` already implements the desired shared-base model:
 
 1. All four supported profiles receive the shared base by default.
-2. Each profile receives only its own shell overlay.
-3. Mac/Arch-only workstation applications are excluded elsewhere.
-4. Arch-only legacy tmux/Workmux files are excluded elsewhere.
-5. WSL/Mac tunnel implementations remain profile-specific.
-6. Generic Linux and unsupported systems remain denied by default.
+2. Native Windows receives Bash; Unix profiles receive shared Zsh plus one
+   overlay.
+3. macOS/Arch workstation applications, Arch legacy tools, and WSL/macOS tunnel
+   implementations are narrow additions.
+4. Generic Linux and unknown systems remain denied by default.
 
-This is a cleanup recommendation, not evidence of incorrect rendered targets.
+The rendered managed sets confirm the model. Ignoring the newly integrated
+Agent Review design notes during the pre-sync snapshot, the only path-level
+differences were the expected shell files, one profile overlay, macOS/Arch
+LazyDocker and Posting, the WSL/macOS tunnel, and Arch's retained legacy tools.
 
 ### Shared base
 
@@ -143,20 +159,49 @@ applies, or removes anything.
 | tmux/Workmux | None | tmux installed, config not managed | tmux installed, Workmux removed | Managed as intentional legacy |
 | Worktrunk user config | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config and plugin bridge | Shared portable config plus Ultralight hooks and seed helper |
 
-### Required conditionals
+### Specificity assessment
 
-These differences should remain conditional:
+The remaining differences fall into three categories. Treating these categories
+separately is more useful than calling all of them platform-specific.
 
-- Windows command strings that Herdr or LazyGit launch through `cmd.exe`
-- Windows Git Bash shell selection and Herdr preview update channel
-- OS-native open commands (`start`, `open`, and `xdg-open`)
-- Windows Neovim executable/path handling and Oxfmt launcher
-- WSL and macOS tunnel implementations
-- Platform shell overlays
-- Arch-only tmux/Workmux legacy configuration
-- Arch-only Ultralight Worktrunk hooks and symlink seeder
-- Mac/Arch-only workstation applications
-- Optional integrations guarded by executable or file availability
+**Inherent OS or shell differences — keep:**
+
+- Git Bash versus Zsh startup files
+- Windows command strings launched through `cmd.exe` or Git Bash
+- `start`, `open`, and `xdg-open` system openers
+- Windows Neovim shell, compiler path, Oxfmt launcher, and markdown-preview
+  installer handling
+- Windows persistent PATH reconciliation and ble.sh bootstrap
+- WSL systemd tunnel services versus macOS SSH ControlMaster sockets
+- WSL's Windows-process bridge for the native PoE2 application
+
+These are narrow and live at appropriate boundaries: Chezmoi selection,
+application launcher templates, or small bootstrap scripts.
+
+**Temporary compatibility differences — remove when their blockers end:**
+
+- Windows Herdr preview builds and four private plugin compatibility branches
+- the Windows-only Mise `pipx:pynvim` shim-reentry workaround
+- Volta on macOS and Arch during project-by-project Node migration
+- direct-release Neovim and miscellaneous user CLI installs on WSL
+
+The Windows Herdr and pynvim cases are already isolated and documented well.
+The Volta transition is not: its current PATH behavior contradicts its policy
+and is the highest-priority correctness issue in this audit.
+
+**Host-role policy expressed through an OS profile — acceptable today, but not
+intrinsically OS-specific:**
+
+- Arch's retained tmux/Workmux stack
+- Arch's Ultralight Worktrunk seeding and cleanup hooks
+- macOS/Arch LazyDocker and Posting management
+- macOS workstation aliases and Arch Tailscale service aliases
+
+There is one machine per profile, so adding a second dimension would currently
+add ceremony without changing behavior. If a second Mac or Arch host is added,
+split profile data into OS plus capabilities/role (for example `workstation`,
+`remote_host`, `legacy_tmux`, and `ultralight_host`) instead of copying more OS
+conditions.
 
 ### Conditionals removed during this cleanup
 
@@ -168,45 +213,110 @@ These differences should remain conditional:
 
 ## Tool installation and provenance
 
-This table records the audited executable source. It is descriptive rather than
-a promise that Chezmoi installs every dependency.
+### Installation heuristic
+
+Use one owner per executable and choose it in this order:
+
+1. **OS package manager** for system libraries, desktop applications, shells,
+   and standalone CLIs when its version satisfies the configuration.
+2. **Mise** for programming-language runtimes, project-selected tool versions,
+   runtime-distributed developer CLIs, and the WSL fallback when APT is missing
+   or materially behind a required CLI.
+3. **Official application installer/release** only when the application needs a
+   preview channel, is absent from the first two layers, or intentionally owns
+   its own update lifecycle.
+4. **Direct ecosystem-global installs** (`npm -g`, `uv tool`, `cargo install`)
+   only when no better owner exists. Prefer Mise's `npm:`, `pipx:`, `cargo:`, or
+   `aqua:` backend so the tool remains in one declared inventory.
+
+This follows [Mise's documented scope](https://mise.jdx.dev/faq.html#mise-is-for-dev-tools-not-applications-or-system-packages):
+development tools and CLI utilities, not system libraries or desktop
+applications. Native package selections should be recorded without making
+Chezmoi silently install or remove them: a
+[WinGet configuration](https://learn.microsoft.com/en-us/windows/package-manager/winget/configure),
+an [APT package list](https://ubuntu.com/server/docs/how-to/software/package-management/),
+a [Brewfile](https://docs.brew.sh/Brew-Bundle-and-Brewfile), and an Arch
+explicit-package list are the appropriate next layer. These native tools are
+designed to restore or test declared package state.
+
+### Current owner and recommendation
+
+`current → recommended` is shown only where this audit recommends a change.
 
 | Tool/group | Windows | WSL | macOS | Arch |
 | --- | --- | --- | --- | --- |
-| Git / Git LFS | WinGet / bundled | apt | Apple Git / Homebrew LFS | pacman |
-| GitHub CLI | WinGet | apt | Homebrew | pacman |
+| Git / Git LFS / gh | WinGet / bundled | APT | Apple Git + Homebrew | pacman |
 | Chezmoi | WinGet | Mise | Homebrew | pacman |
-| Neovim | WinGet | direct release | Homebrew | local AppImage |
+| Neovim | WinGet | direct AppImage → Mise `neovim` | Homebrew | local AppImage + unused nightly package → pacman stable |
 | LazyGit | WinGet | Mise | Homebrew | pacman |
-| Herdr | official preview installer | direct release | direct release | direct/local |
+| Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
-| Pi | Mise | Mise | Mise | Mise |
-| Node | Mise | Mise | Volta | Volta |
-| Mise | WinGet | direct installer | Homebrew | pacman |
-| Java | not managed | not managed | Mise: Temurin 17 and 11 | Mise: Temurin 17 and 11 |
-| Maven | not managed | not managed | Mise: 3.9.16 | Mise: 3.9.16 |
-| Bun | not required by the Windows title-sync fork | official installer, 1.3.14 | official installer, 1.3.14 | official installer, 1.3.14 |
-| Python | Mise 3.14.6 | Mise 3.14.6 | Mise 3.14.6; Homebrew retained | Mise 3.14.6; pacman retained |
-| uv / Neovim Python host | Mise | Mise | Mise provider; Homebrew uv retained | Mise |
-| Go | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 | Mise: 1.26.5 |
-| Worktrunk | WinGet | Cargo | Homebrew | Cargo under `~/.local` |
-| Starship | WinGet | direct release | Homebrew | pacman |
-| Atuin | WinGet | direct release | Homebrew | pacman |
-| LazyJira | not installed | not installed | trusted Homebrew formula | not installed |
-| Bat | WinGet | apt | Homebrew | pacman |
-| Yazi | WinGet | direct release | Homebrew | pacman |
-| jq / zoxide | WinGet | direct release | Homebrew | pacman |
-| fzf / fd / ripgrep | WinGet | apt/direct packages | Homebrew | pacman |
-| LLVM | WinGet | system packages as needed | Homebrew/system as needed | pacman/system as needed |
-| 1Password CLI | available | apt | available | pacman |
+| Mise itself | WinGet | official installer | Homebrew | pacman |
+| Node development runtime | Mise | Mise | broken Mise/Volta overlap → per-project Mise migration | broken Mise/Volta overlap → per-project Mise migration |
+| Python development runtime | Mise | Mise | Mise; Homebrew dependency retained | Mise; pacman system Python retained |
+| Go development runtime | Mise | Mise | Mise | Mise; remove unused explicit pacman Go |
+| Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
+| Bun | not required by Windows plugin forks | official installer → Mise | official installer → Mise | official installer → Mise |
+| Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
+| uv / Neovim Python host | Mise | Mise | Mise; remove Homebrew leaf `uv` | Mise; remove explicit pacman `uv` and `python-pynvim` |
+| Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
+| Worktrunk | WinGet | direct Cargo → Mise `aqua:max-sixty/worktrunk` | Homebrew | direct Cargo → Mise `aqua:max-sixty/worktrunk` until pacman is version-compatible |
+| Starship / Atuin / Yazi | WinGet | direct releases → Mise `aqua:` | Homebrew | pacman |
+| Bat / fzf / fd / ripgrep | WinGet | APT | Homebrew | pacman |
+| jq / zoxide | WinGet | direct releases → Mise `aqua:` or APT if its version suffices | Homebrew | pacman |
+| LLVM / compilers | WinGet LLVM | APT only as needed | Homebrew/Xcode only as needed | pacman only as needed |
+| 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
+| LazyDocker | not needed | not needed | Homebrew | pacman |
+| Posting | not needed | not needed | Homebrew | direct `uv tool` → Mise `pipx:posting` |
+| LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
+| tmux / Workmux | not needed | tmux package, unmanaged | unused Homebrew tmux → remove | pacman tmux + retained local Workmux |
+
+### Live version snapshot
+
+These are the executables actually resolved during the reassessment, not merely
+the versions recorded by package databases.
+
+| Tool | Windows | WSL | macOS | Arch |
+| --- | --- | --- | --- | --- |
+| Git | 2.55.0 | 2.53.0 | Apple Git 2.50.1 | 2.55.0 |
+| Neovim | 0.12.4 | 0.12.4 | 0.12.4 | 0.12.4 |
+| Herdr | 0.7.5 preview | 0.7.5 | 0.7.5 | 0.7.5 |
+| OpenCode | 1.18.7 | 1.18.7 | 1.18.7 | 1.18.7 |
+| Pi | 0.82.1 | 0.82.1 | 0.82.1 | 0.82.1 |
+| Mise | 2026.7.15 | 2026.7.11 | 2026.7.15 | 2026.7.10 |
+| Interactive Node | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise |
+| Interactive Python | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise |
+| Go | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise |
+| uv / pynvim provider | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 |
+| Worktrunk | 0.69.2 | 0.69.2 | 0.69.2 | 0.69.2 |
+
+| Small tool | Windows | WSL | macOS | Arch |
+| --- | --- | --- | --- | --- |
+| Starship | 1.26.0 | 1.26.0 | 1.26.0 | 1.26.0 |
+| Atuin | 18.18.0 | 18.18.1 | 18.17.1 | 18.17.1 |
+| Bat | 0.26.1 | 0.26.1 | 0.26.1 | 0.26.1 |
+| Yazi | 26.5.6 | 26.5.6 | 26.5.6 | 26.5.6 |
+| jq | 1.8.2 | 1.8.2 | 1.8.2 | 1.8.2 |
+| zoxide | 0.10.0 | 0.10.0 | 0.10.0 | 0.10.0 |
+| fzf | 0.74.1 | 0.67.0 | 0.74.0 | 0.74.1 |
+| fd | 10.4.2 | 10.3.0 | 10.4.2 | 10.4.2 |
+| ripgrep | 15.2.0 | 15.1.0 | 15.2.0 | 15.2.0 |
+
+The minor Atuin/fzf/fd/ripgrep differences are normal native-repository lag and
+do not affect the shared configuration. At audit time WinGet offered Atuin
+18.18.1; Homebrew and Arch also had routine upgrades pending. Package currency
+is maintenance state, not a reason to move every healthy native package to
+Mise.
 
 ### Notable version and manager drift
 
 - Python 3.14.6 is owned by Mise for interactive development on all four
   profiles, and `.python-version` is enabled as a common project declaration.
   Windows PowerShell, Git Bash, and WSL-to-Windows interop resolve `python`,
-  `python3`, `pip`, and `pip3` through the same Mise runtime. The native
-  `poe2-item-intelligence` application passed its full 572-test suite there.
+  `python3`, `pip`, and `pip3` through the same Mise runtime. Interactive Zsh
+  resolves Mise Python on WSL, macOS, and Arch. A noninteractive macOS command
+  may resolve Homebrew Python first; that is acceptable for package-owned tools
+  and should not be described as the development-runtime path.
 - Windows's standalone Python 3.12, legacy launcher, Python Install Manager, and
   manager-owned 3.14 runtime were removed after the Mise runtime passed the
   native application's full suite both before and after cleanup. The Windows
@@ -215,9 +325,10 @@ a promise that Chezmoi installs every dependency.
   without deleting or reordering any other entry, and backs up the previous
   value before changing it.
 - Homebrew and pacman Python installations remain installed for package-owned
-  utilities even though Mise wins in development shells. Arch's pacman
-  `python-pynvim` package is harmless redundant state; Neovim explicitly uses
-  the isolated Mise provider instead of `/usr/bin/pynvim-python`.
+  utilities even though Mise wins in development shells. Arch's explicit
+  `python-pynvim` package is redundant and should be removed after replacing
+  the shadowed nightly Neovim package with official stable Neovim; Neovim
+  already selects the isolated Mise provider.
 - Mise discovery ceilings now live in its shell-independent early-init
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
@@ -227,20 +338,23 @@ a promise that Chezmoi installs every dependency.
   now use Mise for Temurin Java 17/11 and Maven 3.9.16. Plain Java version
   declarations align with existing `.java-version` files, and
   `java.shorthand_vendor = "temurin"` keeps the selected distribution explicit.
-- Go 1.26.5 is owned by Mise on all four profiles. GOPATH is left unset so Go
-  uses its standard home-directory default, and `go.set_gobin = false` keeps
-  installed commands in the canonical `~/go/bin`. The retired macOS and Arch
-  SDK trees were moved to each platform's Trash for recovery.
+- Go 1.26.5 is selected from Mise on all four profiles. GOPATH is left unset so
+  Go uses its standard home-directory default, and `go.set_gobin = false` keeps
+  installed commands in the canonical `~/go/bin`. Arch also has an explicit,
+  unused pacman Go installation with no reverse dependencies; that is duplicate
+  ownership and should be removed.
 - Jabba is retired on macOS and Arch. Its shell integration and managed source
   are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
   copies have been removed.
-- macOS package drift is resolved: obsolete Cargo copies, Workmux, the old
-  wkhtmltopdf cask/tap, deprecated Homebrew taps, and orphaned `icu4c@75` have
-  been removed. LazyJira remains intentionally installed and only its specific
-  third-party formula is trusted. `brew doctor` is clean.
-- macOS Bun has been upgraded from 1.0.0 to 1.3.14 through its official
-  self-updater.
+- Earlier macOS package drift is resolved, but the live reassessment found four
+  remaining explicit Homebrew leaves that do not match current policy: `nvm`,
+  `jenv`, tmux, and duplicate `uv`. LazyJira remains intentionally installed
+  and only its specific third-party formula is trusted.
+- Bun 1.3.14 is installed through the official installer on WSL, macOS, and
+  Arch because the upstream Herdr title plugin uses it. Bun is a runtime and is
+  available through Mise; moving these three installs into Mise would match the
+  runtime policy and remove another self-managed tree.
 - Native Windows and WSL use Mise for Node. Windows has no checked-out projects
   with Volta, `.nvmrc`, `.node-version`, or `.tool-versions` Node pins, so its
   standalone Node installation and duplicate npm-global tools have been
@@ -252,15 +366,24 @@ a promise that Chezmoi installs every dependency.
   executable without its runtime DLL directory, causing `0xC0000135`; adding
   another PATH workaround would not improve the configuration. Neovim keeps
   the WinGet LLVM path available for parser builds launched outside Git Bash.
-- macOS and Arch still use Volta for Node, npm, npx, Yarn, and existing
-  project-pinned tools during a staged migration. This is substantive
-  compatibility state, not merely an old installer: the checked-out projects
-  contain exact `package.json.volta` pins ranging from Node 10 through 24, plus
-  npm and Yarn pins. Mise does not interpret the Volta field directly. During
-  the transition, Volta's static shim precedes Mise's static shim so untouched
-  projects keep working; interactive `mise activate zsh` places a migrated
-  project's concrete Mise tool path ahead of both.
-- Mise's standard Node version-file support is enabled on every profile, so
+- WSL and Arch both run a direct Neovim 0.12.4 AppImage from `~/.local/bin`.
+  WSL's APT candidate is only 0.11.6, so Mise's registered Neovim backend is the
+  clean replacement there. Arch's official repository already contains 0.12.4;
+  install that and remove both the local AppImage and the shadowed, unsigned
+  `neovim-nightly` package.
+- macOS and Arch retain Volta because checked-out projects contain exact
+  `package.json.volta` Node, npm, and Yarn pins. Mise does not interpret the
+  Volta field directly. The attempted coexistence is currently incorrect:
+  `mise activate zsh` places the globally configured Mise Node ahead of Volta
+  even in an untouched Volta project. Live examples declared Node 20.20.0 and
+  20.19.0 but ran Mise Node 24.18.0. Do not add another directory hook to repair
+  this. Migrate each active project to `.nvmrc`, `.node-version`,
+  `package.json.devEngines`, or a local `mise.toml`; until a project is migrated,
+  invoke it explicitly through Volta or remove global Mise Node activation on
+  that host. The final choice needs user review because it changes the default
+  Node runtime outside migrated projects.
+- [Mise's standard Node version-file support](https://mise.jdx.dev/lang/node.html#automatic-node-version-detection)
+  is enabled on every profile, so
   `.nvmrc`, `.node-version`, `.tool-versions`, and `package.json.devEngines`
   can become the common project mechanism. Corepack is enabled for
   Mise-installed Node versions on every profile. macOS and Arch can therefore
@@ -268,12 +391,13 @@ a promise that Chezmoi installs every dependency.
   `package.json.volta` projects; Volta should not be removed until those
   projects and its global CLI inventory have been reconciled.
 - Pi is owned by Mise on all four profiles and is no longer part of the Volta
-  migration. The remaining macOS Volta state is project Node/Yarn history;
-  Arch additionally retains legacy and project-facing global CLIs until their
-  consumers are reviewed individually.
-- The Neovim Node host and its default Node LTS runtime are owned by Mise on all
-  four profiles. Neovim explicitly selects Mise's Node, while macOS and Arch
-  retain Volta only for untouched project pins during the staged migration.
+  inventory. Arch still has project-facing Volta global CLIs; those must be
+  classified and migrated before Volta removal. The `piu` Volta fallback is now
+  dead compatibility code and can be simplified to Mise only.
+- The Neovim Node host is Mise-owned on all four profiles. Neovim explicitly
+  selects Mise's Node on Unix, which is appropriate for the provider but also
+  contributes to the broader macOS/Arch Node precedence problem described
+  above.
 - The Neovim Python host is an isolated Mise `pipx:pynvim` tool on all four
   profiles. Neovim selects its `pynvim-python` executable directly rather than
   depending on mutable packages inside a development Python runtime. Mise also
@@ -282,9 +406,24 @@ a promise that Chezmoi installs every dependency.
   bootstrap installs `uv` first, then runs the `pipx:pynvim` install through
   `mise exec uv` to avoid the Windows `uv.exe` shim re-entering Mise. The
   resulting provider remains fully owned by Mise.
+- Homebrew `uv` on macOS and pacman `uv` on Arch are explicit duplicates. No uv
+  tools are installed on Windows, WSL, or macOS. Arch has direct uv-owned
+  `posting` and `harlequin`; migrate those to Mise `pipx:` declarations before
+  removing Arch's package-owned uv.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
-- Worktrunk is aligned at 0.69.2 on all four profiles.
+- Worktrunk is aligned at 0.69.2 on all four profiles, but WSL and Arch use
+  direct Cargo inventories. [Worktrunk documents native WinGet, Homebrew,
+  pacman, and Cargo installs](https://github.com/max-sixty/worktrunk#install),
+  while Mise's registry exposes the official Worktrunk
+  release through `aqua:max-sixty/worktrunk`; using that on WSL and Arch would
+  remove two unmanaged installs and eliminate Rust as installation machinery
+  where no checked-out Rust project exists.
+- WSL's direct-release Neovim, Starship, Atuin, Yazi, jq, and zoxide binaries
+  are individually current but have no shared declaration or owner. APT is
+  materially behind or missing several of them. Mise's registry exposes these
+  tools through vetted release backends, so one WSL-specific Mise block is a
+  simpler fallback tier than six bespoke release installations.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
@@ -293,8 +432,10 @@ a promise that Chezmoi installs every dependency.
 - Atuin remains installed on macOS for local shell history, but its unused and
   failing background daemon service has been removed. Automatic sync remains
   disabled in the shared configuration.
-- Further Mise adoption remains incremental. It manages programming-language
-  runtimes and selected runtime-installed CLIs, not standalone applications.
+- Further Mise adoption remains selective. Native package managers still own
+  system libraries, desktop applications, and healthy standalone packages;
+  Mise owns runtimes and fills user-CLI gaps where the native repository is
+  absent or materially stale.
 
 ## Application findings
 
@@ -349,7 +490,7 @@ uneven:
 | PDF renderer (`pdftoppm`) | No | No | No | Yes |
 | ImageMagick | No | No | Yes | Yes |
 | `chafa` | No | No | No | No |
-| Archive helper | No | No | No | Yes |
+| Archive helper | No | No | Yes (`bsdtar`) | Yes |
 
 These are optional enhancements, not blockers. Ordinary terminal copy/paste and
 Yazi file yank/paste already work without adding Wayland/X11 clipboard tools.
@@ -387,77 +528,60 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
   session-up-arrow, style, Enter-accept, and record-sync settings.
 - Bat uses its bundled Catppuccin Mocha theme on all four profiles; redundant
   checked-in Bat themes and two unused Yazi theme variants were removed.
-- `nvu` has one Linux/x86-64 definition in the common shell layer.
+- `nvu` has one Linux/x86-64 definition in the common shell layer, but it is a
+  direct AppImage updater and should disappear after WSL/Arch Neovim ownership
+  moves to Mise/pacman.
 - `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
 - The unused `gou` curl-to-shell installer alias has been removed. Mise now owns
   Go upgrades on all four profiles.
+- `piu` still contains a Volta fallback even though Pi is Mise-owned everywhere;
+  `uvu` manages an empty uv tool inventory on three machines; and `rcu` exists
+  primarily for the direct Cargo installs targeted above. Revisit all three
+  after the ownership migrations rather than preserving obsolete update paths.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight repositories use machine-local path-scoped Git identity includes;
   `gggm` no longer mutates global identity while running `good morning`.
 
-## Cleanup candidates
+## Reassessment action list
 
-These candidates were previewed and completed individually:
+This order separates correctness from optional ownership cleanup. Every change
+should still be previewed narrowly and verified on the affected machines.
 
-1. **Complete:** simplify `.chezmoiignore` to a shared-base model.
-2. **Complete:** convert the shared Git config template to a plain source file.
-3. **Complete:** remove the empty Yazi keymap.
-4. **Complete:** remove the stale Neoconf file.
-5. **Complete:** resolve contradictory LazyVim Refactoring declarations.
-6. **Complete:** reduce Atuin to intentional non-default settings.
-7. **Complete:** remove unused Yazi and Bat theme files.
-8. **Complete:** portable aliases and Greenlight helpers are deduplicated, and
-   `gggm` relies on path-scoped Git identity instead of global mutation.
-9. **Complete:** retire the legacy Go installer alias.
+1. **Node correctness — requires a policy decision.** The current
+   Mise/Volta coexistence ignores `package.json.volta` pins. Choose the interim
+   behavior for macOS and Arch, then migrate active projects one at a time to a
+   Mise-readable declaration. Do not remove Volta until Arch's global package
+   inventory has been classified.
+2. **Neovim ownership — straightforward.** Move WSL's AppImage to Mise. Replace
+   Arch's local AppImage and unused nightly package with official pacman stable
+   Neovim. Remove Arch `python-pynvim` after provider verification.
+3. **Duplicate runtimes — straightforward after checks.** Remove macOS
+   Homebrew `uv`; remove Arch pacman `uv` and Go after migrating Arch's uv tools
+   to Mise. Keep system Python and dependency-owned Node on Arch.
+4. **Runtime-distributed CLIs — low risk.** Declare Arch Posting and Harlequin
+   through Mise `pipx:`. Move WSL/Arch Worktrunk to
+   `aqua:max-sixty/worktrunk`. Then reassess whether WSL Mise Rust, Arch system
+   Rust, `cargo-update`, `rcu`, and `uvu` still have a purpose.
+5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
+   Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
+   completion setup if no other consumer remains.
+6. **macOS dead leaves — confirm, then remove.** `nvm`, `jenv`, and tmux are
+   explicit Homebrew leaves with no managed integration. Their removal matches
+   current policy unless there is an unmanaged use not visible to this audit.
+7. **WSL CLI consolidation — optional but recommended.** Move direct-release
+   Neovim, Starship, Atuin, Yazi, jq, and zoxide into the WSL Mise block. Leave
+   healthy APT-owned Bat, fzf, fd, and ripgrep alone.
+8. **Package manifests — recommended architectural follow-up.** Add a narrow
+   WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
+   list. They should support check/plan and explicit bootstrap, not automatic
+   removal during ordinary `chezmoi apply`.
+9. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+   `chafa`, or `resvg` dependencies merely for parity.
 
-The Arch tmux and Workmux sources are not dead configuration. They are retained
-legacy by explicit policy and should not be removed as part of general cleanup.
-Jabba has been replaced by Mise-managed Temurin 17 and 11 on macOS and Arch.
-The redundant `.profile` has also been removed: Zsh receives Volta from
-`.zshenv`, and the supported workflows do not require a separate POSIX
-login-shell fallback.
-
-## Installation gaps and optional enhancements
-
-Optional:
-
-- Migrate macOS and Arch projects from Volta to standard Mise-readable Node
-  declarations one project at a time, then reconcile Volta's global CLI
-  inventory before removal.
-- Consider later migrations of runtime-installed CLIs into Mise one owner at a
-  time; current standalone application managers remain intentional.
-
-## Recommended cleanup sequence
-
-Each step should be previewed narrowly and verified on all affected profiles.
-
-1. **Complete:** `dotfiles-doctor` reports required tools, resolved
-   versions/paths, Windows environment variables, Chezmoi state, Herdr plugin
-   sources, and optional Yazi dependencies on all four profiles.
-2. **Complete:** `.chezmoiignore` now expresses a shared supported-profile base
-   with narrow exclusions, and the identical Git configuration is a plain file.
-3. **Complete:** the retired Neoconf file and empty Yazi keymap are removed; the
-   stale Refactoring extra is gone while the explicit plugin disable remains.
-4. **Complete:** Atuin contains only intentional settings; redundant Bat/Yazi
-   themes and duplicate `nvu`, `ha`, `hat`, and Greenlight pull logic are gone.
-5. **Complete:** portable Worktrunk layout/schema settings are shared; the
-   Unix-only Ultralight hooks remain on Arch, and all four profiles run 0.69.2.
-6. **Complete:** all four plugins are desired everywhere; monthly reconciliation
-   updates Unix upstream installs and Windows private branches while preserving
-   explicit review for public-upstream merges and plugin removal.
-7. **Complete:** Mise discovery is shell-independent and WSL is isolated from
-   Windows; macOS and Arch use Mise-managed Temurin 17/11 and Maven 3.9.16;
-   all four profiles use Mise-managed Go and Python; Jabba is retired; Arch
-   uses Volta instead of Hermes; Bun is current; Windows can bootstrap ble.sh;
-   and macOS package ownership, obsolete taps, and retained LazyJira trust are
-   clean.
-8. **Skipped by policy:** Yazi's existing preview coverage is sufficient; do
-   not add optional media, PDF, image, archive, `chafa`, or `resvg` dependencies
-   merely for cross-platform parity.
-9. **Complete:** Windows, WSL, macOS, and Arch have clean source worktrees,
-   empty Chezmoi diffs/status, successful verification, and zero doctor
-   failures. Windows retains four expected warnings until parent applications
-   restart and inherit its persistent Yazi, Bat, and Worktrunk environment.
+The Arch tmux and Workmux sources remain intentional legacy configuration.
+Arch's Ultralight hooks and macOS/Arch workstation applications are host-role
+policy, not cleanup debt. Jabba, Hermes, `.profile`, stale Neovim configuration,
+and the old duplicated themes/helpers remain correctly retired.
 
 ## Verification policy
 

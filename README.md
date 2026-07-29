@@ -12,9 +12,9 @@ Chezmoi detects one of four supported profiles:
 - `windows`: native Windows
 
 All four supported profiles receive a shared application base plus narrowly
-scoped shell, launcher, and workstation differences. WSL, macOS, and native
-Windows still use a deny-by-default Chezmoi allowlist inherited from the
-normalization work; simplifying that scaffold is tracked in the
+scoped shell, launcher, and workstation differences. Generic Linux and unknown
+platforms remain denied by default; supported profiles use the shared-base
+selection documented in the
 [cross-platform audit](docs/cross-platform-audit.md).
 
 ## Shell layout
