@@ -16,7 +16,6 @@ bun = "latest"
 go = "latest"
 neovim = "nightly"
 node = "lts"
-odin = { version = "latest", bin_path = "." }
 python = "latest"
 uv = "latest"
 "aqua:max-sixty/worktrunk" = "latest"
@@ -41,3 +40,11 @@ maven = "latest"
 "pipx:harlequin" = { version = "latest", depends = ["uv"], extras = ["postgres", "mysql"] }
 {{- end }}
 {{- end }}
+
+[tools.odin]
+version = "latest"
+bin_path = "."
+
+[tools.odin.platforms]
+linux-x64 = { strip_components = 1, bin_path = "." }
+macos-arm64 = { strip_components = 1, bin_path = "." }
