@@ -52,6 +52,7 @@ registry and are not intended as supported public packages.
 | Worktrunk | `jeffhertzler/herdr-worktrunk-windows` | `agent/windows-support` | `~/dev/herdr-worktrunk-windows` |
 | Window Title Sync | `jeffhertzler/herdr-window-title-sync-windows` | `agent/windows-support` | `~/dev/herdr-window-title-sync-windows` |
 
-Window Title Sync's upstream implementation requires Bun and Unix `find`. The
-Windows compatibility branch uses the Node.js runtime already shared by all
-profiles and performs session-file discovery through Node's filesystem API.
+Window Title Sync uses Bun on every profile. The Windows compatibility branch
+stays aligned with upstream's runtime and only adds portable temporary/home
+directory handling plus session-file discovery through Bun's filesystem API
+instead of Unix `find`.

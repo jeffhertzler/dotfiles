@@ -357,10 +357,11 @@ Mise.
   remains intentionally installed and only its specific third-party formula
   is trusted.
 - Bun 1.3.14 is Mise-owned on all four profiles as an intentionally available
-  experimental runtime. The upstream Herdr title plugin uses it on Unix, while
-  the Windows compatibility fork uses Node. All four Bun installations pass;
-  the three former official-installer trees were moved to Trash, and their
-  dedicated PATH and completion setup is gone.
+  experimental runtime and is also used by the Herdr title plugin everywhere.
+  The Windows compatibility fork retains upstream's Bun launcher and differs
+  only where Windows needs portable filesystem and path handling. All four Bun
+  installations pass; the three former official-installer trees were moved to
+  Trash, and their dedicated PATH and completion setup is gone.
 - Native Windows and WSL use Mise for Node. Windows has no checked-out projects
   with Volta, `.nvmrc`, `.node-version`, or `.tool-versions` Node pins, so its
   standalone Node installation and duplicate npm-global tools have been
