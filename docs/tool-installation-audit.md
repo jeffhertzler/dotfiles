@@ -171,14 +171,15 @@ Neovim's Node host, Playwright CLI, SQLit, and pynvim.
   hooks/keyrings.
 - Shell/general CLI: Bat, btop, duf, eza, Git LFS, GitHub CLI, and tldr. The
   retained disk split is Dust for directory sizes and duf for filesystem/mount
-  capacity. Pacman zoxide remains installed as a dependency of `sesh-bin`, while
-  the interactive command resolves Mise.
+  capacity. Mise is now the only zoxide owner.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
   LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, and mkcert.
 - `wkhtmltopdf-static` remains a native legacy-project tool because Greenlight
   Java services invoke the command directly.
 - Workstation applications: Ghostty, Steam, Moonlight, Cursor, Codex, and
   gaming-session packages remain native/AUR if retained.
+- `fga-bin` remains for checked-out OpenFGA work, and LazyJira remains an active
+  TUI experiment with shared popup bindings.
 - Arch-only tmux/Workmux state and its supporting tools remain intentional
   legacy configuration.
 
@@ -195,8 +196,7 @@ SQLit, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Review old or specialized explicit tools before manifesting them: `fga-bin`,
-  `crush-bin`, `rtk`, `sesh-bin`, Stripe CLI, ngrok, and LazyJira.
+- Review whether Stripe CLI still has a real workflow before manifesting it.
 
 ## Review order before manifests
 

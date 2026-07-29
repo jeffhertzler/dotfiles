@@ -274,7 +274,7 @@ designed to restore or test declared package state.
 | LazyDocker | not needed | not needed | Homebrew | pacman |
 | Posting | not needed | not needed | Mise `pipx:` | Mise `pipx:` |
 | SQLit | Mise `pipx:` | Mise `pipx:` | Mise `pipx:` | Mise `pipx:` |
-| LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
+| LazyJira | not needed | not needed | trusted Homebrew formula | AUR package |
 | tmux / Workmux | not needed | tmux package, unmanaged | not needed | pacman tmux + retained local Workmux |
 
 ### Live version snapshot
@@ -393,6 +393,9 @@ maintenance state, not a reason to move every healthy native package to Mise.
 - Arch's unused Tectonic LaTeX engine, host Python 2 binary distribution, and
   ReiserFS maintenance utilities are retired. `wkhtmltopdf-static` remains
   because checked-out Greenlight Java services invoke it directly.
+- Arch's unused Crush agent, RTK command proxy, sesh session manager, and ngrok
+  tunnel client are retired. FGA remains for checked-out OpenFGA work, while
+  LazyJira remains an explicit TUI experiment on macOS and Arch.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -416,9 +419,10 @@ maintenance state, not a reason to move every healthy native package to Mise.
   Homebrew Python dependencies.
 - Starship, Atuin, Yazi, jq, and zoxide are shared Mise `aqua:` tools on all
   four profiles. Their shell behavior and doctors pass. Former WinGet,
-  Homebrew, pacman, and WSL direct-release top-level copies are gone; Arch's
-  native zoxide remains only because `sesh-bin` requires the package. Healthy
-  native Bat, fzf, fd, and ripgrep packages remain intentionally OS-owned.
+  Homebrew, pacman, and WSL direct-release top-level copies are gone. Arch's
+  final native zoxide package left with its retired `sesh-bin` dependent.
+  Healthy native Bat, fzf, fd, and ripgrep packages remain intentionally
+  OS-owned.
 - Windows retains its WinGet LLVM toolchain. Mise's current `clang` and
   `conda:clang` backends install the correct Conda package but expose a copied
   executable without its runtime DLL directory, causing `0xC0000135`; adding
@@ -636,9 +640,8 @@ should still be previewed narrowly and verified on the affected machines.
    gone. Mise continues to own the active Node and Java runtimes.
 7. **Portable CLI consolidation — complete.** Starship, Atuin, Yazi, jq, and
    zoxide are shared Mise `aqua:` tools. Former top-level native and standalone
-   copies are retired or recoverable from Trash. Arch keeps a dependency-owned
-   zoxide package for `sesh-bin`; Mise wins shell resolution. Healthy native
-   Bat, fzf, fd, and ripgrep remain unchanged.
+   copies are retired or recoverable from Trash, including Arch's final native
+   zoxide package. Healthy native Bat, fzf, fd, and ripgrep remain unchanged.
 8. **Verified dead leaves — complete.** Arch's duplicate Dust, unused Bottom,
    and obsolete asdf package are gone. Unused Git Delta packages are gone from
    macOS and Arch. Project-scoped Mise caches remain intentionally unmanaged by
@@ -662,11 +665,14 @@ should still be previewed narrowly and verified on the affected machines.
 15. **Legacy document/filesystem tools — complete.** Tectonic, host Python 2,
     and unused ReiserFS utilities are retired. wkhtmltopdf remains for explicit
     Greenlight legacy-project usage.
-16. **Package manifests — recommended architectural follow-up.** Add a narrow
+16. **Specialized Arch tools — mostly complete.** Crush, RTK, sesh, and ngrok
+    are retired. FGA and LazyJira remain intentional; Stripe CLI still needs a
+    final use decision.
+17. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-17. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+18. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
