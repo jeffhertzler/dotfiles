@@ -43,10 +43,9 @@ specificity:
    must be migrated to a Mise-readable project file. Volta remains callable
    behind Mise's shims for that migration but no longer participates in normal
    Node precedence.
-2. Several installations have duplicate or untracked owners: macOS has unused
-   `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
-   unused package-owned Go, `uv`, and `python-pynvim`, while Worktrunk and two
-   Python CLIs live in direct Cargo/uv inventories.
+2. Several installations still have duplicate or untracked owners: macOS has
+   unused `nvm`, `jenv`, and tmux formulae, while WSL and Arch Worktrunk live in
+   direct Cargo inventories.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -254,11 +253,11 @@ designed to restore or test declared package state.
 | Mise itself | WinGet | official installer | Homebrew | pacman |
 | Node development runtime | Mise | Mise | Mise; Volta retained only for incremental migration | Mise; Volta retained only for incremental migration |
 | Python development runtime | Mise | Mise | Mise; Homebrew dependency retained | Mise; pacman system Python retained |
-| Go development runtime | Mise | Mise | Mise | Mise; remove unused explicit pacman Go |
+| Go development runtime | Mise | Mise | Mise | Mise |
 | Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
 | Bun | not required by Windows plugin forks | official installer → Mise | official installer → Mise | official installer → Mise |
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
-| uv / Neovim Python host | Mise | Mise | Mise; remove Homebrew leaf `uv` | Mise; remove explicit pacman `uv` and `python-pynvim` |
+| uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
 | Worktrunk | WinGet | direct Cargo → Mise `aqua:max-sixty/worktrunk` | Homebrew | direct Cargo → Mise `aqua:max-sixty/worktrunk` until pacman is version-compatible |
 | Starship / Atuin / Yazi | WinGet | direct releases → Mise `aqua:` | Homebrew | pacman |
@@ -267,7 +266,7 @@ designed to restore or test declared package state.
 | LLVM / compilers | WinGet LLVM | APT only as needed | Homebrew/Xcode only as needed | pacman only as needed |
 | 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
 | LazyDocker | not needed | not needed | Homebrew | pacman |
-| Posting | not needed | not needed | Homebrew | direct `uv tool` → Mise `pipx:posting` |
+| Posting | not needed | not needed | Homebrew | Mise `pipx:posting` |
 | LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
 | tmux / Workmux | not needed | tmux package, unmanaged | unused Homebrew tmux → remove | pacman tmux + retained local Workmux |
 
@@ -325,9 +324,8 @@ Mise.
   without deleting or reordering any other entry, and backs up the previous
   value before changing it.
 - Homebrew and pacman Python installations remain installed for package-owned
-  utilities even though Mise wins in development shells. Arch's explicit
-  `python-pynvim` package is redundant because Neovim already selects the
-  isolated Mise provider.
+  utilities even though Mise wins in development shells. The redundant Arch
+  `python-pynvim` package was removed after the isolated Mise provider passed.
 - Mise discovery ceilings now live in its shell-independent early-init
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
@@ -339,17 +337,17 @@ Mise.
   `java.shorthand_vendor = "temurin"` keeps the selected distribution explicit.
 - Go 1.26.5 is selected from Mise on all four profiles. GOPATH is left unset so
   Go uses its standard home-directory default, and `go.set_gobin = false` keeps
-  installed commands in the canonical `~/go/bin`. Arch also has an explicit,
-  unused pacman Go installation with no reverse dependencies; that is duplicate
-  ownership and should be removed.
+  installed commands in the canonical `~/go/bin`. Arch's redundant pacman Go
+  package was removed after the Mise runtime passed.
 - Jabba is retired on macOS and Arch. Its shell integration and managed source
   are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
   copies have been removed.
-- Earlier macOS package drift is resolved, but the live reassessment found four
-  remaining explicit Homebrew leaves that do not match current policy: `nvm`,
-  `jenv`, tmux, and duplicate `uv`. LazyJira remains intentionally installed
-  and only its specific third-party formula is trusted.
+- Earlier macOS package drift is resolved, but the live reassessment found
+  three remaining explicit Homebrew leaves that do not match current policy:
+  `nvm`, `jenv`, and tmux. The duplicate Homebrew `uv` formula was removed after
+  Mise `uv` passed. LazyJira remains intentionally installed and only its
+  specific third-party formula is trusted.
 - Bun 1.3.14 is installed through the official installer on WSL, macOS, and
   Arch because the upstream Herdr title plugin uses it. Bun is a runtime and is
   available through Mise; moving these three installs into Mise would match the
@@ -404,10 +402,11 @@ Mise.
   bootstrap installs `uv` first, then runs the `pipx:pynvim` install through
   `mise exec uv` to avoid the Windows `uv.exe` shim re-entering Mise. The
   resulting provider remains fully owned by Mise.
-- Homebrew `uv` on macOS and pacman `uv` on Arch are explicit duplicates. No uv
-  tools are installed on Windows, WSL, or macOS. Arch has direct uv-owned
-  `posting` and `harlequin`; migrate those to Mise `pipx:` declarations before
-  removing Arch's package-owned uv.
+- Mise now solely owns `uv` on all four profiles. The duplicate macOS Homebrew
+  and Arch pacman packages are gone. Arch Posting and Harlequin moved from the
+  old direct uv-tool inventory to declared Mise `pipx:` tools; Harlequin's
+  MySQL and PostgreSQL extras are explicit alongside its built-in DuckDB and
+  SQLite adapters.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk is aligned at 0.69.2 on all four profiles, but WSL and Arch use
@@ -553,13 +552,13 @@ should still be previewed narrowly and verified on the affected machines.
    Arch's global package inventory has also been classified and migrated.
 2. **Neovim ownership — complete.** Mise nightly and both providers pass on all
    four profiles. All superseded Neovim packages and standalone binaries have
-   been removed or moved to Trash. Arch `python-pynvim` remains a separate
-   redundant provider package to consider during duplicate-runtime cleanup.
-3. **Duplicate runtimes — straightforward after checks.** Remove macOS
-   Homebrew `uv`; remove Arch pacman `uv` and Go after migrating Arch's uv tools
-   to Mise. Keep system Python and dependency-owned Node on Arch.
-4. **Runtime-distributed CLIs — low risk.** Declare Arch Posting and Harlequin
-   through Mise `pipx:`. Move WSL/Arch Worktrunk to
+   been removed or moved to Trash. The redundant Arch `python-pynvim` provider
+   package is also gone.
+3. **Duplicate runtimes — complete.** Mise solely owns development Go and `uv`
+   on all four profiles. Arch Posting and Harlequin are declared Mise `pipx:`
+   tools, with Harlequin's prior database adapters preserved. System Python and
+   dependency-owned Node remain on Arch.
+4. **Runtime-distributed CLIs — low risk.** Move WSL/Arch Worktrunk to
    `aqua:max-sixty/worktrunk`. Then reassess whether WSL Mise Rust, Arch system
    Rust, `cargo-update`, `rcu`, and `uvu` still have a purpose.
 5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
