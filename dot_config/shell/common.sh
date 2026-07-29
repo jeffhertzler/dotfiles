@@ -38,15 +38,6 @@ function piu() {
   command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
 }
 
-function rcu() {
-  if command -v rustup >/dev/null 2>&1; then
-    command rustup update
-  fi
-  if command -v cargo-install-update >/dev/null 2>&1; then
-    command cargo install-update --all
-  fi
-}
-
 if command -v bat >/dev/null 2>&1; then
   alias cat='bat'
 fi

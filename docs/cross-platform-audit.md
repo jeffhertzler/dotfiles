@@ -44,8 +44,7 @@ specificity:
    behind Mise's shims for that migration but no longer participates in normal
    Node precedence.
 2. Several installations still have duplicate or untracked owners on macOS:
-   unused `nvm`, `jenv`, and tmux formulae plus five direct Cargo-installed
-   utilities that need individual classification.
+   unused `nvm`, `jenv`, and tmux formulae.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -263,6 +262,7 @@ designed to restore or test declared package state.
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
 | Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
+| Dust | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Starship / Atuin / Yazi | WinGet | direct releases → Mise `aqua:` | Homebrew | pacman |
 | Bat / fzf / fd / ripgrep | WinGet | APT | Homebrew | pacman |
 | jq / zoxide | WinGet | direct releases → Mise `aqua:` or APT if its version suffices | Homebrew | pacman |
@@ -291,6 +291,7 @@ the versions recorded by package databases.
 | Go | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise |
 | uv / pynvim provider | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 |
 | Worktrunk | 0.69.2 | 0.69.2 | 0.69.2 | 0.69.2 |
+| Dust | 1.2.4 | 1.2.4 | 1.2.4 | 1.2.4 |
 
 | Small tool | Windows | WSL | macOS | Arch |
 | --- | --- | --- | --- | --- |
@@ -346,6 +347,11 @@ Mise.
   are gone; the old JDK trees were moved to each platform's Trash for recovery.
 - macOS now uses Homebrew for Bat, `fd`, and ripgrep; their obsolete Cargo
   copies have been removed.
+- The old macOS Cargo inventory is retired. Bottom was unused, `exa` was
+  superseded by `eza`, `sd` had no observed use, and `cargo-update` had no
+  remaining packages to maintain. Dust remains intentionally available and is
+  now Mise-owned at 1.2.4 on all four profiles. The official macOS release is
+  x86_64 and runs successfully through Rosetta on the Apple Silicon Mac.
 - Earlier macOS package drift is resolved, but the live reassessment found
   three remaining explicit Homebrew leaves that do not match current policy:
   `nvm`, `jenv`, and tmux. The duplicate Homebrew `uv` formula was removed after
@@ -420,6 +426,10 @@ Mise.
   Mise shim intentionally owns the bare `wt` command instead of Windows
   Terminal; Windows Terminal remains available through its Start-menu entry or
   explicit executable path.
+- WSL, macOS, and Arch no longer retain Rust solely as CLI installation
+  machinery. Their Rustup/Mise or native package state was removed only after
+  checking for Cargo projects and migrating or retiring every Cargo-installed
+  utility.
 - WSL's direct-release Starship, Atuin, Yazi, jq, and zoxide binaries are
   individually current but have no shared declaration or owner. APT is
   materially behind or missing several of them. Mise's registry exposes these
@@ -539,8 +549,8 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
   Go upgrades on all four profiles.
 - `piu` upgrades the shared Mise-owned Pi declaration without a dead Volta
   fallback. The obsolete `uvu` alias is gone because the default uv-tool
-  inventory is empty on all four machines. `rcu` still serves five direct
-  Cargo-installed macOS utilities and should remain until those are classified.
+  inventory is empty on all four machines. `rcu` is also gone now that no
+  direct Cargo-installed utilities remain.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight repositories use machine-local path-scoped Git identity includes;
   `gggm` no longer mutates global identity while running `good morning`.
@@ -562,11 +572,9 @@ should still be previewed narrowly and verified on the affected machines.
    on all four profiles. Arch Posting and Harlequin are declared Mise `pipx:`
    tools, with Harlequin's prior database adapters preserved. System Python and
    dependency-owned Node remain on Arch.
-4. **Runtime-distributed CLIs — Worktrunk and Linux Rust cleanup complete.**
-   Worktrunk is Mise-owned on all four profiles. WSL's now-unused Mise/Rustup
-   toolchain and Arch's Rustup, pacman Rust, and self-updating `cargo-update`
-   inventory are gone. Classify the five remaining macOS Cargo utilities before
-   changing `rcu`; the unused `uvu` alias has been removed.
+4. **Runtime-distributed CLIs — complete.** Worktrunk and Dust are Mise-owned on
+   all four profiles. The former WSL, macOS, and Arch Rust/Cargo installation
+   machinery is gone, as are the obsolete `rcu` and `uvu` helpers.
 5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
    Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
    completion setup if no other consumer remains.
