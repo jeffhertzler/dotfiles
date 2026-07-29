@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.3
+$schema: https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json
+metadata:
+  winget:
+    processor:
+      identifier: dscv3
+resources:
+  - name: winget
+    type: Microsoft.WinGet/Source
+    metadata:
+      winget:
+        securityContext: elevated
+    properties:
+      type: Microsoft.PreIndexed.Package
+      trustLevel: trusted
+      argument: https://cdn.winget.microsoft.com/cache
+      name: winget
+
+  - name: 1password
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: AgileBits.1Password, source: winget }
+
+  - name: 1password-cli
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: AgileBits.1Password.CLI, source: winget }
+
+  - name: bat
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: sharkdp.bat, source: winget }
+
+  - name: chezmoi
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: twpayne.chezmoi, source: winget }
+
+  - name: fd
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: sharkdp.fd, source: winget }
+
+  - name: fzf
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: junegunn.fzf, source: winget }
+
+  - name: git
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: Git.Git, source: winget }
+
+  - name: gh
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: GitHub.cli, source: winget }
+
+  - name: llvm
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: LLVM.LLVM, source: winget }
+
+  - name: mise
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: jdx.mise, source: winget }
+
+  - name: mkcert
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: FiloSottile.mkcert, source: winget }
+
+  - name: powershell
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: Microsoft.PowerShell, source: winget }
+
+  - name: ripgrep
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: BurntSushi.ripgrep.MSVC, source: winget }
+
+  - name: windows-terminal
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: Microsoft.WindowsTerminal, source: winget }
+
+  - name: wsl
+    type: Microsoft.WinGet/Package
+    dependsOn: [winget]
+    properties: { id: Microsoft.WSL, source: winget }

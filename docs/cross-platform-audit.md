@@ -680,10 +680,11 @@ should still be previewed narrowly and verified on the affected machines.
     TablePlus are retired from Windows; Compass is also retired from macOS.
 18. **Windows browser overlap — complete.** Helium remains; the unused Arc and
     Zen Browser installations are retired.
-19. **Package manifests — recommended architectural follow-up.** Add a narrow
-   WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
-   list. They should support check/plan and explicit bootstrap, not automatic
-   removal during ordinary `chezmoi apply`.
+19. **Package manifests — complete.** A narrow WinGet configuration, WSL APT
+    list, macOS Brewfile, and Arch pacman list now cover only the native
+    shell/editor foundation and host-role essentials. They are additive,
+    explicitly invoked bootstrap inputs; ordinary `chezmoi apply` neither
+    installs packages nor removes unlisted software.
 20. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 

@@ -1,6 +1,7 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 README.md
 docs
+packages
 .config/git/local.config
 .config/nvim/lazy-lock.json
 

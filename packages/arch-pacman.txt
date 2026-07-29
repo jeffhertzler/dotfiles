@@ -1,0 +1,28 @@
+# Shell and source control
+git
+git-lfs
+github-cli
+zsh
+
+# Native command-line foundation
+bat
+fd
+fzf
+ripgrep
+btop
+duf
+eza
+mosh
+
+# Native bootstrap and host services
+base-devel
+chezmoi
+mise
+mkcert
+docker
+docker-compose
+tailscale
+
+# Managed popup and retained legacy support
+lazydocker
+tmux

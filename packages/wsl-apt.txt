@@ -1,0 +1,21 @@
+# Shell and source control
+git
+git-lfs
+gh
+zsh
+
+# Native command-line foundation
+bat
+fd-find
+fzf
+ripgrep
+mosh
+unzip
+
+# Native build and SQLite libraries
+build-essential
+libsqlite3-dev
+sqlite3
+
+# Secret bootstrap
+1password-cli

@@ -6,9 +6,9 @@ Snapshot date: 2026-07-28
 
 Profiles: native Windows, WSL Ubuntu 26.04, macOS, Arch Linux
 
-This audit is the input to the future WinGet, APT, Homebrew, and pacman
-manifests. The manifests must describe the ownership decisions made here; they
-must not preserve every package that happens to be installed today.
+This audit is the input to the WinGet, APT, Homebrew, and pacman manifests in
+`packages/`. Those manifests describe only the foundational ownership decisions
+made here; they do not preserve every package that happens to be installed.
 
 The inventory covers every user-selectable/top-level package, every Mise tool,
 and every observed manual executable channel. Transitive OS libraries and
@@ -199,7 +199,7 @@ SQLit, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
 
-## Review order before manifests
+## Manifest outcome
 
 The first cleanup pass is complete: Arch's duplicate pacman Dust, unused
 Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
@@ -211,9 +211,13 @@ where used, while its agent-oriented CLI is shared through Mise. Odin is shared
 through Mise; unused Terraform, Julia, and Windows Deno are retired. macOS's
 dependency-owned Deno copy is deliberately outside the manifest.
 
-1. Review overlapping workstation/TUI tools with the user; installed state is
-   not sufficient evidence of intent.
-2. Generate role-aware native manifests from the accepted `Native` entries.
-   Mise remains declared in its existing shared configuration.
-3. Add check/plan commands and explicit bootstrap commands. Ordinary
-   `chezmoi apply` must not silently install or remove native packages.
+The native manifests are intentionally narrower than the accepted inventory:
+
+1. Only the shell/editor foundation and established host-role essentials are
+   included. Incidental workstation applications, experiments, project-only
+   tools, and optional previews remain outside the bootstrap layer.
+2. Mise remains the single shared manifest for programming runtimes and
+   portable CLIs; native manifests do not duplicate it.
+3. Check and explicit additive bootstrap commands are documented in
+   `packages/README.md`. Ordinary `chezmoi apply` does not install or remove
+   native packages.

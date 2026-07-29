@@ -27,6 +27,13 @@ selection documented in the
 
 Machine-local SSH configuration and credentials are intentionally not managed.
 
+## Package bootstrap
+
+The deliberately small native package manifests live in
+[`packages`](packages/README.md). They restore the shell/editor foundation and
+host-role essentials without snapshotting every installed application or OS
+dependency. Shared runtimes and portable CLIs remain declared through Mise.
+
 ## Health check
 
 Run `dotfiles-doctor` from any supported shell for a read-only report covering
