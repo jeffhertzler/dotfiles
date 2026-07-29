@@ -46,9 +46,7 @@ specificity:
 2. Several installations have duplicate or untracked owners: macOS has unused
    `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
    unused package-owned Go, `uv`, and `python-pynvim`, while Worktrunk and two
-   Python CLIs live in direct Cargo/uv inventories. Superseded Neovim packages
-   remain installed on Windows and Arch only until their privileged removals
-   are run; they do not win in the supported shells.
+   Python CLIs live in direct Cargo/uv inventories.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -249,7 +247,7 @@ designed to restore or test declared package state.
 | --- | --- | --- | --- | --- |
 | Git / Git LFS / gh | WinGet / bundled | APT | Apple Git + Homebrew | pacman |
 | Chezmoi | WinGet | Mise | Homebrew | pacman |
-| Neovim | Mise `neovim@nightly`; superseded WinGet stable pending elevated removal | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly`; superseded pacman nightly pending `sudo` removal |
+| Neovim | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly` |
 | LazyGit | WinGet | Mise | Homebrew | pacman |
 | Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
@@ -371,12 +369,9 @@ Mise.
   heuristic. Mise declares `neovim@nightly` once for all four profiles and the
   shared `nvu` helper force-refreshes that mutable channel. The former WSL and
   Arch AppImages were moved to each machine's Trash, and the former macOS
-  Homebrew formula was removed. Windows still has a superseded WinGet stable
-  package because MSI removal requires an elevated terminal; Arch still has a
-  superseded `neovim-nightly` package because pacman removal requires `sudo`.
-  Neither package wins in the supported Git Bash/Zsh profiles. Ordinary native
-  PowerShell will continue to find the Windows stable executable first until
-  its elevated removal is completed.
+  Homebrew formula, Windows WinGet stable package, and Arch `neovim-nightly`
+  package were removed after verification. Native PowerShell, Git Bash, and all
+  three Zsh profiles now resolve the Mise-owned nightly build.
 - macOS and Arch retain Volta because checked-out projects contain exact
   `package.json.volta` Node, npm, and Yarn pins and Arch still has Volta-owned
   global CLIs. Mise does not interpret the Volta field directly. Rather than
@@ -556,13 +551,10 @@ should still be previewed narrowly and verified on the affected machines.
    every profile. As macOS/Arch Volta projects are next used, translate their
    runtime pins into Mise-readable declarations. Do not remove Volta until
    Arch's global package inventory has also been classified and migrated.
-2. **Neovim ownership — functionally complete; privileged cleanup remains.**
-   Mise nightly and both providers pass on all four profiles. Remove the
-   superseded Windows stable package from an Administrator terminal with
-   `winget uninstall --id Neovim.Neovim --exact`, and remove Arch's superseded
-   package with `sudo pacman -R neovim-nightly`. Do not use `pacman -Rs`: its
-   removal plan includes shared libraries that may remain useful. Then consider
-   removing Arch `python-pynvim`, which the Mise provider has replaced.
+2. **Neovim ownership — complete.** Mise nightly and both providers pass on all
+   four profiles. All superseded Neovim packages and standalone binaries have
+   been removed or moved to Trash. Arch `python-pynvim` remains a separate
+   redundant provider package to consider during duplicate-runtime cleanup.
 3. **Duplicate runtimes — straightforward after checks.** Remove macOS
    Homebrew `uv`; remove Arch pacman `uv` and Go after migrating Arch's uv tools
    to Mise. Keep system Python and dependency-owned Node on Arch.
