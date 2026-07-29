@@ -20,6 +20,11 @@ python = "latest"
 uv = "latest"
 "aqua:max-sixty/worktrunk" = "latest"
 "aqua:bootandy/dust" = "latest"
+"aqua:starship/starship" = "latest"
+"aqua:atuinsh/atuin" = "latest"
+"aqua:sxyazi/yazi" = "latest"
+"aqua:jqlang/jq" = "latest"
+"aqua:ajeetdsouza/zoxide" = "latest"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:neovim" = "latest"
 "pipx:pynvim" = { version = "latest", depends = ["uv"] }
@@ -28,11 +33,6 @@ uv = "latest"
 {{- else if eq $profile "wsl" }}
 "github:jesseduffield/lazygit" = "latest"
 "github:tree-sitter/tree-sitter" = "v0.26.11"
-"aqua:starship/starship" = "latest"
-"aqua:atuinsh/atuin" = "latest"
-"aqua:sxyazi/yazi" = "latest"
-"aqua:jqlang/jq" = "latest"
-"aqua:ajeetdsouza/zoxide" = "latest"
 chezmoi = "2.71.1"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
 java = ["17", "11"]

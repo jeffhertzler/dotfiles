@@ -7,9 +7,6 @@ fi
 if [[ -d "/c/Program Files/LLVM/bin" ]]; then
   export PATH="/c/Program Files/LLVM/bin:$PATH"
 fi
-if [[ -d "/c/Program Files/starship/bin" ]]; then
-  export PATH="/c/Program Files/starship/bin:$PATH"
-fi
 if [[ -d "/c/Program Files/GitHub CLI" ]]; then
   export PATH="/c/Program Files/GitHub CLI:$PATH"
 fi
