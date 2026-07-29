@@ -55,7 +55,7 @@ but they are not promoted into hand-maintained manifest entries.
 | AWS CLI, kubectl, k9s | native where used | Native | correct unless project pinning becomes necessary |
 | Terraform | pacman on Arch | Mise/project version | migrate if retained |
 | Julia | pacman on Arch | Mise if retained | migrate if retained |
-| Deno | WinGet on Windows; Homebrew dependency on macOS | Mise only if directly used | review; do not manage macOS's dependency copy |
+| Deno | Homebrew dependency on macOS only; Windows package retired | none unless directly used | correct; do not manage macOS's dependency copy |
 | Odin | WinGet on Windows | Mise if actively developed; otherwise remove | review |
 | Playwright library and CLI | Arch packages | Project-local by default | review actual global use before migration/removal |
 
@@ -89,8 +89,8 @@ separated from the developer CLI manifest so a bootstrap can select a
 - Focusrite Control, SteelSeries GG, PlayStation Accessories
 - REAPER, Zoom, Teams, OneDrive, Tailscale, Syncthing
 - Steam, EA app, Ubisoft Connect, Path of Building, and PoE2 Path of Building
-- Odin and Deno are listed here by WinGet today but are runtime review items,
-  not desktop applications.
+- Odin is listed here by WinGet today but is a runtime review item, not a
+  desktop application. The unused Windows Deno package is retired.
 
 Visual C++ redistributables, Windows App Runtime/UI frameworks, DirectX,
 GameInput, Edge, .NET desktop runtimes, NVIDIA PhysX, ViGEm, and Epic Online
@@ -102,8 +102,8 @@ entries merely because `winget list` can identify them.
 - Decide whether the database/API client overlap is intentional: Beekeeper,
   Compass, NoSQLBooster, TablePlus, and Yaak.
 - Decide whether Arc and Zen are still desired alongside Helium.
-- Move Deno and Odin to Mise if they are active development runtimes; otherwise
-  leave them out of the eventual manifest and remove them separately.
+- Move Odin to Mise if it is an active development runtime; otherwise leave it
+  out of the eventual manifest and remove it separately.
 - Package updates shown by WinGet are maintenance work, not ownership changes.
 
 ## WSL Ubuntu 26.04
@@ -212,8 +212,9 @@ Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
 Delta packages on macOS and Arch are gone. Project-selected Mise versions are
 normal cached state and are not shared-manifest drift.
 
-1. Decide language/project tooling: Deno, Odin, Julia, Terraform, and global
-   Playwright.
+1. Decide the remaining language/project tooling: Odin, Julia, Terraform, and
+   global Playwright. Windows Deno is already retired; macOS's dependency-owned
+   copy is deliberately outside the manifest.
 2. Review overlapping workstation/TUI tools with the user; installed state is
    not sufficient evidence of intent.
 3. Generate role-aware native manifests from the accepted `Native` entries.

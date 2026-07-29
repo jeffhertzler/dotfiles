@@ -364,6 +364,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   ownership drift. For example, Node 20.19.2 was installed while validating
   `greenlight/enzyme/.tool-versions`; its other declared languages need not be
   installed until that project is revisited.
+- The unused native Windows Deno package is retired. Deno is not a shared Mise
+  tool; Homebrew may retain its macOS copy as dependency-owned state.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
