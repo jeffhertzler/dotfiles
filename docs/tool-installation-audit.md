@@ -180,6 +180,7 @@ Neovim's Node host, Playwright CLI, SQLit, and pynvim.
   gaming-session packages remain native/AUR if retained.
 - `fga-bin` remains for checked-out OpenFGA work, and LazyJira remains an active
   TUI experiment with shared popup bindings.
+- Stripe CLI remains for local Stripe development in the Vimme Laravel app.
 - Arch-only tmux/Workmux state and its supporting tools remain intentional
   legacy configuration.
 
@@ -196,7 +197,6 @@ SQLit, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Review whether Stripe CLI still has a real workflow before manifesting it.
 
 ## Review order before manifests
 

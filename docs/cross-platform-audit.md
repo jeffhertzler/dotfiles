@@ -395,7 +395,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   because checked-out Greenlight Java services invoke it directly.
 - Arch's unused Crush agent, RTK command proxy, sesh session manager, and ngrok
   tunnel client are retired. FGA remains for checked-out OpenFGA work, while
-  LazyJira remains an explicit TUI experiment on macOS and Arch.
+  LazyJira remains an explicit TUI experiment on macOS and Arch. Stripe CLI is
+  retained for local Stripe development in the Vimme Laravel app.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -665,9 +666,9 @@ should still be previewed narrowly and verified on the affected machines.
 15. **Legacy document/filesystem tools — complete.** Tectonic, host Python 2,
     and unused ReiserFS utilities are retired. wkhtmltopdf remains for explicit
     Greenlight legacy-project usage.
-16. **Specialized Arch tools — mostly complete.** Crush, RTK, sesh, and ngrok
-    are retired. FGA and LazyJira remain intentional; Stripe CLI still needs a
-    final use decision.
+16. **Specialized Arch tools — complete.** Crush, RTK, sesh, and ngrok are
+    retired. FGA, LazyJira, and Stripe CLI remain for identified project or
+    experimental workflows.
 17. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
