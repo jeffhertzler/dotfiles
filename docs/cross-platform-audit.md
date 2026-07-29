@@ -38,10 +38,11 @@ This reassessment found that the setup is not yet down to only unavoidable
 specificity:
 
 1. macOS and Arch still have temporary Volta compatibility state, and the
-   current PATH order does **not** implement its stated policy. In an actual
-   `package.json.volta` checkout, a declared Node 20 resolves Mise's global Node
-   24 instead. This must be corrected or the affected projects migrated before
-   Volta can be described as a working fallback.
+   current PATH order does **not** implement the already-settled precedence
+   policy. Volta should own the default and untouched `package.json.volta`
+   projects; a project-local Mise declaration should override Volta. In an
+   actual Volta checkout, a declared Node 20 currently resolves Mise's global
+   Node 24 instead. This is an implementation bug, not an open policy decision.
 2. Several installations have duplicate or untracked owners: macOS has unused
    `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
    unused package-owned Go, `uv`, `python-pynvim`, and a shadowed nightly
@@ -252,7 +253,7 @@ designed to restore or test declared package state.
 | Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
 | Mise itself | WinGet | official installer | Homebrew | pacman |
-| Node development runtime | Mise | Mise | broken Mise/Volta overlap → per-project Mise migration | broken Mise/Volta overlap → per-project Mise migration |
+| Node development runtime | Mise | Mise | fix Volta-default/Mise-local precedence → per-project Mise migration | fix Volta-default/Mise-local precedence → per-project Mise migration |
 | Python development runtime | Mise | Mise | Mise; Homebrew dependency retained | Mise; pacman system Python retained |
 | Go development runtime | Mise | Mise | Mise | Mise; remove unused explicit pacman Go |
 | Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
@@ -377,11 +378,11 @@ Mise.
   `mise activate zsh` places the globally configured Mise Node ahead of Volta
   even in an untouched Volta project. Live examples declared Node 20.20.0 and
   20.19.0 but ran Mise Node 24.18.0. Do not add another directory hook to repair
-  this. Migrate each active project to `.nvmrc`, `.node-version`,
-  `package.json.devEngines`, or a local `mise.toml`; until a project is migrated,
-  invoke it explicitly through Volta or remove global Mise Node activation on
-  that host. The final choice needs user review because it changes the default
-  Node runtime outside migrated projects.
+  this. The intended precedence is Volta for the default and untouched
+  `package.json.volta` projects, with a project-local Mise declaration taking
+  precedence after migration. Correct the shell integration to implement that
+  policy, then migrate active projects to `.nvmrc`, `.node-version`,
+  `package.json.devEngines`, or a local `mise.toml` one at a time.
 - [Mise's standard Node version-file support](https://mise.jdx.dev/lang/node.html#automatic-node-version-detection)
   is enabled on every profile, so
   `.nvmrc`, `.node-version`, `.tool-versions`, and `package.json.devEngines`
@@ -547,10 +548,11 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
 This order separates correctness from optional ownership cleanup. Every change
 should still be previewed narrowly and verified on the affected machines.
 
-1. **Node correctness — requires a policy decision.** The current
-   Mise/Volta coexistence ignores `package.json.volta` pins. Choose the interim
-   behavior for macOS and Arch, then migrate active projects one at a time to a
-   Mise-readable declaration. Do not remove Volta until Arch's global package
+1. **Node correctness — implementation bug; fix first.** The current
+   Mise/Volta coexistence ignores `package.json.volta` pins. Implement the
+   settled precedence—Volta as the default and for untouched Volta projects,
+   project-local Mise above Volta—then migrate active projects one at a time to
+   a Mise-readable declaration. Do not remove Volta until Arch's global package
    inventory has been classified.
 2. **Neovim ownership — straightforward.** Move WSL's AppImage to Mise. Replace
    Arch's local AppImage and unused nightly package with official pacman stable
