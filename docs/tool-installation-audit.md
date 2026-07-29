@@ -85,7 +85,7 @@ These belong to WinGet or their vendor installer if retained. They should be
 separated from the developer CLI manifest so a bootstrap can select a
 `windows-workstation` role:
 
-- 1Password, Arc, Helium, Zen Browser, VS Code, JetBrains Toolbox
+- 1Password, Helium, VS Code, JetBrains Toolbox
 - Beekeeper Studio and Yaak
 - CrystalDiskInfo, PowerToys, Windows Terminal, WSL, Ubuntu
 - Focusrite Control, SteelSeries GG, PlayStation Accessories
@@ -93,6 +93,7 @@ separated from the developer CLI manifest so a bootstrap can select a
 - Steam, EA app, Ubisoft Connect, Path of Building, and PoE2 Path of Building
 - The unused Windows Deno package and superseded WinGet Odin package are
   retired.
+- Arc and Zen Browser are retired; Helium is the retained alternative browser.
 
 Visual C++ redistributables, Windows App Runtime/UI frameworks, DirectX,
 GameInput, Edge, .NET desktop runtimes, NVIDIA PhysX, ViGEm, and Epic Online
@@ -101,7 +102,6 @@ entries merely because `winget list` can identify them.
 
 ### Windows review queue
 
-- Decide whether Arc and Zen are still desired alongside Helium.
 - Package updates shown by WinGet are maintenance work, not ownership changes.
 
 ## WSL Ubuntu 26.04

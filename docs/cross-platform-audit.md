@@ -401,6 +401,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   API-client experiment. MongoDB Compass, NoSQLBooster, and TablePlus are
   retired there. macOS also retains its existing non-Homebrew Beekeeper Studio
   app, and its separate Homebrew Compass cask is retired.
+- Native Windows retains Helium as its alternative browser. The unused Arc and
+  Zen Browser installations are retired.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -676,11 +678,13 @@ should still be previewed narrowly and verified on the affected machines.
 17. **Database/API desktop applications — complete.** Beekeeper remains on
     Windows and macOS, and Yaak remains on Windows. Compass, NoSQLBooster, and
     TablePlus are retired from Windows; Compass is also retired from macOS.
-18. **Package manifests — recommended architectural follow-up.** Add a narrow
+18. **Windows browser overlap — complete.** Helium remains; the unused Arc and
+    Zen Browser installations are retired.
+19. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-19. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+20. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
