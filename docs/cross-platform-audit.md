@@ -43,10 +43,9 @@ specificity:
    must be migrated to a Mise-readable project file. Volta remains callable
    behind Mise's shims for that migration but no longer participates in normal
    Node precedence.
-2. Several installations still have duplicate or untracked owners: macOS has
-   unused `nvm`, `jenv`, and tmux formulae, while WSL and Arch retain Rust
-   installation machinery that may no longer have a consumer now that
-   Worktrunk is Mise-owned.
+2. Several installations still have duplicate or untracked owners on macOS:
+   unused `nvm`, `jenv`, and tmux formulae plus five direct Cargo-installed
+   utilities that need individual classification.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -538,10 +537,10 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
 - `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
 - The unused `gou` curl-to-shell installer alias has been removed. Mise now owns
   Go upgrades on all four profiles.
-- `piu` still contains a Volta fallback even though Pi is Mise-owned everywhere;
-  `uvu` manages an empty uv tool inventory on three machines; and `rcu` exists
-  primarily for the direct Cargo installs targeted above. Revisit all three
-  after the ownership migrations rather than preserving obsolete update paths.
+- `piu` upgrades the shared Mise-owned Pi declaration without a dead Volta
+  fallback. The obsolete `uvu` alias is gone because the default uv-tool
+  inventory is empty on all four machines. `rcu` still serves five direct
+  Cargo-installed macOS utilities and should remain until those are classified.
 - Greenlight's duplicate `frontend/settings` pull has been removed.
 - Greenlight repositories use machine-local path-scoped Git identity includes;
   `gggm` no longer mutates global identity while running `good morning`.
@@ -563,9 +562,11 @@ should still be previewed narrowly and verified on the affected machines.
    on all four profiles. Arch Posting and Harlequin are declared Mise `pipx:`
    tools, with Harlequin's prior database adapters preserved. System Python and
    dependency-owned Node remain on Arch.
-4. **Runtime-distributed CLIs — Worktrunk complete; cleanup remains.**
-   Worktrunk is Mise-owned on all four profiles. Reassess whether WSL Mise Rust,
-   Arch system Rust, `cargo-update`, `rcu`, and `uvu` still have a purpose.
+4. **Runtime-distributed CLIs — Worktrunk and Linux Rust cleanup complete.**
+   Worktrunk is Mise-owned on all four profiles. WSL's now-unused Mise/Rustup
+   toolchain and Arch's Rustup, pacman Rust, and self-updating `cargo-update`
+   inventory are gone. Classify the five remaining macOS Cargo utilities before
+   changing `rcu`; the unused `uvu` alias has been removed.
 5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
    Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
    completion setup if no other consumer remains.

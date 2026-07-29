@@ -31,15 +31,11 @@ alias gl='git pull'
 alias gp='git push'
 
 function piu() {
-  if command -v mise >/dev/null 2>&1 \
-    && command mise where 'npm:@earendil-works/pi-coding-agent' >/dev/null 2>&1; then
-    command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
-  elif command -v volta >/dev/null 2>&1; then
-    command volta install @earendil-works/pi-coding-agent@latest
-  else
-    printf '%s\n' 'piu: neither mise nor volta is available' >&2
+  if ! command -v mise >/dev/null 2>&1; then
+    printf '%s\n' 'piu: mise is not available' >&2
     return 127
   fi
+  command mise upgrade 'npm:@earendil-works/pi-coding-agent' --minimum-release-age 0s
 }
 
 function rcu() {
@@ -50,10 +46,6 @@ function rcu() {
     command cargo install-update --all
   fi
 }
-
-if command -v uv >/dev/null 2>&1; then
-  alias uvu='uv tool upgrade --all'
-fi
 
 if command -v bat >/dev/null 2>&1; then
   alias cat='bat'
