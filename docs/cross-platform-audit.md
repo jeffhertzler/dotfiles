@@ -45,9 +45,10 @@ specificity:
    Node precedence.
 2. Several installations have duplicate or untracked owners: macOS has unused
    `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
-   unused package-owned Go, `uv`, `python-pynvim`, and a shadowed nightly
-   Neovim, while Worktrunk and two Python CLIs live in direct Cargo/uv
-   inventories.
+   unused package-owned Go, `uv`, and `python-pynvim`, while Worktrunk and two
+   Python CLIs live in direct Cargo/uv inventories. Superseded Neovim packages
+   remain installed on Windows and Arch only until their privileged removals
+   are run; they do not win in the supported shells.
 3. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
@@ -184,7 +185,7 @@ application launcher templates, or small bootstrap scripts.
 - Windows Herdr preview builds and four private plugin compatibility branches
 - the Windows-only Mise `pipx:pynvim` shim-reentry workaround
 - Volta on macOS and Arch during project-by-project Node migration
-- direct-release Neovim and miscellaneous user CLI installs on WSL
+- miscellaneous direct-release user CLI installs on WSL
 
 The Windows Herdr and pynvim cases are already isolated and documented well.
 The Volta transition is intentionally one-way: Mise owns normal resolution,
@@ -248,7 +249,7 @@ designed to restore or test declared package state.
 | --- | --- | --- | --- | --- |
 | Git / Git LFS / gh | WinGet / bundled | APT | Apple Git + Homebrew | pacman |
 | Chezmoi | WinGet | Mise | Homebrew | pacman |
-| Neovim | WinGet | direct AppImage → Mise `neovim` | Homebrew | local AppImage + unused nightly package → pacman stable |
+| Neovim | Mise `neovim@nightly`; superseded WinGet stable pending elevated removal | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly`; superseded pacman nightly pending `sudo` removal |
 | LazyGit | WinGet | Mise | Homebrew | pacman |
 | Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
@@ -280,7 +281,7 @@ the versions recorded by package databases.
 | Tool | Windows | WSL | macOS | Arch |
 | --- | --- | --- | --- | --- |
 | Git | 2.55.0 | 2.53.0 | Apple Git 2.50.1 | 2.55.0 |
-| Neovim | 0.12.4 | 0.12.4 | 0.12.4 | 0.12.4 |
+| Neovim | 0.13.0-dev-1141+ge3c5974adf | 0.13.0-dev-1141+ge3c5974adf | 0.13.0-dev-1141+ge3c5974adf | 0.13.0-dev-1141+ge3c5974adf |
 | Herdr | 0.7.5 preview | 0.7.5 | 0.7.5 | 0.7.5 |
 | OpenCode | 1.18.7 | 1.18.7 | 1.18.7 | 1.18.7 |
 | Pi | 0.82.1 | 0.82.1 | 0.82.1 | 0.82.1 |
@@ -327,9 +328,8 @@ Mise.
   value before changing it.
 - Homebrew and pacman Python installations remain installed for package-owned
   utilities even though Mise wins in development shells. Arch's explicit
-  `python-pynvim` package is redundant and should be removed after replacing
-  the shadowed nightly Neovim package with official stable Neovim; Neovim
-  already selects the isolated Mise provider.
+  `python-pynvim` package is redundant because Neovim already selects the
+  isolated Mise provider.
 - Mise discovery ceilings now live in its shell-independent early-init
   `miserc.toml`. Every profile stops at its home; WSL also stops at the mounted
   Windows home, preventing native Windows global configuration from leaking
@@ -367,11 +367,16 @@ Mise.
   executable without its runtime DLL directory, causing `0xC0000135`; adding
   another PATH workaround would not improve the configuration. Neovim keeps
   the WinGet LLVM path available for parser builds launched outside Git Bash.
-- WSL and Arch both run a direct Neovim 0.12.4 AppImage from `~/.local/bin`.
-  WSL's APT candidate is only 0.11.6, so Mise's registered Neovim backend is the
-  clean replacement there. Arch's official repository already contains 0.12.4;
-  install that and remove both the local AppImage and the shadowed, unsigned
-  `neovim-nightly` package.
+- Neovim is an intentional freshness exception to the native-package-first
+  heuristic. Mise declares `neovim@nightly` once for all four profiles and the
+  shared `nvu` helper force-refreshes that mutable channel. The former WSL and
+  Arch AppImages were moved to each machine's Trash, and the former macOS
+  Homebrew formula was removed. Windows still has a superseded WinGet stable
+  package because MSI removal requires an elevated terminal; Arch still has a
+  superseded `neovim-nightly` package because pacman removal requires `sudo`.
+  Neither package wins in the supported Git Bash/Zsh profiles. Ordinary native
+  PowerShell will continue to find the Windows stable executable first until
+  its elevated removal is completed.
 - macOS and Arch retain Volta because checked-out projects contain exact
   `package.json.volta` Node, npm, and Yarn pins and Arch still has Volta-owned
   global CLIs. Mise does not interpret the Volta field directly. Rather than
@@ -417,11 +422,11 @@ Mise.
   release through `aqua:max-sixty/worktrunk`; using that on WSL and Arch would
   remove two unmanaged installs and eliminate Rust as installation machinery
   where no checked-out Rust project exists.
-- WSL's direct-release Neovim, Starship, Atuin, Yazi, jq, and zoxide binaries
-  are individually current but have no shared declaration or owner. APT is
+- WSL's direct-release Starship, Atuin, Yazi, jq, and zoxide binaries are
+  individually current but have no shared declaration or owner. APT is
   materially behind or missing several of them. Mise's registry exposes these
   tools through vetted release backends, so one WSL-specific Mise block is a
-  simpler fallback tier than six bespoke release installations.
+  simpler fallback tier than five bespoke release installations.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
@@ -459,6 +464,9 @@ Mise.
 ### Neovim
 
 - The shared LazyVim tree works on all four profiles.
+- Mise owns the same official nightly build on all four profiles. `nvu`
+  refreshes the mutable nightly tag with `mise install --force
+  neovim@nightly`; it was exercised successfully on WSL after migration.
 - TypeScript, Python, and Go support are enabled on all four profiles. Native
   Windows now has the complete LazyVim Go toolset, including gopls.
 - LazyGit, Yazi, and Agent Review can target an existing Neovim instance.
@@ -526,9 +534,8 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
   session-up-arrow, style, Enter-accept, and record-sync settings.
 - Bat uses its bundled Catppuccin Mocha theme on all four profiles; redundant
   checked-in Bat themes and two unused Yazi theme variants were removed.
-- `nvu` has one Linux/x86-64 definition in the common shell layer, but it is a
-  direct AppImage updater and should disappear after WSL/Arch Neovim ownership
-  moves to Mise/pacman.
+- `nvu` is a portable shared Mise updater for `neovim@nightly` and reports the
+  resulting Neovim version after a successful refresh.
 - `ha` and `hat` have one WSL/macOS definition in the templated Zsh layer.
 - The unused `gou` curl-to-shell installer alias has been removed. Mise now owns
   Go upgrades on all four profiles.
@@ -549,9 +556,13 @@ should still be previewed narrowly and verified on the affected machines.
    every profile. As macOS/Arch Volta projects are next used, translate their
    runtime pins into Mise-readable declarations. Do not remove Volta until
    Arch's global package inventory has also been classified and migrated.
-2. **Neovim ownership — straightforward.** Move WSL's AppImage to Mise. Replace
-   Arch's local AppImage and unused nightly package with official pacman stable
-   Neovim. Remove Arch `python-pynvim` after provider verification.
+2. **Neovim ownership — functionally complete; privileged cleanup remains.**
+   Mise nightly and both providers pass on all four profiles. Remove the
+   superseded Windows stable package from an Administrator terminal with
+   `winget uninstall --id Neovim.Neovim --exact`, and remove Arch's superseded
+   package with `sudo pacman -R neovim-nightly`. Do not use `pacman -Rs`: its
+   removal plan includes shared libraries that may remain useful. Then consider
+   removing Arch `python-pynvim`, which the Mise provider has replaced.
 3. **Duplicate runtimes — straightforward after checks.** Remove macOS
    Homebrew `uv`; remove Arch pacman `uv` and Go after migrating Arch's uv tools
    to Mise. Keep system Python and dependency-owned Node on Arch.
@@ -566,8 +577,8 @@ should still be previewed narrowly and verified on the affected machines.
    explicit Homebrew leaves with no managed integration. Their removal matches
    current policy unless there is an unmanaged use not visible to this audit.
 7. **WSL CLI consolidation — optional but recommended.** Move direct-release
-   Neovim, Starship, Atuin, Yazi, jq, and zoxide into the WSL Mise block. Leave
-   healthy APT-owned Bat, fzf, fd, and ripgrep alone.
+   Starship, Atuin, Yazi, jq, and zoxide into the WSL Mise block. Leave healthy
+   APT-owned Bat, fzf, fd, and ripgrep alone.
 8. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
