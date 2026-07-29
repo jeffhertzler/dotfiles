@@ -139,8 +139,11 @@ Tree-sitter's former Mise GitHub backends are retired.
   LuaRocks, and zlib.
 - DevOps: AWS CLI, k9s, LazyDocker, and Orbstack.
 - Media/preview tools: aria2, ffmpeg, ImageMagick, librsvg, and yt-dlp.
-- Applications/casks: 1Password CLI, Claude desktop, Claude Code, MongoDB
-  Compass, OpenCode Desktop, and Orbstack.
+- Applications/casks: 1Password CLI, Claude desktop, Claude Code, OpenCode
+  Desktop, and Orbstack.
+- Beekeeper Studio 5.8.1 is an existing non-Homebrew application and remains the
+  macOS database GUI. Do not add it to a Brewfile unless ownership is
+  deliberately migrated.
 - LazyJira remains an explicitly trusted third-party formula while it is being
   evaluated.
 

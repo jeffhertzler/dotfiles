@@ -399,8 +399,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   retained for local Stripe development in the Vimme Laravel app.
 - Native Windows retains Beekeeper Studio as its database GUI and Yaak as an
   API-client experiment. MongoDB Compass, NoSQLBooster, and TablePlus are
-  retired there. The separate macOS Compass installation remains unchanged
-  pending a macOS-specific decision.
+  retired there. macOS also retains its existing non-Homebrew Beekeeper Studio
+  app, and its separate Homebrew Compass cask is retired.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -673,8 +673,9 @@ should still be previewed narrowly and verified on the affected machines.
 16. **Specialized Arch tools — complete.** Crush, RTK, sesh, and ngrok are
     retired. FGA, LazyJira, and Stripe CLI remain for identified project or
     experimental workflows.
-17. **Windows database/API applications — complete.** Beekeeper and Yaak remain;
-    Compass, NoSQLBooster, and TablePlus are retired from Windows.
+17. **Database/API desktop applications — complete.** Beekeeper remains on
+    Windows and macOS, and Yaak remains on Windows. Compass, NoSQLBooster, and
+    TablePlus are retired from Windows; Compass is also retired from macOS.
 18. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
