@@ -43,9 +43,7 @@ specificity:
    must be migrated to a Mise-readable project file. Volta remains callable
    behind Mise's shims for that migration but no longer participates in normal
    Node precedence.
-2. Several installations still have duplicate or untracked owners on macOS:
-   unused `nvm`, `jenv`, and tmux formulae.
-3. Native package selections are not recorded declaratively. Mise tools are
+2. Native package selections are not recorded declaratively. Mise tools are
    reproducible from this repository, but WinGet, APT, Homebrew, and pacman
    selections currently require this prose audit or live-machine inspection.
 
@@ -271,7 +269,7 @@ designed to restore or test declared package state.
 | LazyDocker | not needed | not needed | Homebrew | pacman |
 | Posting | not needed | not needed | Homebrew | Mise `pipx:posting` |
 | LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
-| tmux / Workmux | not needed | tmux package, unmanaged | unused Homebrew tmux → remove | pacman tmux + retained local Workmux |
+| tmux / Workmux | not needed | tmux package, unmanaged | not needed | pacman tmux + retained local Workmux |
 
 ### Live version snapshot
 
@@ -352,11 +350,11 @@ Mise.
   remaining packages to maintain. Dust remains intentionally available and is
   now Mise-owned at 1.2.4 on all four profiles. The official macOS release is
   x86_64 and runs successfully through Rosetta on the Apple Silicon Mac.
-- Earlier macOS package drift is resolved, but the live reassessment found
-  three remaining explicit Homebrew leaves that do not match current policy:
-  `nvm`, `jenv`, and tmux. The duplicate Homebrew `uv` formula was removed after
-  Mise `uv` passed. LazyJira remains intentionally installed and only its
-  specific third-party formula is trusted.
+- Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
+  formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
+  retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
+  remains intentionally installed and only its specific third-party formula
+  is trusted.
 - Bun 1.3.14 is installed through the official installer on WSL, macOS, and
   Arch because the upstream Herdr title plugin uses it. Bun is a runtime and is
   available through Mise; moving these three installs into Mise would match the
@@ -578,9 +576,9 @@ should still be previewed narrowly and verified on the affected machines.
 5. **Bun ownership — low risk.** Move WSL, macOS, and Arch from the official
    Bun tree to Mise, verify the title-sync plugin, then remove `.bun` PATH and
    completion setup if no other consumer remains.
-6. **macOS dead leaves — confirm, then remove.** `nvm`, `jenv`, and tmux are
-   explicit Homebrew leaves with no managed integration. Their removal matches
-   current policy unless there is an unmanaged use not visible to this audit.
+6. **macOS dead leaves — complete.** The unused `nvm`, `jenv`, and tmux
+   formulae and their empty or absent user state are gone. Mise continues to
+   own the active Node and Java runtimes.
 7. **WSL CLI consolidation — optional but recommended.** Move direct-release
    Starship, Atuin, Yazi, jq, and zoxide into the WSL Mise block. Leave healthy
    APT-owned Bat, fzf, fd, and ripgrep alone.
