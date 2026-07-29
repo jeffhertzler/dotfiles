@@ -171,11 +171,7 @@ check_tool 'zoxide' zoxide
 check_tool 'fzf' fzf
 check_alternative 'fd' fd fdfind
 check_tool 'ripgrep' rg
-if [[ $profile == windows ]]; then
-  check_tool 'Worktrunk' git-wt
-else
-  check_alternative 'Worktrunk' wt git-wt
-fi
+check_alternative 'Worktrunk' wt git-wt
 
 case $profile in
   windows)
