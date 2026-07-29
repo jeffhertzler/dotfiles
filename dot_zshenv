@@ -1,6 +1,5 @@
 #!/usr/bin/env zsh
 
-export BUN_INSTALL="$HOME/.bun"
 export VOLTA_HOME="$HOME/.volta"
 export COMPOSER_BIN="$HOME/.config/composer/vendor/bin"
 
@@ -17,7 +16,6 @@ path=(
   "$HOME/.local/bin"
   "$HOME/.atuin/bin"
   "$HOME/.opencode/bin"
-  "$BUN_INSTALL/bin"
   "$HOME/.cargo/bin"
   "$HOME/go/bin"
   "$COMPOSER_BIN"
