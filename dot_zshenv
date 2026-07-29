@@ -10,11 +10,10 @@ export LANG="${LANG:-en_US.UTF-8}"
 path=(
   "/opt/homebrew/bin"
   "/opt/homebrew/sbin"
-  # During the staged Node migration, untouched package.json.volta projects
-  # keep using Volta. `mise activate zsh` places an active project's concrete
-  # Mise tool paths ahead of both entries when that project has migrated.
-  "$VOLTA_HOME/bin"
+  # Mise owns normal Node resolution. Volta remains reachable behind its shims
+  # only while legacy projects and globally installed CLIs are migrated.
   "$HOME/.local/share/mise/shims"
+  "$VOLTA_HOME/bin"
   "$HOME/.local/bin"
   "$HOME/.atuin/bin"
   "$HOME/.opencode/bin"

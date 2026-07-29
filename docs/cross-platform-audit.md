@@ -37,12 +37,12 @@ The central design is sound:
 This reassessment found that the setup is not yet down to only unavoidable
 specificity:
 
-1. macOS and Arch still have temporary Volta compatibility state, and the
-   current PATH order does **not** implement the already-settled precedence
-   policy. Volta should own the default and untouched `package.json.volta`
-   projects; a project-local Mise declaration should override Volta. In an
-   actual Volta checkout, a declared Node 20 currently resolves Mise's global
-   Node 24 instead. This is an implementation bug, not an open policy decision.
+1. macOS and Arch still contain temporary Volta project and global-CLI
+   inventory. Mise now deliberately owns normal Node resolution on every
+   profile; when an old Volta project is next used, its version declarations
+   must be migrated to a Mise-readable project file. Volta remains callable
+   behind Mise's shims for that migration but no longer participates in normal
+   Node precedence.
 2. Several installations have duplicate or untracked owners: macOS has unused
    `nvm`, `jenv`, and tmux formulae plus a duplicate Homebrew `uv`; Arch has
    unused package-owned Go, `uv`, `python-pynvim`, and a shadowed nightly
@@ -187,8 +187,8 @@ application launcher templates, or small bootstrap scripts.
 - direct-release Neovim and miscellaneous user CLI installs on WSL
 
 The Windows Herdr and pynvim cases are already isolated and documented well.
-The Volta transition is not: its current PATH behavior contradicts its policy
-and is the highest-priority correctness issue in this audit.
+The Volta transition is intentionally one-way: Mise owns normal resolution,
+while Volta remains available only to inspect and migrate legacy state.
 
 **Host-role policy expressed through an OS profile — acceptable today, but not
 intrinsically OS-specific:**
@@ -253,7 +253,7 @@ designed to restore or test declared package state.
 | Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
 | Mise itself | WinGet | official installer | Homebrew | pacman |
-| Node development runtime | Mise | Mise | fix Volta-default/Mise-local precedence → per-project Mise migration | fix Volta-default/Mise-local precedence → per-project Mise migration |
+| Node development runtime | Mise | Mise | Mise; Volta retained only for incremental migration | Mise; Volta retained only for incremental migration |
 | Python development runtime | Mise | Mise | Mise; Homebrew dependency retained | Mise; pacman system Python retained |
 | Go development runtime | Mise | Mise | Mise | Mise; remove unused explicit pacman Go |
 | Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
@@ -373,32 +373,29 @@ Mise.
   install that and remove both the local AppImage and the shadowed, unsigned
   `neovim-nightly` package.
 - macOS and Arch retain Volta because checked-out projects contain exact
-  `package.json.volta` Node, npm, and Yarn pins. Mise does not interpret the
-  Volta field directly. The attempted coexistence is currently incorrect:
-  `mise activate zsh` places the globally configured Mise Node ahead of Volta
-  even in an untouched Volta project. Live examples declared Node 20.20.0 and
-  20.19.0 but ran Mise Node 24.18.0. Do not add another directory hook to repair
-  this. The intended precedence is Volta for the default and untouched
-  `package.json.volta` projects, with a project-local Mise declaration taking
-  precedence after migration. Correct the shell integration to implement that
-  policy, then migrate active projects to `.nvmrc`, `.node-version`,
-  `package.json.devEngines`, or a local `mise.toml` one at a time.
+  `package.json.volta` Node, npm, and Yarn pins and Arch still has Volta-owned
+  global CLIs. Mise does not interpret the Volta field directly. Rather than
+  maintaining two automatic precedence systems, Mise now owns normal Node
+  resolution everywhere. Volta's bin directory remains behind Mise's shims so
+  the `volta` command is available for inspection and migration, but its Node
+  shims do not override Mise. When an old project is next used, move its pins to
+  `.nvmrc`, `.node-version`, `package.json.devEngines`, or a local `mise.toml`.
 - [Mise's standard Node version-file support](https://mise.jdx.dev/lang/node.html#automatic-node-version-detection)
   is enabled on every profile, so
   `.nvmrc`, `.node-version`, `.tool-versions`, and `package.json.devEngines`
   can become the common project mechanism. Corepack is enabled for
   Mise-installed Node versions on every profile. macOS and Arch can therefore
-  migrate projects incrementally while Volta remains available for untouched
-  `package.json.volta` projects; Volta should not be removed until those
-  projects and its global CLI inventory have been reconciled.
+  migrate projects incrementally while the `volta` command remains available
+  behind Mise. Volta should not be removed until those projects and its global
+  CLI inventory have been reconciled.
 - Pi is owned by Mise on all four profiles and is no longer part of the Volta
   inventory. Arch still has project-facing Volta global CLIs; those must be
   classified and migrated before Volta removal. The `piu` Volta fallback is now
   dead compatibility code and can be simplified to Mise only.
-- The Neovim Node host is Mise-owned on all four profiles. Neovim explicitly
-  selects Mise's Node on Unix, which is appropriate for the provider but also
-  contributes to the broader macOS/Arch Node precedence problem described
-  above.
+- The Neovim Node host is Mise-owned on all four profiles. Neovim locates the
+  isolated Mise `npm:neovim` package explicitly, while the provider process uses
+  the same normal Mise Node resolution as the rest of the environment. The
+  former Unix-only `mise which node` PATH injection is no longer necessary.
 - The Neovim Python host is an isolated Mise `pipx:pynvim` tool on all four
   profiles. Neovim selects its `pynvim-python` executable directly rather than
   depending on mutable packages inside a development Python runtime. Mise also
@@ -548,12 +545,10 @@ and cleanliness. Undeclared plugins are reported but require explicit removal.
 This order separates correctness from optional ownership cleanup. Every change
 should still be previewed narrowly and verified on the affected machines.
 
-1. **Node correctness — implementation bug; fix first.** The current
-   Mise/Volta coexistence ignores `package.json.volta` pins. Implement the
-   settled precedence—Volta as the default and for untouched Volta projects,
-   project-local Mise above Volta—then migrate active projects one at a time to
-   a Mise-readable declaration. Do not remove Volta until Arch's global package
-   inventory has been classified.
+1. **Volta migration — incremental.** Mise now owns normal Node resolution on
+   every profile. As macOS/Arch Volta projects are next used, translate their
+   runtime pins into Mise-readable declarations. Do not remove Volta until
+   Arch's global package inventory has also been classified and migrated.
 2. **Neovim ownership — straightforward.** Move WSL's AppImage to Mise. Replace
    Arch's local AppImage and unused nightly package with official pacman stable
    Neovim. Remove Arch `python-pynvim` after provider verification.

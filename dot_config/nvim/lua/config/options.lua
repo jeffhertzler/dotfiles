@@ -37,13 +37,6 @@ end
 
 local mise = vim.fn.exepath("mise")
 if mise ~= "" then
-  if vim.fn.has("win32") ~= 1 then
-    local node = vim.fn.trim(vim.fn.system({ mise, "which", "node" }))
-    if vim.v.shell_error == 0 and vim.fn.executable(node) == 1 then
-      prepend_path(vim.fs.dirname(node))
-    end
-  end
-
   local neovim_package = vim.fn.trim(vim.fn.system({ mise, "where", "npm:neovim" }))
   local node_hosts = {
     vim.fs.joinpath(neovim_package, "node_modules", "neovim", "bin", "cli.js"),
