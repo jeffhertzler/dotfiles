@@ -13,9 +13,7 @@ Chezmoi detects one of four supported profiles:
 
 All four supported profiles receive a shared application base plus narrowly
 scoped shell, launcher, and workstation differences. Generic Linux and unknown
-platforms remain denied by default; supported profiles use the shared-base
-selection documented in the
-[cross-platform audit](docs/cross-platform-audit.md).
+platforms remain denied by default.
 
 ## Shell layout
 
