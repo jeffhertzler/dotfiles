@@ -1,7 +1,9 @@
 # Tool installation ownership audit
 
-Status: inventory complete; ownership review in progress  
-Snapshot date: 2026-07-28  
+Status: inventory complete; ownership review in progress
+
+Snapshot date: 2026-07-28
+
 Profiles: native Windows, WSL Ubuntu 26.04, macOS, Arch Linux
 
 This audit is the input to the future WinGet, APT, Homebrew, and pacman
