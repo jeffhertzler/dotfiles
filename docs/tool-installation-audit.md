@@ -57,7 +57,8 @@ but they are not promoted into hand-maintained manifest entries.
 | Julia | not installed | none | intentionally retired |
 | Deno | Homebrew dependency on macOS only; Windows package retired | none unless directly used | correct; do not manage macOS's dependency copy |
 | Odin | Mise on all profiles | Mise | correct; retained for graphics-programming exploration |
-| Playwright library and CLI | Arch packages | Project-local by default | review actual global use before migration/removal |
+| Playwright library | project-local in projects such as Ultralight | Project | correct; global Arch package retired |
+| Playwright CLI | Mise `npm:` on all profiles | Mise | correct; intentionally shared for agent browser automation |
 
 ## Native Windows
 
@@ -69,7 +70,7 @@ but they are not promoted into hand-maintained manifest entries.
   `BurntSushi.ripgrep.MSVC`.
 - Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk, Dust,
   Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Pi, Neovim's
-  Node host, and pynvim.
+  Node host, Playwright CLI, and pynvim.
 - Official/manual exceptions: Herdr preview and OpenCode.
 - Dotfile-owned launchers in `~/.local/bin`: Agent Review, doctor, Herdr popup
   helpers, LazyGit/Yazi Neovim bridges, and the research-video launcher.
@@ -115,7 +116,7 @@ entries merely because `winget list` can identify them.
   filesystem utilities, `ubuntu-minimal`, and `ubuntu-wsl`.
 - Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Chezmoi,
   LazyGit, Tree-sitter CLI, Worktrunk, Dust, Pi, Neovim's Node host, pynvim,
-  Starship, Atuin, Yazi, jq, and zoxide.
+  Playwright CLI, Starship, Atuin, Yazi, jq, and zoxide.
 - Official/manual exceptions: Mise bootstrap, Herdr, OpenCode, and the
   WSL-to-Windows PTY bridge.
 - Dotfile-owned scripts in `~/.local/bin` are expected and managed by Chezmoi.
@@ -151,7 +152,7 @@ remain Homebrew-owned and should not be manually listed.
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting, Pi,
-Neovim's Node host, and pynvim.
+Neovim's Node host, Playwright CLI, and pynvim.
 
 ### macOS review queue
 
@@ -182,7 +183,7 @@ Neovim's Node host, and pynvim.
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting,
-Harlequin, Pi, Neovim's Node host, and pynvim.
+Harlequin, Pi, Neovim's Node host, Playwright CLI, and pynvim.
 
 ### Arch review queue
 
@@ -191,8 +192,6 @@ Harlequin, Pi, Neovim's Node host, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Treat global `playwright` and `playwright-cli` as project-local unless a
-  specific shared automation consumer is identified.
 - Review overlapping monitors and disk tools: btop is preferred, while
   `glances`, `htop`, `gdu`, and `duf` may now be redundant. Dust remains the
   preferred directory-size tool.
@@ -209,12 +208,14 @@ Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
 Delta packages on macOS and Arch are gone. Project-selected Mise versions are
 normal cached state and are not shared-manifest drift.
 
-1. Decide the remaining global Playwright tooling. Odin is now shared through
-   Mise; unused Terraform, Julia, and Windows Deno are retired. macOS's
-   dependency-owned Deno copy is deliberately outside the manifest.
-2. Review overlapping workstation/TUI tools with the user; installed state is
+The language/project-tool review is complete. Playwright remains project-local
+where used, while its agent-oriented CLI is shared through Mise. Odin is shared
+through Mise; unused Terraform, Julia, and Windows Deno are retired. macOS's
+dependency-owned Deno copy is deliberately outside the manifest.
+
+1. Review overlapping workstation/TUI tools with the user; installed state is
    not sufficient evidence of intent.
-3. Generate role-aware native manifests from the accepted `Native` entries.
+2. Generate role-aware native manifests from the accepted `Native` entries.
    Mise remains declared in its existing shared configuration.
-4. Add check/plan commands and explicit bootstrap commands. Ordinary
+3. Add check/plan commands and explicit bootstrap commands. Ordinary
    `chezmoi apply` must not silently install or remove native packages.

@@ -261,6 +261,7 @@ designed to restore or test declared package state.
 | Bun | Mise | Mise | Mise | Mise |
 | Odin | Mise `github:` | Mise `github:` | Mise `github:` | Mise `github:` |
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
+| Playwright CLI | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
@@ -287,6 +288,7 @@ the versions recorded by package databases.
 | Herdr | 0.7.5 preview | 0.7.5 | 0.7.5 | 0.7.5 |
 | OpenCode | 1.18.7 | 1.18.7 | 1.18.7 | 1.18.7 |
 | Pi | 0.82.1 | 0.82.1 | 0.82.1 | 0.82.1 |
+| Playwright CLI | 0.1.17 | 0.1.17 | 0.1.17 | 0.1.17 |
 | Mise | 2026.7.15 | 2026.7.11 | 2026.7.15 | 2026.7.10 |
 | Interactive Node | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise |
 | Bun | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise |
@@ -378,6 +380,10 @@ maintenance state, not a reason to move every healthy native package to Mise.
   work. Its shared LazyVim extra and the cached Mason `terraform-ls` and `tflint`
   packages are also gone from all four profiles; project-local tooling can be
   restored if that work is ever needed.
+- Playwright libraries remain project-local where actually used, including the
+  Ultralight projects. The agent-oriented Playwright CLI is intentionally
+  shared through Mise on all four profiles; its former global Arch packages and
+  now-unused `flite` dependency are retired.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -634,11 +640,14 @@ should still be previewed narrowly and verified on the affected machines.
     not part of the shared Mise tool set.
 11. **Unused Terraform — complete.** The Arch CLI, shared LazyVim extra, and
     cached Mason language-server/linter packages are retired.
-12. **Package manifests — recommended architectural follow-up.** Add a narrow
+12. **Playwright ownership — complete.** Project libraries stay project-local,
+    while the agent CLI is Mise-owned on all four profiles. The global Arch
+    library and CLI package owners are retired.
+13. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-13. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+14. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
