@@ -168,9 +168,10 @@ Neovim's Node host, Playwright CLI, and pynvim.
   include `base`, `amd-ucode`, `efibootmgr`, `btrbk`, `docker`, `tailscale`,
   `alsa-utils`, `bluez-utils`, NVIDIA packages, filesystem utilities, and EOS
   hooks/keyrings.
-- Shell/general CLI: Bat, btop, eza, Git LFS, GitHub CLI, and tldr. Pacman
-  zoxide remains installed as a dependency of `sesh-bin`, while the interactive
-  command resolves Mise.
+- Shell/general CLI: Bat, btop, duf, eza, Git LFS, GitHub CLI, and tldr. The
+  retained disk split is Dust for directory sizes and duf for filesystem/mount
+  capacity. Pacman zoxide remains installed as a dependency of `sesh-bin`, while
+  the interactive command resolves Mise.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
   LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, mkcert,
   and database/API TUIs pending use review.
@@ -192,9 +193,6 @@ Harlequin, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Review overlapping monitors and disk tools: btop is preferred, while
-  `glances`, `htop`, `gdu`, and `duf` may now be redundant. Dust remains the
-  preferred directory-size tool.
 - Review overlapping database/API TUIs: `atac`, `jwt-ui`, `rainfrog`,
   `lazysql`, Posting, and Harlequin.
 - Review old or specialized explicit tools before manifesting them: Tectonic,

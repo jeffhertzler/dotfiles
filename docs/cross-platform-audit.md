@@ -384,6 +384,10 @@ maintenance state, not a reason to move every healthy native package to Mise.
   Ultralight projects. The agent-oriented Playwright CLI is intentionally
   shared through Mise on all four profiles; its former global Arch packages and
   now-unused `flite` dependency are retired.
+- Arch retains a small, non-overlapping terminal monitoring set: btop for
+  processes and system resources, Mise Dust for directory sizes, and duf for
+  filesystem and mount capacity. Glances, htop, gdu, and Glances' private
+  Python dependency leaves are retired.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -643,11 +647,13 @@ should still be previewed narrowly and verified on the affected machines.
 12. **Playwright ownership — complete.** Project libraries stay project-local,
     while the agent CLI is Mise-owned on all four profiles. The global Arch
     library and CLI package owners are retired.
-13. **Package manifests — recommended architectural follow-up.** Add a narrow
+13. **Monitor and disk tools — complete.** Arch retains btop, Dust, and duf for
+    distinct jobs; overlapping Glances, htop, and gdu are retired.
+14. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-14. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+15. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
