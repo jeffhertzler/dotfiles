@@ -86,7 +86,7 @@ separated from the developer CLI manifest so a bootstrap can select a
 `windows-workstation` role:
 
 - 1Password, Arc, Helium, Zen Browser, VS Code, JetBrains Toolbox
-- Beekeeper Studio, MongoDB Compass, NoSQLBooster, TablePlus, Yaak
+- Beekeeper Studio and Yaak
 - CrystalDiskInfo, PowerToys, Windows Terminal, WSL, Ubuntu
 - Focusrite Control, SteelSeries GG, PlayStation Accessories
 - REAPER, Zoom, Teams, OneDrive, Tailscale, Syncthing
@@ -101,8 +101,6 @@ entries merely because `winget list` can identify them.
 
 ### Windows review queue
 
-- Decide whether the database/API client overlap is intentional: Beekeeper,
-  Compass, NoSQLBooster, TablePlus, and Yaak.
 - Decide whether Arc and Zen are still desired alongside Helium.
 - Package updates shown by WinGet are maintenance work, not ownership changes.
 
