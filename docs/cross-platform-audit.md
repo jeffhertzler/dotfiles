@@ -372,6 +372,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   Mise-owned on all four profiles. The shared GitHub-backend declaration handles
   Windows and Unix archive layouts explicitly; the superseded WinGet package is
   retired.
+- Julia is retired from Arch after confirming it was an explicitly installed
+  leaf with no reverse dependencies. No Julia executable remains.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -624,11 +626,13 @@ should still be previewed narrowly and verified on the affected machines.
 9. **Odin ownership — complete.** Odin's official release is shared through
    Mise on all four profiles, including explicit platform archive handling. The
    old Windows WinGet owner is retired.
-10. **Package manifests — recommended architectural follow-up.** Add a narrow
+10. **Unused Julia — complete.** The standalone Arch package is retired and is
+    not part of the shared Mise tool set.
+11. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-11. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+12. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.

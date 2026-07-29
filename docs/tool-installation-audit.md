@@ -54,7 +54,7 @@ but they are not promoted into hand-maintained manifest entries.
 | Delta | not installed; no Git pager config or observed use | none | intentionally retired |
 | AWS CLI, kubectl, k9s | native where used | Native | correct unless project pinning becomes necessary |
 | Terraform | pacman on Arch | Mise/project version | migrate if retained |
-| Julia | pacman on Arch | Mise if retained | migrate if retained |
+| Julia | not installed | none | intentionally retired |
 | Deno | Homebrew dependency on macOS only; Windows package retired | none unless directly used | correct; do not manage macOS's dependency copy |
 | Odin | Mise on all profiles | Mise | correct; retained for graphics-programming exploration |
 | Playwright library and CLI | Arch packages | Project-local by default | review actual global use before migration/removal |
@@ -191,7 +191,7 @@ Harlequin, Pi, Neovim's Node host, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Migrate Julia and Terraform to Mise if retained.
+- Migrate Terraform to Mise if retained.
 - Treat global `playwright` and `playwright-cli` as project-local unless a
   specific shared automation consumer is identified.
 - Review overlapping monitors and disk tools: btop is preferred, while
@@ -199,8 +199,8 @@ Harlequin, Pi, Neovim's Node host, and pynvim.
   preferred directory-size tool.
 - Review overlapping database/API TUIs: `atac`, `jwt-ui`, `rainfrog`,
   `lazysql`, Posting, and Harlequin.
-- Review old or specialized explicit tools before manifesting them: Julia,
-  Tectonic, `wkhtmltopdf-static`, `python2-bin`, `reiserfsprogs`,
+- Review old or specialized explicit tools before manifesting them: Tectonic,
+  `wkhtmltopdf-static`, `python2-bin`, `reiserfsprogs`,
   `fga-bin`, `crush-bin`, `rtk`, `sesh-bin`, Stripe CLI, ngrok, and LazyJira.
 
 ## Review order before manifests
@@ -210,9 +210,10 @@ Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
 Delta packages on macOS and Arch are gone. Project-selected Mise versions are
 normal cached state and are not shared-manifest drift.
 
-1. Decide the remaining language/project tooling: Julia, Terraform, and global
-   Playwright. Odin is now shared through Mise. Windows Deno is retired;
-   macOS's dependency-owned copy is deliberately outside the manifest.
+1. Decide the remaining language/project tooling: Terraform and global
+   Playwright. Odin is now shared through Mise; unused Julia and Windows Deno
+   are retired. macOS's dependency-owned Deno copy is deliberately outside the
+   manifest.
 2. Review overlapping workstation/TUI tools with the user; installed state is
    not sufficient evidence of intent.
 3. Generate role-aware native manifests from the accepted `Native` entries.
