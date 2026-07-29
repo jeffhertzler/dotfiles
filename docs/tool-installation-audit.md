@@ -40,9 +40,9 @@ but they are not promoted into hand-maintained manifest entries.
 | Mise itself | WinGet / official WSL install / Homebrew / pacman | Native or official bootstrap | correct exception; Mise cannot be its only bootstrap owner |
 | Neovim nightly | Mise on all profiles | Mise | correct |
 | Node, Python, Go, Bun | Mise on all profiles | Mise | correct |
-| Java 11/17 and Maven | Mise on macOS and Arch | Mise | correct; macOS also has duplicate JDK casks |
+| Java 11/17 and Maven | Mise on macOS and Arch | Mise | correct; duplicate macOS JDK casks retired |
 | Pi, Neovim Node host, pynvim | Mise ecosystem backends | Mise | correct |
-| Worktrunk, Dust | Mise `aqua:` on all profiles | Mise | correct; Arch also has duplicate pacman Dust |
+| Worktrunk, Dust | Mise `aqua:` on all profiles | Mise | correct; duplicate Arch pacman Dust retired |
 | OpenCode | official installer on all profiles | Official | correct by explicit policy |
 | Herdr | official release/preview installer | Official | correct |
 | Bat, fzf, fd, ripgrep | native on all profiles | Native | correct; repository version lag is acceptable |
@@ -51,7 +51,7 @@ but they are not promoted into hand-maintained manifest entries.
 | Tree-sitter CLI | Mise `aqua:` 0.26.11 on all profiles | Mise | correct; one pinned Neovim build tool |
 | Posting | Mise `pipx:` on macOS and Arch | Mise | correct on the two profiles where it is used |
 | LazyDocker | Homebrew on macOS; pacman on Arch | Native | correct; not needed elsewhere |
-| Delta | Homebrew on macOS; pacman on Arch; no Git pager config | remove unless still wanted interactively | review |
+| Delta | not installed; no Git pager config or observed use | none | intentionally retired |
 | AWS CLI, kubectl, k9s | native where used | Native | correct unless project pinning becomes necessary |
 | Terraform | pacman on Arch | Mise/project version | migrate if retained |
 | Julia | pacman on Arch | Mise if retained | migrate if retained |
@@ -136,7 +136,7 @@ Tree-sitter's former Mise GitHub backends are retired.
 ### Current native inventory
 
 - Shell/general CLI: Bash, Bat, btop, curl, eza, fd, fzf, gawk, ripgrep,
-  tealdeer, wget, and Git Delta pending review.
+  tealdeer, and wget.
 - Git/dev tooling: GitHub CLI, Git LFS, mkcert, CMake, Ninja, GCC, LuaJIT,
   LuaRocks, and zlib.
 - DevOps: AWS CLI, k9s, LazyDocker, and Orbstack.
@@ -157,12 +157,6 @@ Neovim's Node host, and pynvim.
 
 ### macOS review queue
 
-- Homebrew casks `temurin@11` and `temurin@17` duplicate Mise Java. The
-  `temurin@8` cask has no matching approved project requirement and is Intel
-  under Rosetta. Verify no GUI/system consumer needs registered JDKs, then
-  remove all three casks if shell/project Java is the only requirement.
-- Delta is installed but is not configured as Git's pager. Remove it unless an
-  interactive use remains.
 - `dnsmasq`, `nushell`, and the broad build stack are retained for now but need
   a use review before being promoted to the manifest.
 
@@ -175,9 +169,9 @@ Neovim's Node host, and pynvim.
   include `base`, `amd-ucode`, `efibootmgr`, `btrbk`, `docker`, `tailscale`,
   `alsa-utils`, `bluez-utils`, NVIDIA packages, filesystem utilities, and EOS
   hooks/keyrings.
-- Shell/general CLI: Bat, btop, eza, Git Delta, Git LFS, GitHub CLI, and tldr
-  pending the Delta decision. Pacman zoxide remains installed as a dependency
-  of `sesh-bin`, while the interactive command resolves Mise.
+- Shell/general CLI: Bat, btop, eza, Git LFS, GitHub CLI, and tldr. Pacman
+  zoxide remains installed as a dependency of `sesh-bin`, while the interactive
+  command resolves Mise.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
   LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, mkcert,
   Terraform pending migration, and database/API TUIs pending use review.
@@ -194,17 +188,14 @@ Harlequin, Pi, Neovim's Node host, and pynvim.
 
 ### Arch review queue
 
-- Remove pacman `dust` after confirming the Mise executable; it is a direct
-  duplicate.
-- Remove `bottom`; it is explicitly unused and btop is the preferred monitor.
-- Remove `asdf-vm` after confirming no project invokes it; Mise supersedes it.
-- Remove inactive, unconfigured Mise Node 20.19.2 after the remaining Volta
-  project review confirms it is not needed.
+- Mise Node 20.19.2 is an expected project-version cache installed while
+  validating `greenlight/enzyme/.tool-versions`. It is not a shared declaration,
+  manifest entry, or ownership problem. The same file's Ruby, Elixir, and
+  Erlang declarations do not need proactive installs; Mise can install them if
+  that project is revisited.
 - Migrate Julia and Terraform to Mise if retained.
 - Treat global `playwright` and `playwright-cli` as project-local unless a
   specific shared automation consumer is identified.
-- Delta is installed but no pager configuration was found. Remove it unless an
-  interactive use remains.
 - Review overlapping monitors and disk tools: btop is preferred, while
   `glances`, `htop`, `gdu`, and `duf` may now be redundant. Dust remains the
   preferred directory-size tool.
@@ -216,14 +207,16 @@ Harlequin, Pi, Neovim's Node host, and pynvim.
 
 ## Review order before manifests
 
-1. Remove only verified duplicates/dead leaves: Arch pacman Dust/bottom/asdf,
-   macOS Temurin casks, and unused Delta. The WSL portable-CLI leftovers are
-   already recoverable from Trash.
-2. Decide language/project tooling: Deno, Odin, Julia, Terraform, and global
+The first cleanup pass is complete: Arch's duplicate pacman Dust, unused
+Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
+Delta packages on macOS and Arch are gone. Project-selected Mise versions are
+normal cached state and are not shared-manifest drift.
+
+1. Decide language/project tooling: Deno, Odin, Julia, Terraform, and global
    Playwright.
-3. Review overlapping workstation/TUI tools with the user; installed state is
+2. Review overlapping workstation/TUI tools with the user; installed state is
    not sufficient evidence of intent.
-4. Generate role-aware native manifests from the accepted `Native` entries.
+3. Generate role-aware native manifests from the accepted `Native` entries.
    Mise remains declared in its existing shared configuration.
-5. Add check/plan commands and explicit bootstrap commands. Ordinary
+4. Add check/plan commands and explicit bootstrap commands. Ordinary
    `chezmoi apply` must not silently install or remove native packages.

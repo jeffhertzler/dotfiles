@@ -339,6 +339,9 @@ maintenance state, not a reason to move every healthy native package to Mise.
   now use Mise for Temurin Java 17/11 and Maven 3.9.16. Plain Java version
   declarations align with existing `.java-version` files, and
   `java.shorthand_vendor = "temurin"` keeps the selected distribution explicit.
+- The duplicate macOS Temurin 8/11/17 casks are retired. Mise Java 11 and 17,
+  `javac`, and Maven all pass; no approved project requirement was found for
+  Java 8.
 - Go 1.26.5 is selected from Mise on all four profiles. GOPATH is left unset so
   Go uses its standard home-directory default, and `go.set_gobin = false` keeps
   installed commands in the canonical `~/go/bin`. Arch's redundant pacman Go
@@ -352,6 +355,15 @@ maintenance state, not a reason to move every healthy native package to Mise.
   remaining packages to maintain. Dust remains intentionally available and is
   now Mise-owned at 1.2.4 on all four profiles. The official macOS release is
   x86_64 and runs successfully through Rosetta on the Apple Silicon Mac.
+- Arch's duplicate pacman Dust, unused Bottom package, and obsolete asdf package
+  are retired. The asdf user tree was absent, and Mise Dust remains healthy.
+- Git Delta is retired on macOS and Arch because no Git pager configuration or
+  other active use was found. Existing Neogit, LazyGit, and Neovim diff flows
+  remain unchanged.
+- Project-selected Mise versions are expected local cache state, not shared
+  ownership drift. For example, Node 20.19.2 was installed while validating
+  `greenlight/enzyme/.tool-versions`; its other declared languages need not be
+  installed until that project is revisited.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -590,18 +602,22 @@ should still be previewed narrowly and verified on the affected machines.
    profiles. The Unix title-sync actions pass, and the former official trees,
    PATH entry, and completion hook are retired.
 6. **macOS dead leaves — complete.** The unused `nvm`, `jenv`, and tmux
-   formulae and their empty or absent user state are gone. Mise continues to
-   own the active Node and Java runtimes.
+   formulae, duplicate Temurin casks, and their empty or absent user state are
+   gone. Mise continues to own the active Node and Java runtimes.
 7. **Portable CLI consolidation — complete.** Starship, Atuin, Yazi, jq, and
    zoxide are shared Mise `aqua:` tools. Former top-level native and standalone
    copies are retired or recoverable from Trash. Arch keeps a dependency-owned
    zoxide package for `sesh-bin`; Mise wins shell resolution. Healthy native
    Bat, fzf, fd, and ripgrep remain unchanged.
-8. **Package manifests — recommended architectural follow-up.** Add a narrow
+8. **Verified dead leaves — complete.** Arch's duplicate Dust, unused Bottom,
+   and obsolete asdf package are gone. Unused Git Delta packages are gone from
+   macOS and Arch. Project-scoped Mise caches remain intentionally unmanaged by
+   the shared tool manifest.
+9. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-9. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+10. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
