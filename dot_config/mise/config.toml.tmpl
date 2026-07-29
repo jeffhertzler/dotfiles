@@ -25,20 +25,18 @@ uv = "latest"
 "aqua:sxyazi/yazi" = "latest"
 "aqua:jqlang/jq" = "latest"
 "aqua:ajeetdsouza/zoxide" = "latest"
+"aqua:jesseduffield/lazygit" = "latest"
+"aqua:tree-sitter/tree-sitter" = "0.26.11"
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:neovim" = "latest"
 "pipx:pynvim" = { version = "latest", depends = ["uv"] }
-{{- if eq $profile "windows" }}
-"github:tree-sitter/tree-sitter" = { version = "v0.26.11", bin = "tree-sitter.exe" }
-{{- else if eq $profile "wsl" }}
-"github:jesseduffield/lazygit" = "latest"
-"github:tree-sitter/tree-sitter" = "v0.26.11"
+{{- if eq $profile "wsl" }}
 chezmoi = "2.71.1"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
 java = ["17", "11"]
 maven = "latest"
+"pipx:posting" = { version = "latest", depends = ["uv"] }
 {{- if eq $profile "arch" }}
 "pipx:harlequin" = { version = "latest", depends = ["uv"], extras = ["postgres", "mysql"] }
-"pipx:posting" = { version = "latest", depends = ["uv"] }
 {{- end }}
 {{- end }}
