@@ -264,9 +264,9 @@ designed to restore or test declared package state.
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
 | Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Dust | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
-| Starship / Atuin / Yazi | WinGet | Mise `aqua:` | Homebrew | pacman |
+| Starship / Atuin / Yazi | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Bat / fzf / fd / ripgrep | WinGet | APT | Homebrew | pacman |
-| jq / zoxide | WinGet | Mise `aqua:` | Homebrew | pacman |
+| jq / zoxide | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | LLVM / compilers | WinGet LLVM | APT only as needed | Homebrew/Xcode only as needed | pacman only as needed |
 | 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
 | LazyDocker | not needed | not needed | Homebrew | pacman |
@@ -298,7 +298,7 @@ the versions recorded by package databases.
 | Small tool | Windows | WSL | macOS | Arch |
 | --- | --- | --- | --- | --- |
 | Starship | 1.26.0 | 1.26.0 | 1.26.0 | 1.26.0 |
-| Atuin | 18.18.0 | 18.18.1 | 18.17.1 | 18.17.1 |
+| Atuin | 18.18.1 | 18.18.1 | 18.18.1 | 18.18.1 |
 | Bat | 0.26.1 | 0.26.1 | 0.26.1 | 0.26.1 |
 | Yazi | 26.5.6 | 26.5.6 | 26.5.6 | 26.5.6 |
 | jq | 1.8.2 | 1.8.2 | 1.8.2 | 1.8.2 |
@@ -307,11 +307,9 @@ the versions recorded by package databases.
 | fd | 10.4.2 | 10.3.0 | 10.4.2 | 10.4.2 |
 | ripgrep | 15.2.0 | 15.1.0 | 15.2.0 | 15.2.0 |
 
-The minor Atuin/fzf/fd/ripgrep differences reflect normal manager release
-timing and do not affect the shared configuration. At audit time WinGet offered
-Atuin 18.18.1; Homebrew and Arch also had routine upgrades pending. Package
-currency is maintenance state, not a reason to move every healthy native
-package to Mise.
+The minor fzf/fd/ripgrep differences reflect normal native-manager release
+timing and do not affect the shared configuration. Package currency is
+maintenance state, not a reason to move every healthy native package to Mise.
 
 ### Notable version and manager drift
 
@@ -371,10 +369,11 @@ package to Mise.
   removed. PowerShell and Git Bash both resolve the Mise shims. Mise also owns
   the Neovim Node host and Tree-sitter CLI there instead of Node-global npm
   state.
-- WSL's former direct-release Starship, Atuin, Yazi, jq, and zoxide binaries
-  are now Mise `aqua:` tools. Their existing versions and shell behavior pass,
-  and the superseded executables were moved to WSL's Trash. Healthy APT-owned
-  Bat, fzf, fd, and ripgrep remain native packages.
+- Starship, Atuin, Yazi, jq, and zoxide are shared Mise `aqua:` tools on all
+  four profiles. Their shell behavior and doctors pass. Former WinGet,
+  Homebrew, pacman, and WSL direct-release top-level copies are gone; Arch's
+  native zoxide remains only because `sesh-bin` requires the package. Healthy
+  native Bat, fzf, fd, and ripgrep packages remain intentionally OS-owned.
 - Windows retains its WinGet LLVM toolchain. Mise's current `clang` and
   `conda:clang` backends install the correct Conda package but expose a copied
   executable without its runtime DLL directory, causing `0xC0000135`; adding
@@ -438,11 +437,10 @@ package to Mise.
   machinery. Their Rustup/Mise or native package state was removed only after
   checking for Cargo projects and migrating or retiring every Cargo-installed
   utility.
-- WSL's former direct-release Starship, Atuin, Yazi, jq, and zoxide binaries
-  are now Mise-owned and the superseded executables are recoverable from Trash.
-  The full ownership review is deciding whether those declarations should move
-  from the WSL block into the shared Mise set for consistency with the other
-  profiles.
+- Starship, Atuin, Yazi, jq, and zoxide have one shared Mise declaration. WSL's
+  former standalone executables are recoverable from Trash, and native
+  top-level packages were retired on Windows, macOS, and Arch after the Mise
+  commands passed.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
@@ -589,10 +587,11 @@ should still be previewed narrowly and verified on the affected machines.
 6. **macOS dead leaves — complete.** The unused `nvm`, `jenv`, and tmux
    formulae and their empty or absent user state are gone. Mise continues to
    own the active Node and Java runtimes.
-7. **WSL CLI consolidation — complete.** Starship, Atuin, Yazi, jq, and zoxide
-   are declared as Mise `aqua:` tools. Their former standalone executables are
-   recoverable from Trash. Healthy APT-owned Bat, fzf, fd, and ripgrep remain
-   unchanged.
+7. **Portable CLI consolidation — complete.** Starship, Atuin, Yazi, jq, and
+   zoxide are shared Mise `aqua:` tools. Former top-level native and standalone
+   copies are retired or recoverable from Trash. Arch keeps a dependency-owned
+   zoxide package for `sesh-bin`; Mise wins shell resolution. Healthy native
+   Bat, fzf, fd, and ripgrep remain unchanged.
 8. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic

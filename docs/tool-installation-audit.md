@@ -46,7 +46,7 @@ but they are not promoted into hand-maintained manifest entries.
 | OpenCode | official installer on all profiles | Official | correct by explicit policy |
 | Herdr | official release/preview installer | Official | correct |
 | Bat, fzf, fd, ripgrep | native on all profiles | Native | correct; repository version lag is acceptable |
-| Starship, Atuin, Yazi, jq, zoxide | native on Windows/macOS/Arch; Mise on WSL | likely shared Mise | review; current ownership conflicts with the one-owner rule |
+| Starship, Atuin, Yazi, jq, zoxide | Mise `aqua:` on all profiles | Mise | correct; native top-level copies retired |
 | LazyGit | WinGet / Mise / Homebrew / pacman | likely shared Mise | review; daily-use portable CLI with four owners |
 | Tree-sitter CLI | Mise on Windows/WSL; native on macOS/Arch | likely shared Mise | review; Neovim build tooling should resolve consistently |
 | Posting | Homebrew on macOS; Mise `pipx:` on Arch | likely Mise on both | review; same application currently has two owners |
@@ -63,20 +63,19 @@ but they are not promoted into hand-maintained manifest entries.
 
 ### Correct owner or expected exception
 
-- WinGet developer tools: `AgileBits.1Password.CLI`, `Atuinsh.Atuin`,
-  `sharkdp.bat`, `twpayne.chezmoi`, `sharkdp.fd`, `junegunn.fzf`, `Git.Git`,
-  `GitHub.cli`, `jqlang.jq`, `JesseDuffield.lazygit`, `LLVM.LLVM`,
-  `jdx.mise`, `FiloSottile.mkcert`, `Microsoft.PowerShell`,
-  `BurntSushi.ripgrep.MSVC`, `Starship.Starship`, `sxyazi.yazi`, and
-  `ajeetdsouza.zoxide`.
+- WinGet developer tools: `AgileBits.1Password.CLI`, `sharkdp.bat`,
+  `twpayne.chezmoi`, `sharkdp.fd`, `junegunn.fzf`, `Git.Git`, `GitHub.cli`,
+  `JesseDuffield.lazygit`, `LLVM.LLVM`, `jdx.mise`, `FiloSottile.mkcert`,
+  `Microsoft.PowerShell`, and `BurntSushi.ripgrep.MSVC`.
 - Mise tools: Bun, Go, Neovim nightly, Node LTS, Python, uv, Worktrunk, Dust,
-  Tree-sitter CLI, Pi, Neovim's Node host, and pynvim.
+  Starship, Atuin, Yazi, jq, zoxide, Tree-sitter CLI, Pi, Neovim's Node host,
+  and pynvim.
 - Official/manual exceptions: Herdr preview and OpenCode.
 - Dotfile-owned launchers in `~/.local/bin`: Agent Review, doctor, Herdr popup
   helpers, LazyGit/Yazi Neovim bridges, and the research-video launcher.
 
-The WinGet CLI entries above remain installed and healthy, but Starship, Atuin,
-Yazi, jq, zoxide, LazyGit, and Tree-sitter are pending the common-Mise decision.
+The former WinGet Starship, Atuin, Yazi, jq, and zoxide packages are gone.
+LazyGit and Tree-sitter remain pending the next common-Mise decision.
 
 ### Native workstation applications
 
@@ -130,19 +129,17 @@ separate base-OS check and must not be pruned as ordinary duplicate CLIs.
 
 ### WSL review queue
 
-- `~/.local/bin/ya` is the superseded companion from the former standalone
-  Yazi release; Mise now provides both `yazi` and `ya`.
-- `~/.atuin/bin/atuin-update` is leftover official-installer machinery now that
-  Mise owns Atuin.
-- Starship, Atuin, Yazi, jq, zoxide, LazyGit, and Tree-sitter may move from the
-  WSL-only block into shared Mise declarations after the cross-platform review.
+- LazyGit and Tree-sitter remain WSL-specific Mise declarations pending the
+  next common-ownership decision.
+- The superseded standalone Starship, Atuin, Yazi, `ya`, jq, zoxide, and
+  `atuin-update` executables are recoverable from WSL's Trash.
 
 ## macOS
 
 ### Current native inventory
 
-- Shell/general CLI: Bash, Bat, btop, curl, eza, fd, fzf, gawk, jq, ripgrep,
-  Starship, Atuin, Yazi, zoxide, tealdeer, wget, and Git Delta pending review.
+- Shell/general CLI: Bash, Bat, btop, curl, eza, fd, fzf, gawk, ripgrep,
+  tealdeer, wget, and Git Delta pending review.
 - Git/dev tooling: GitHub CLI, Git LFS, LazyGit, Tree-sitter CLI, mkcert,
   CMake, Ninja, GCC, LuaJIT, LuaRocks, and zlib.
 - DevOps: AWS CLI, k9s, LazyDocker, and Orbstack.
@@ -158,7 +155,7 @@ remain Homebrew-owned and should not be manually listed.
 ### Correct Mise owner
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Python, uv, Worktrunk,
-Dust, Pi, Neovim's Node host, and pynvim.
+Dust, Starship, Atuin, Yazi, jq, zoxide, Pi, Neovim's Node host, and pynvim.
 
 ### macOS review queue
 
@@ -168,8 +165,8 @@ Dust, Pi, Neovim's Node host, and pynvim.
   remove all three casks if shell/project Java is the only requirement.
 - Move Posting from Homebrew to the same Mise `pipx:` declaration as Arch if
   the one-owner rule is approved.
-- Move Starship, Atuin, Yazi, jq, zoxide, LazyGit, and Tree-sitter from Homebrew
-  to shared Mise if the common ownership proposal is approved.
+- Move LazyGit and Tree-sitter from Homebrew to shared Mise if the next common
+  ownership proposal is approved.
 - Delta is installed but is not configured as Git's pager. Remove it unless an
   interactive use remains.
 - `dnsmasq`, `nushell`, and the broad build stack are retained for now but need
@@ -184,8 +181,9 @@ Dust, Pi, Neovim's Node host, and pynvim.
   include `base`, `amd-ucode`, `efibootmgr`, `btrbk`, `docker`, `tailscale`,
   `alsa-utils`, `bluez-utils`, NVIDIA packages, filesystem utilities, and EOS
   hooks/keyrings.
-- Shell/general CLI: Atuin, Bat, btop, eza, Git Delta, Git LFS, GitHub CLI,
-  LazyGit, Starship, Yazi, and tldr pending the common-Mise/Delta decisions.
+- Shell/general CLI: Bat, btop, eza, Git Delta, Git LFS, GitHub CLI, LazyGit,
+  and tldr pending the LazyGit/Delta decisions. Pacman zoxide remains installed
+  as a dependency of `sesh-bin`, while the interactive command resolves Mise.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
   LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, mkcert,
   Terraform pending migration, and database/API TUIs pending use review.
@@ -197,7 +195,8 @@ Dust, Pi, Neovim's Node host, and pynvim.
 ### Correct Mise owner
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Python, uv, Worktrunk,
-Dust, Posting, Harlequin, Pi, Neovim's Node host, and pynvim.
+Dust, Starship, Atuin, Yazi, jq, zoxide, Posting, Harlequin, Pi, Neovim's Node
+host, and pynvim.
 
 ### Arch review queue
 
@@ -223,10 +222,10 @@ Dust, Posting, Harlequin, Pi, Neovim's Node host, and pynvim.
 
 ## Review order before manifests
 
-1. Decide the shared-Mise set for Starship, Atuin, Yazi, jq, zoxide, LazyGit,
-   Tree-sitter CLI, and Posting.
-2. Remove only verified duplicates/dead leaves: WSL `ya`/`atuin-update`, Arch
-   pacman Dust/bottom/asdf, macOS Temurin casks, and unused Delta.
+1. Decide the shared-Mise set for LazyGit, Tree-sitter CLI, and Posting.
+2. Remove only verified duplicates/dead leaves: Arch pacman Dust/bottom/asdf,
+   macOS Temurin casks, and unused Delta. The WSL portable-CLI leftovers are
+   already recoverable from Trash.
 3. Decide language/project tooling: Deno, Odin, Julia, Terraform, and global
    Playwright.
 4. Review overlapping workstation/TUI tools with the user; installed state is
