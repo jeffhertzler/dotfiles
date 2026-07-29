@@ -35,33 +35,23 @@ if vim.fn.has("win32") == 1 then
   end
 end
 
-local mise = vim.fn.exepath("mise")
-if mise ~= "" then
-  local neovim_package = vim.fn.trim(vim.fn.system({ mise, "where", "npm:neovim" }))
+local node_launcher = vim.fn.exepath("neovim-node-host")
+if node_launcher ~= "" then
   local node_hosts = {
-    vim.fs.joinpath(neovim_package, "node_modules", "neovim", "bin", "cli.js"),
-    vim.fs.joinpath(neovim_package, "lib", "node_modules", "neovim", "bin", "cli.js"),
+    vim.fs.joinpath(vim.fs.dirname(node_launcher), "..", "neovim", "bin", "cli.js"),
+    vim.uv.fs_realpath(node_launcher),
   }
   for _, node_host in ipairs(node_hosts) do
-    if vim.v.shell_error == 0 and vim.fn.filereadable(node_host) == 1 then
-      vim.g.node_host_prog = node_host
+    if node_host and vim.fn.filereadable(node_host) == 1 then
+      vim.g.node_host_prog = vim.uv.fs_realpath(node_host) or node_host
       break
     end
   end
 end
 
-if mise ~= "" then
-  local pynvim_package = vim.fn.trim(vim.fn.system({ mise, "where", "pipx:pynvim" }))
-  local python_hosts = {
-    vim.fs.joinpath(pynvim_package, "bin", "pynvim-python"),
-    vim.fs.joinpath(pynvim_package, "bin", "pynvim-python.exe"),
-  }
-  for _, python_host in ipairs(python_hosts) do
-    if vim.v.shell_error == 0 and vim.fn.executable(python_host) == 1 then
-      vim.g.python3_host_prog = python_host
-      break
-    end
-  end
+local python_host = vim.fn.exepath(vim.fn.has("win32") == 1 and "pynvim-python.exe" or "pynvim-python")
+if python_host ~= "" then
+  vim.g.python3_host_prog = python_host
 end
 
 vim.opt.relativenumber = false
