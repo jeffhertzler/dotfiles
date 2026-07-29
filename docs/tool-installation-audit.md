@@ -50,6 +50,7 @@ but they are not promoted into hand-maintained manifest entries.
 | LazyGit | Mise `aqua:` on all profiles | Mise | correct; native and superseded Mise copies retired |
 | Tree-sitter CLI | Mise `aqua:` 0.26.11 on all profiles | Mise | correct; one pinned Neovim build tool |
 | Posting | Mise `pipx:` on macOS and Arch | Mise | correct on the two profiles where it is used |
+| SQLit | Mise `pipx:` on all profiles | Mise | correct; current database-TUI candidate |
 | LazyDocker | Homebrew on macOS; pacman on Arch | Native | correct; not needed elsewhere |
 | Delta | not installed; no Git pager config or observed use | none | intentionally retired |
 | AWS CLI, kubectl, k9s | native where used | Native | correct unless project pinning becomes necessary |
@@ -70,7 +71,7 @@ but they are not promoted into hand-maintained manifest entries.
   `BurntSushi.ripgrep.MSVC`.
 - Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk, Dust,
   Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Pi, Neovim's
-  Node host, Playwright CLI, and pynvim.
+  Node host, Playwright CLI, SQLit, and pynvim.
 - Official/manual exceptions: Herdr preview and OpenCode.
 - Dotfile-owned launchers in `~/.local/bin`: Agent Review, doctor, Herdr popup
   helpers, LazyGit/Yazi Neovim bridges, and the research-video launcher.
@@ -116,7 +117,7 @@ entries merely because `winget list` can identify them.
   filesystem utilities, `ubuntu-minimal`, and `ubuntu-wsl`.
 - Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Chezmoi,
   LazyGit, Tree-sitter CLI, Worktrunk, Dust, Pi, Neovim's Node host, pynvim,
-  Playwright CLI, Starship, Atuin, Yazi, jq, and zoxide.
+  Playwright CLI, SQLit, Starship, Atuin, Yazi, jq, and zoxide.
 - Official/manual exceptions: Mise bootstrap, Herdr, OpenCode, and the
   WSL-to-Windows PTY bridge.
 - Dotfile-owned scripts in `~/.local/bin` are expected and managed by Chezmoi.
@@ -152,7 +153,7 @@ remain Homebrew-owned and should not be manually listed.
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting, Pi,
-Neovim's Node host, Playwright CLI, and pynvim.
+Neovim's Node host, Playwright CLI, SQLit, and pynvim.
 
 ### macOS review queue
 
@@ -173,8 +174,7 @@ Neovim's Node host, Playwright CLI, and pynvim.
   capacity. Pacman zoxide remains installed as a dependency of `sesh-bin`, while
   the interactive command resolves Mise.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
-  LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, mkcert,
-  and database/API TUIs pending use review.
+  LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, and mkcert.
 - Workstation applications: Ghostty, Steam, Moonlight, Cursor, Codex, and
   gaming-session packages remain native/AUR if retained.
 - Arch-only tmux/Workmux state and its supporting tools remain intentional
@@ -184,7 +184,7 @@ Neovim's Node host, Playwright CLI, and pynvim.
 
 Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting,
-Harlequin, Pi, Neovim's Node host, Playwright CLI, and pynvim.
+SQLit, Pi, Neovim's Node host, Playwright CLI, and pynvim.
 
 ### Arch review queue
 
@@ -193,8 +193,6 @@ Harlequin, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Review overlapping database/API TUIs: `atac`, `jwt-ui`, `rainfrog`,
-  `lazysql`, Posting, and Harlequin.
 - Review old or specialized explicit tools before manifesting them: Tectonic,
   `wkhtmltopdf-static`, `python2-bin`, `reiserfsprogs`,
   `fga-bin`, `crush-bin`, `rtk`, `sesh-bin`, Stripe CLI, ngrok, and LazyJira.

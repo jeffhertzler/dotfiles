@@ -273,6 +273,7 @@ designed to restore or test declared package state.
 | 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
 | LazyDocker | not needed | not needed | Homebrew | pacman |
 | Posting | not needed | not needed | Mise `pipx:` | Mise `pipx:` |
+| SQLit | Mise `pipx:` | Mise `pipx:` | Mise `pipx:` | Mise `pipx:` |
 | LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
 | tmux / Workmux | not needed | tmux package, unmanaged | not needed | pacman tmux + retained local Workmux |
 
@@ -289,6 +290,7 @@ the versions recorded by package databases.
 | OpenCode | 1.18.7 | 1.18.7 | 1.18.7 | 1.18.7 |
 | Pi | 0.82.1 | 0.82.1 | 0.82.1 | 0.82.1 |
 | Playwright CLI | 0.1.17 | 0.1.17 | 0.1.17 | 0.1.17 |
+| SQLit | 1.5.2 | 1.5.2 | 1.5.2 | 1.5.2 |
 | Mise | 2026.7.15 | 2026.7.11 | 2026.7.15 | 2026.7.10 |
 | Interactive Node | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise |
 | Bun | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise |
@@ -459,11 +461,13 @@ maintenance state, not a reason to move every healthy native package to Mise.
   `mise exec uv` to avoid the Windows `uv.exe` shim re-entering Mise. The
   resulting provider remains fully owned by Mise.
 - Mise now solely owns `uv` on all four profiles. The duplicate macOS Homebrew
-  and Arch pacman packages are gone. Arch Posting and Harlequin moved from the
-  old direct uv-tool inventory to declared Mise `pipx:` tools; Harlequin's
-  MySQL and PostgreSQL extras are explicit alongside its built-in DuckDB and
-  SQLite adapters. macOS Posting now uses the same declared Mise owner instead
-  of its former Homebrew formula.
+  and Arch pacman packages are gone. Posting moved from the old direct uv-tool
+  inventory to a declared Mise `pipx:` tool on macOS and Arch, replacing its
+  former macOS Homebrew owner.
+- SQLit 1.5.2 is the current database-TUI candidate and is a shared Mise `pipx:`
+  tool on all four profiles. Harlequin, Rainfrog, and LazySQL are retired, as
+  are ATAC and jwt-ui; Posting remains the API-TUI candidate on macOS and Arch.
+  SQLit connection data and credentials remain local and unmanaged.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk 0.69.2 is declared once through Mise's
@@ -616,8 +620,7 @@ should still be previewed narrowly and verified on the affected machines.
    been removed or moved to Trash. The redundant Arch `python-pynvim` provider
    package is also gone.
 3. **Duplicate runtimes — complete.** Mise solely owns development Go and `uv`
-   on all four profiles. macOS/Arch Posting and Arch Harlequin are declared
-   Mise `pipx:` tools, with Harlequin's prior database adapters preserved.
+   on all four profiles. macOS/Arch Posting is a declared Mise `pipx:` tool.
    System Python and dependency-owned Node remain on Arch.
 4. **Runtime-distributed CLIs — complete.** Worktrunk and Dust are Mise-owned on
    all four profiles. The former WSL, macOS, and Arch Rust/Cargo installation
@@ -649,11 +652,15 @@ should still be previewed narrowly and verified on the affected machines.
     library and CLI package owners are retired.
 13. **Monitor and disk tools — complete.** Arch retains btop, Dust, and duf for
     distinct jobs; overlapping Glances, htop, and gdu are retired.
-14. **Package manifests — recommended architectural follow-up.** Add a narrow
+14. **Database and API TUIs — complete for now.** Posting remains the API-TUI
+    candidate on macOS/Arch, while SQLit is shared through Mise for database
+    evaluation. ATAC, jwt-ui, Harlequin, Rainfrog, LazySQL, and their unused
+    dependency leaves are retired.
+15. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-15. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+16. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
