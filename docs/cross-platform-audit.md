@@ -261,9 +261,9 @@ designed to restore or test declared package state.
 | Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
 | Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Dust | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
-| Starship / Atuin / Yazi | WinGet | direct releases → Mise `aqua:` | Homebrew | pacman |
+| Starship / Atuin / Yazi | WinGet | Mise `aqua:` | Homebrew | pacman |
 | Bat / fzf / fd / ripgrep | WinGet | APT | Homebrew | pacman |
-| jq / zoxide | WinGet | direct releases → Mise `aqua:` or APT if its version suffices | Homebrew | pacman |
+| jq / zoxide | WinGet | Mise `aqua:` | Homebrew | pacman |
 | LLVM / compilers | WinGet LLVM | APT only as needed | Homebrew/Xcode only as needed | pacman only as needed |
 | 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
 | LazyDocker | not needed | not needed | Homebrew | pacman |
@@ -304,11 +304,11 @@ the versions recorded by package databases.
 | fd | 10.4.2 | 10.3.0 | 10.4.2 | 10.4.2 |
 | ripgrep | 15.2.0 | 15.1.0 | 15.2.0 | 15.2.0 |
 
-The minor Atuin/fzf/fd/ripgrep differences are normal native-repository lag and
-do not affect the shared configuration. At audit time WinGet offered Atuin
-18.18.1; Homebrew and Arch also had routine upgrades pending. Package currency
-is maintenance state, not a reason to move every healthy native package to
-Mise.
+The minor Atuin/fzf/fd/ripgrep differences reflect normal manager release
+timing and do not affect the shared configuration. At audit time WinGet offered
+Atuin 18.18.1; Homebrew and Arch also had routine upgrades pending. Package
+currency is maintenance state, not a reason to move every healthy native
+package to Mise.
 
 ### Notable version and manager drift
 
@@ -368,6 +368,10 @@ Mise.
   removed. PowerShell and Git Bash both resolve the Mise shims. Mise also owns
   the Neovim Node host and Tree-sitter CLI there instead of Node-global npm
   state.
+- WSL's former direct-release Starship, Atuin, Yazi, jq, and zoxide binaries
+  are now Mise `aqua:` tools. Their existing versions and shell behavior pass,
+  and the superseded executables were moved to WSL's Trash. Healthy APT-owned
+  Bat, fzf, fd, and ripgrep remain native packages.
 - Windows retains its WinGet LLVM toolchain. Mise's current `clang` and
   `conda:clang` backends install the correct Conda package but expose a copied
   executable without its runtime DLL directory, causing `0xC0000135`; adding
@@ -582,9 +586,10 @@ should still be previewed narrowly and verified on the affected machines.
 6. **macOS dead leaves — complete.** The unused `nvm`, `jenv`, and tmux
    formulae and their empty or absent user state are gone. Mise continues to
    own the active Node and Java runtimes.
-7. **WSL CLI consolidation — optional but recommended.** Move direct-release
-   Starship, Atuin, Yazi, jq, and zoxide into the WSL Mise block. Leave healthy
-   APT-owned Bat, fzf, fd, and ripgrep alone.
+7. **WSL CLI consolidation — complete.** Starship, Atuin, Yazi, jq, and zoxide
+   are declared as Mise `aqua:` tools. Their former standalone executables are
+   recoverable from Trash. Healthy APT-owned Bat, fzf, fd, and ripgrep remain
+   unchanged.
 8. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
