@@ -250,7 +250,7 @@ designed to restore or test declared package state.
 | Git / Git LFS / gh | WinGet / bundled | APT | Apple Git + Homebrew | pacman |
 | Chezmoi | WinGet | Mise | Homebrew | pacman |
 | Neovim | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly` | Mise `neovim@nightly` |
-| LazyGit | WinGet | Mise | Homebrew | pacman |
+| LazyGit | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Herdr | official preview installer | official release | official release | official release |
 | OpenCode | official installer | official installer | official installer | official installer |
 | Mise itself | WinGet | official installer | Homebrew | pacman |
@@ -261,7 +261,7 @@ designed to restore or test declared package state.
 | Bun | Mise | Mise | Mise | Mise |
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
-| Tree-sitter CLI | Mise | Mise | Homebrew | pacman |
+| Tree-sitter CLI | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Worktrunk | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Dust | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
 | Starship / Atuin / Yazi | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
@@ -270,7 +270,7 @@ designed to restore or test declared package state.
 | LLVM / compilers | WinGet LLVM | APT only as needed | Homebrew/Xcode only as needed | pacman only as needed |
 | 1Password CLI | WinGet | official APT repository | Homebrew | pacman |
 | LazyDocker | not needed | not needed | Homebrew | pacman |
-| Posting | not needed | not needed | Homebrew | Mise `pipx:posting` |
+| Posting | not needed | not needed | Mise `pipx:` | Mise `pipx:` |
 | LazyJira | not needed | not needed | trusted Homebrew formula | not needed |
 | tmux / Workmux | not needed | tmux package, unmanaged | not needed | pacman tmux + retained local Workmux |
 
@@ -367,8 +367,12 @@ maintenance state, not a reason to move every healthy native package to Mise.
   with Volta, `.nvmrc`, `.node-version`, or `.tool-versions` Node pins, so its
   standalone Node installation and duplicate npm-global tools have been
   removed. PowerShell and Git Bash both resolve the Mise shims. Mise also owns
-  the Neovim Node host and Tree-sitter CLI there instead of Node-global npm
-  state.
+  the Neovim Node host there instead of Node-global npm state.
+- LazyGit 0.63.1 and Tree-sitter CLI 0.26.11 are shared Mise `aqua:` tools on
+  all four profiles. Their WinGet, Homebrew, pacman, and older WSL/Windows Mise
+  owners are retired. Posting 2.10.0 is a Mise `pipx:` tool on both macOS and
+  Arch; removing its Homebrew formula also retired its unneeded isolated
+  Homebrew Python dependencies.
 - Starship, Atuin, Yazi, jq, and zoxide are shared Mise `aqua:` tools on all
   four profiles. Their shell behavior and doctors pass. Former WinGet,
   Homebrew, pacman, and WSL direct-release top-level copies are gone; Arch's
@@ -422,7 +426,8 @@ maintenance state, not a reason to move every healthy native package to Mise.
   and Arch pacman packages are gone. Arch Posting and Harlequin moved from the
   old direct uv-tool inventory to declared Mise `pipx:` tools; Harlequin's
   MySQL and PostgreSQL extras are explicit alongside its built-in DuckDB and
-  SQLite adapters.
+  SQLite adapters. macOS Posting now uses the same declared Mise owner instead
+  of its former Homebrew formula.
 - The unused Hermes installation, its private runtime, and its command shims
   have been removed from Arch.
 - Worktrunk 0.69.2 is declared once through Mise's
@@ -575,9 +580,9 @@ should still be previewed narrowly and verified on the affected machines.
    been removed or moved to Trash. The redundant Arch `python-pynvim` provider
    package is also gone.
 3. **Duplicate runtimes — complete.** Mise solely owns development Go and `uv`
-   on all four profiles. Arch Posting and Harlequin are declared Mise `pipx:`
-   tools, with Harlequin's prior database adapters preserved. System Python and
-   dependency-owned Node remain on Arch.
+   on all four profiles. macOS/Arch Posting and Arch Harlequin are declared
+   Mise `pipx:` tools, with Harlequin's prior database adapters preserved.
+   System Python and dependency-owned Node remain on Arch.
 4. **Runtime-distributed CLIs — complete.** Worktrunk and Dust are Mise-owned on
    all four profiles. The former WSL, macOS, and Arch Rust/Cargo installation
    machinery is gone, as are the obsolete `rcu` and `uvu` helpers.
