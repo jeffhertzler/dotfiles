@@ -56,7 +56,7 @@ but they are not promoted into hand-maintained manifest entries.
 | Terraform | pacman on Arch | Mise/project version | migrate if retained |
 | Julia | pacman on Arch | Mise if retained | migrate if retained |
 | Deno | Homebrew dependency on macOS only; Windows package retired | none unless directly used | correct; do not manage macOS's dependency copy |
-| Odin | WinGet on Windows | Mise if actively developed; otherwise remove | review |
+| Odin | Mise on all profiles | Mise | correct; retained for graphics-programming exploration |
 | Playwright library and CLI | Arch packages | Project-local by default | review actual global use before migration/removal |
 
 ## Native Windows
@@ -67,7 +67,7 @@ but they are not promoted into hand-maintained manifest entries.
   `twpayne.chezmoi`, `sharkdp.fd`, `junegunn.fzf`, `Git.Git`, `GitHub.cli`,
   `LLVM.LLVM`, `jdx.mise`, `FiloSottile.mkcert`, `Microsoft.PowerShell`, and
   `BurntSushi.ripgrep.MSVC`.
-- Mise tools: Bun, Go, Neovim nightly, Node LTS, Python, uv, Worktrunk, Dust,
+- Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk, Dust,
   Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Pi, Neovim's
   Node host, and pynvim.
 - Official/manual exceptions: Herdr preview and OpenCode.
@@ -89,8 +89,8 @@ separated from the developer CLI manifest so a bootstrap can select a
 - Focusrite Control, SteelSeries GG, PlayStation Accessories
 - REAPER, Zoom, Teams, OneDrive, Tailscale, Syncthing
 - Steam, EA app, Ubisoft Connect, Path of Building, and PoE2 Path of Building
-- Odin is listed here by WinGet today but is a runtime review item, not a
-  desktop application. The unused Windows Deno package is retired.
+- The unused Windows Deno package and superseded WinGet Odin package are
+  retired.
 
 Visual C++ redistributables, Windows App Runtime/UI frameworks, DirectX,
 GameInput, Edge, .NET desktop runtimes, NVIDIA PhysX, ViGEm, and Epic Online
@@ -102,8 +102,6 @@ entries merely because `winget list` can identify them.
 - Decide whether the database/API client overlap is intentional: Beekeeper,
   Compass, NoSQLBooster, TablePlus, and Yaak.
 - Decide whether Arc and Zen are still desired alongside Helium.
-- Move Odin to Mise if it is an active development runtime; otherwise leave it
-  out of the eventual manifest and remove it separately.
 - Package updates shown by WinGet are maintenance work, not ownership changes.
 
 ## WSL Ubuntu 26.04
@@ -115,7 +113,7 @@ entries merely because `winget list` can identify them.
   `sqlite3`, `unzip`, and `zsh`.
 - APT base/system packages: Bash, Dash, init, hostname, ncurses, archive and
   filesystem utilities, `ubuntu-minimal`, and `ubuntu-wsl`.
-- Mise tools: Bun, Go, Neovim nightly, Node LTS, Python, uv, Chezmoi,
+- Mise tools: Bun, Go, Neovim nightly, Node LTS, Odin, Python, uv, Chezmoi,
   LazyGit, Tree-sitter CLI, Worktrunk, Dust, Pi, Neovim's Node host, pynvim,
   Starship, Atuin, Yazi, jq, and zoxide.
 - Official/manual exceptions: Mise bootstrap, Herdr, OpenCode, and the
@@ -151,7 +149,7 @@ remain Homebrew-owned and should not be manually listed.
 
 ### Correct Mise owner
 
-Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Python, uv, Worktrunk,
+Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting, Pi,
 Neovim's Node host, and pynvim.
 
@@ -182,7 +180,7 @@ Neovim's Node host, and pynvim.
 
 ### Correct Mise owner
 
-Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Python, uv, Worktrunk,
+Bun, Go, Java 11/17, Maven, Neovim nightly, Node LTS, Odin, Python, uv, Worktrunk,
 Dust, Starship, Atuin, Yazi, jq, zoxide, LazyGit, Tree-sitter CLI, Posting,
 Harlequin, Pi, Neovim's Node host, and pynvim.
 
@@ -212,9 +210,9 @@ Bottom, obsolete asdf package, macOS's duplicate Temurin casks, and unused
 Delta packages on macOS and Arch are gone. Project-selected Mise versions are
 normal cached state and are not shared-manifest drift.
 
-1. Decide the remaining language/project tooling: Odin, Julia, Terraform, and
-   global Playwright. Windows Deno is already retired; macOS's dependency-owned
-   copy is deliberately outside the manifest.
+1. Decide the remaining language/project tooling: Julia, Terraform, and global
+   Playwright. Odin is now shared through Mise. Windows Deno is retired;
+   macOS's dependency-owned copy is deliberately outside the manifest.
 2. Review overlapping workstation/TUI tools with the user; installed state is
    not sufficient evidence of intent.
 3. Generate role-aware native manifests from the accepted `Native` entries.

@@ -259,6 +259,7 @@ designed to restore or test declared package state.
 | Go development runtime | Mise | Mise | Mise | Mise |
 | Java / Maven | not currently needed | not currently needed | Mise Temurin 17/11 + Maven | Mise Temurin 17/11 + Maven |
 | Bun | Mise | Mise | Mise | Mise |
+| Odin | Mise `github:` | Mise `github:` | Mise `github:` | Mise `github:` |
 | Pi / Neovim Node host | Mise `npm:` | Mise `npm:` | Mise `npm:` | Mise `npm:` |
 | uv / Neovim Python host | Mise | Mise | Mise | Mise |
 | Tree-sitter CLI | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` | Mise `aqua:` |
@@ -289,6 +290,7 @@ the versions recorded by package databases.
 | Mise | 2026.7.15 | 2026.7.11 | 2026.7.15 | 2026.7.10 |
 | Interactive Node | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise | 24.18.0 Mise |
 | Bun | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise | 1.3.14 Mise |
+| Odin | dev-2026-07a Mise | dev-2026-07a Mise | dev-2026-07a Mise | dev-2026-07a Mise |
 | Interactive Python | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise | 3.14.6 Mise |
 | Go | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise | 1.26.5 Mise |
 | uv / pynvim provider | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 | 0.11.32 / 0.6.0 |
@@ -366,6 +368,10 @@ maintenance state, not a reason to move every healthy native package to Mise.
   installed until that project is revisited.
 - The unused native Windows Deno package is retired. Deno is not a shared Mise
   tool; Homebrew may retain its macOS copy as dependency-owned state.
+- Odin is intentionally available for graphics-programming exploration and is
+  Mise-owned on all four profiles. The shared GitHub-backend declaration handles
+  Windows and Unix archive layouts explicitly; the superseded WinGet package is
+  retired.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -615,11 +621,14 @@ should still be previewed narrowly and verified on the affected machines.
    and obsolete asdf package are gone. Unused Git Delta packages are gone from
    macOS and Arch. Project-scoped Mise caches remain intentionally unmanaged by
    the shared tool manifest.
-9. **Package manifests — recommended architectural follow-up.** Add a narrow
+9. **Odin ownership — complete.** Odin's official release is shared through
+   Mise on all four profiles, including explicit platform archive handling. The
+   old Windows WinGet owner is retired.
+10. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-10. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+11. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
