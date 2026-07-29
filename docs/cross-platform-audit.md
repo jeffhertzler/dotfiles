@@ -374,6 +374,10 @@ maintenance state, not a reason to move every healthy native package to Mise.
   retired.
 - Julia is retired from Arch after confirming it was an explicitly installed
   leaf with no reverse dependencies. No Julia executable remains.
+- Terraform is retired from Arch because this setup does not perform Terraform
+  work. Its shared LazyVim extra and the cached Mason `terraform-ls` and `tflint`
+  packages are also gone from all four profiles; project-local tooling can be
+  restored if that work is ever needed.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -628,11 +632,13 @@ should still be previewed narrowly and verified on the affected machines.
    old Windows WinGet owner is retired.
 10. **Unused Julia — complete.** The standalone Arch package is retired and is
     not part of the shared Mise tool set.
-11. **Package manifests — recommended architectural follow-up.** Add a narrow
+11. **Unused Terraform — complete.** The Arch CLI, shared LazyVim extra, and
+    cached Mason language-server/linter packages are retired.
+12. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-12. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+13. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.
