@@ -390,6 +390,9 @@ maintenance state, not a reason to move every healthy native package to Mise.
   processes and system resources, Mise Dust for directory sizes, and duf for
   filesystem and mount capacity. Glances, htop, gdu, and Glances' private
   Python dependency leaves are retired.
+- Arch's unused Tectonic LaTeX engine, host Python 2 binary distribution, and
+  ReiserFS maintenance utilities are retired. `wkhtmltopdf-static` remains
+  because checked-out Greenlight Java services invoke it directly.
 - Earlier macOS package drift is resolved. The unused `nvm`, `jenv`, and tmux
   formulae are gone, as is the duplicate Homebrew `uv` formula. Homebrew also
   retired their unneeded `libevent` and `utf8proc` dependencies. LazyJira
@@ -656,11 +659,14 @@ should still be previewed narrowly and verified on the affected machines.
     candidate on macOS/Arch, while SQLit is shared through Mise for database
     evaluation. ATAC, jwt-ui, Harlequin, Rainfrog, LazySQL, and their unused
     dependency leaves are retired.
-15. **Package manifests — recommended architectural follow-up.** Add a narrow
+15. **Legacy document/filesystem tools — complete.** Tectonic, host Python 2,
+    and unused ReiserFS utilities are retired. wkhtmltopdf remains for explicit
+    Greenlight legacy-project usage.
+16. **Package manifests — recommended architectural follow-up.** Add a narrow
    WinGet configuration, WSL APT list, macOS Brewfile, and Arch explicit-package
    list. They should support check/plan and explicit bootstrap, not automatic
    removal during ordinary `chezmoi apply`.
-16. **Optional previews remain optional.** Do not add media, PDF, image, archive,
+17. **Optional previews remain optional.** Do not add media, PDF, image, archive,
    `chafa`, or `resvg` dependencies merely for parity.
 
 The Arch tmux and Workmux sources remain intentional legacy configuration.

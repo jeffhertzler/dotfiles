@@ -175,6 +175,8 @@ Neovim's Node host, Playwright CLI, SQLit, and pynvim.
   the interactive command resolves Mise.
 - DevOps and data tools: AWS CLI plus Session Manager, kubectl, k9s,
   LazyDocker, Docker Compose, grpcurl, Helm docs, MariaDB clients, and mkcert.
+- `wkhtmltopdf-static` remains a native legacy-project tool because Greenlight
+  Java services invoke the command directly.
 - Workstation applications: Ghostty, Steam, Moonlight, Cursor, Codex, and
   gaming-session packages remain native/AUR if retained.
 - Arch-only tmux/Workmux state and its supporting tools remain intentional
@@ -193,9 +195,8 @@ SQLit, Pi, Neovim's Node host, Playwright CLI, and pynvim.
   manifest entry, or ownership problem. The same file's Ruby, Elixir, and
   Erlang declarations do not need proactive installs; Mise can install them if
   that project is revisited.
-- Review old or specialized explicit tools before manifesting them: Tectonic,
-  `wkhtmltopdf-static`, `python2-bin`, `reiserfsprogs`,
-  `fga-bin`, `crush-bin`, `rtk`, `sesh-bin`, Stripe CLI, ngrok, and LazyJira.
+- Review old or specialized explicit tools before manifesting them: `fga-bin`,
+  `crush-bin`, `rtk`, `sesh-bin`, Stripe CLI, ngrok, and LazyJira.
 
 ## Review order before manifests
 
