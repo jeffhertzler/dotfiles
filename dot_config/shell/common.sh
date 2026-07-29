@@ -88,20 +88,18 @@ if command -v yazi >/dev/null 2>&1; then
   }
 fi
 
-# WSL and the Arch host use the upstream Linux x86_64 AppImage.
-if [ "$(uname -s)" = Linux ] && [ "$(uname -m)" = x86_64 ]; then
-  function nvu() {
-    local tmp exit_code
-    tmp="$(mktemp)" || return 1
+# Nightly Neovim is a deliberate freshness exception owned by Mise everywhere.
+function nvu() {
+  if ! command -v mise >/dev/null 2>&1; then
+    printf '%s\n' 'nvu: mise is not available' >&2
+    return 127
+  fi
 
-    command curl -fL \
-      "https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage" \
-      -o "$tmp" &&
-      mkdir -p "$HOME/.local/bin" &&
-      command install -m 755 "$tmp" "$HOME/.local/bin/nvim"
-    exit_code=$?
-
-    rm -f "$tmp"
-    return "$exit_code"
-  }
-fi
+  command mise install --force neovim@nightly || return
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    rehash
+  else
+    hash -r
+  fi
+  command nvim --version | command head -n 1
+}
