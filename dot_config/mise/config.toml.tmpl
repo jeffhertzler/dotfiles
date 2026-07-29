@@ -37,9 +37,6 @@ chezmoi = "2.71.1"
 java = ["17", "11"]
 maven = "latest"
 "pipx:posting" = { version = "latest", depends = ["uv"] }
-{{- if eq $profile "arch" }}
-"pipx:harlequin" = { version = "latest", depends = ["uv"], extras = ["postgres", "mysql"] }
-{{- end }}
 {{- end }}
 
 [tools.odin]
