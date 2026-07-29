@@ -179,7 +179,6 @@ application launcher templates, or small bootstrap scripts.
 - Windows Herdr preview builds and four private plugin compatibility branches
 - the Windows-only Mise `pipx:pynvim` shim-reentry workaround
 - Volta on macOS and Arch during project-by-project Node migration
-- miscellaneous direct-release user CLI installs on WSL
 
 The Windows Herdr and pynvim cases are already isolated and documented well.
 The Volta transition is intentionally one-way: Mise owns normal resolution,
@@ -208,6 +207,10 @@ conditions.
   layers with capability or profile guards.
 
 ## Tool installation and provenance
+
+The exhaustive top-level package and manual-install review now lives in
+[`tool-installation-audit.md`](tool-installation-audit.md). Its ownership
+decisions must be completed before generating native package manifests.
 
 ### Installation heuristic
 
@@ -435,11 +438,11 @@ package to Mise.
   machinery. Their Rustup/Mise or native package state was removed only after
   checking for Cargo projects and migrating or retiring every Cargo-installed
   utility.
-- WSL's direct-release Starship, Atuin, Yazi, jq, and zoxide binaries are
-  individually current but have no shared declaration or owner. APT is
-  materially behind or missing several of them. Mise's registry exposes these
-  tools through vetted release backends, so one WSL-specific Mise block is a
-  simpler fallback tier than five bespoke release installations.
+- WSL's former direct-release Starship, Atuin, Yazi, jq, and zoxide binaries
+  are now Mise-owned and the superseded executables are recoverable from Trash.
+  The full ownership review is deciding whether those declarations should move
+  from the WSL block into the shared Mise set for consistency with the other
+  profiles.
 - Windows ble.sh remains a release-tree installation under
   `~/.local/share/blesh`; a Windows-only Chezmoi bootstrap installs the upstream
   nightly build when that tree is missing and never replaces an existing copy.
