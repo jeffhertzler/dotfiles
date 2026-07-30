@@ -1,3 +1,4 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
 # Shared interactive behavior for Bash and Zsh.
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 export WORKTRUNK_CONFIG_PATH="${WORKTRUNK_CONFIG_PATH:-$XDG_CONFIG_HOME/worktrunk/config.toml}"
@@ -29,6 +30,16 @@ alias gcm='git commit -m'
 alias gcp='git cherry-pick'
 alias gl='git pull'
 alias gp='git push'
+
+{{ if ne $profile "arch" -}}
+function hatw() {
+  command herdr --remote archt --session work --remote-keybindings server "$@"
+}
+
+function hatv() {
+  command herdr --remote archt --session vimme --remote-keybindings server "$@"
+}
+{{ end -}}
 
 function piu() {
   if ! command -v mise >/dev/null 2>&1; then

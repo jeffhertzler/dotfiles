@@ -13,11 +13,3 @@ function poe2() {
     command python.exe -m poe2_intel.server_control "$@"
   )
 }
-
-function hatw() {
-  command herdr --remote archt --session work --remote-keybindings server "$@"
-}
-
-function hatv() {
-  command herdr --remote archt --session vimme --remote-keybindings server "$@"
-}
