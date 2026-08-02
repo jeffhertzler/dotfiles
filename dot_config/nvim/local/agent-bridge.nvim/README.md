@@ -76,3 +76,16 @@ input:open("initial text")
 Inputs are bordered native Markdown buffers that open in insert mode, grow with
 content, and retain normal Neovim editing. AgentBridge's composer uses a larger
 persistent instance; Agent Review uses compact transient instances.
+
+## Tests
+
+Run from the chezmoi source tree:
+
+```sh
+bash dot_config/nvim/local/agent-bridge.nvim/tests/run.sh
+```
+
+The isolated suite owns coverage for AgentBridge commands and dispatch, context
+formatting, diagnostics, and the shared growing input primitive. Consumers such
+as Agent Review test only their adapter configuration and integration with these
+boundaries.

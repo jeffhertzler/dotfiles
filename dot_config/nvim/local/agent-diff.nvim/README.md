@@ -80,3 +80,16 @@ CodeDiff's range calculation and `CodeDiffCharInsert`/`CodeDiffCharDelete`
 inner colors while preserving Neogit's line backgrounds and Tree-sitter
 foregrounds. Native Gitsigns and Neogit hunks remain canonical for staging,
 resetting, and navigation.
+
+## Tests
+
+Run from the chezmoi source tree:
+
+```sh
+bash dot_config/nvim/local/agent-diff.nvim/tests/run.sh
+```
+
+The isolated suite covers standalone view lifecycle, revisions and changesets,
+Gitsigns and Neogit integration, large diffs, and patch operations. Agent
+Review's adapters for annotating Agent Diff views are covered by Agent Review's
+suite.

@@ -47,7 +47,10 @@ Run from the chezmoi source tree:
 bash dot_config/nvim/local/agent-review.nvim/tests/run.sh
 ```
 
-The isolated suite covers multiline input, regular buffers, columns, CRUD,
-command/API boundaries, transactional RPC, unopened-file anchoring, bridge
-transport, persistence/restart, v1 migration, reanchoring/stale state, named
-sessions, and CodeDiff split/inline behavior.
+The isolated suite covers the review input adapter, regular buffers, columns,
+CRUD, command/API boundaries, transactional RPC, unopened-file anchoring,
+AgentBridge send integration, persistence/restart, v1 migration,
+reanchoring/stale state, named sessions, and CodeDiff and Agent Diff adapters.
+Generic AgentBridge input, context, and command behavior is covered by
+AgentBridge's own suite; Agent Diff's standalone views and patch behavior are
+covered by Agent Diff's suite.
