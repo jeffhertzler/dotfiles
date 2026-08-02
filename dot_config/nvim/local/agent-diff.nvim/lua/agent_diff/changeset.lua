@@ -267,6 +267,7 @@ function M.select(index)
   local old_path = file.old_path or file.path
   local new_path = file.path
   local old_lines, new_lines, new_existing_buf
+  local modified_needs_display_load = false
   local pending = 2
 
   local function ready()
@@ -292,9 +293,13 @@ function M.select(index)
 
     if session.modified_revision == "WORKING" and vim.uv.fs_stat(session.root .. "/" .. new_path) then
       session.modified_buf = new_existing_buf or vim.fn.bufadd(session.root .. "/" .. new_path)
-      vim.fn.bufload(session.modified_buf)
+      -- TODO(neovim-0.13): Recheck periodically and remove this deferred-load path once fixed upstream.
+      -- Through nightly a5103c0853, bufload() followed by first display falsely sets 'modified'.
+      modified_needs_display_load = not vim.api.nvim_buf_is_loaded(session.modified_buf)
       session.modified_scratch = false
-      new_lines = vim.api.nvim_buf_get_lines(session.modified_buf, 0, -1, false)
+      if not modified_needs_display_load then
+        new_lines = vim.api.nvim_buf_get_lines(session.modified_buf, 0, -1, false)
+      end
     else
       session.modified_buf = scratch(
         string.format("agent-diff://%s/%s", session.modified_revision, new_path),
@@ -308,6 +313,10 @@ function M.select(index)
       return
     end
     vim.api.nvim_win_set_buf(session.modified_win, session.modified_buf)
+    if modified_needs_display_load then
+      new_lines = vim.api.nvim_buf_get_lines(session.modified_buf, 0, -1, false)
+      session.modified_lines = new_lines
+    end
     vim.b[session.original_buf].agent_diff_context = {
       root = session.root,
       path = new_path,

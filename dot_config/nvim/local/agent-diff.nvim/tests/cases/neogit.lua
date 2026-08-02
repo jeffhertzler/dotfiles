@@ -74,6 +74,7 @@ assert(vim.wait(10000, function()
   local context = multi.modified_buf and vim.b[multi.modified_buf].agent_diff_context
   return context and context.path == "second.txt"
 end, 20))
+assert(not vim.bo[multi.modified_buf].modified, "displaying an unloaded working buffer marked it modified")
 vim.fn.writefile({ "second external" }, vim.fs.dirname(path) .. "/second.txt")
 assert(vim.wait(10000, function()
   return multi.modified_lines and multi.modified_lines[1] == "second external"
