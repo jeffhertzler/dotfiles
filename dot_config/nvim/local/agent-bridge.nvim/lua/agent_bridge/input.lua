@@ -65,7 +65,10 @@ function Input:_resize()
     return
   end
   local lines = vim.api.nvim_buf_line_count(self.buffer)
-  self.window.opts.height = math.max(self.opts.min_height, math.min(self.opts.max_height, lines))
+  local display_lines = vim.api.nvim_win_text_height(self.window.win, {
+    max_height = self.opts.max_height,
+  }).all
+  self.window.opts.height = math.max(self.opts.min_height, math.min(self.opts.max_height, display_lines))
   self.window.opts.wo.cursorline = self.opts.cursorline and lines > 1
   self.window:update()
 end
