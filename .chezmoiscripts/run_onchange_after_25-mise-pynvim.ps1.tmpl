@@ -7,11 +7,6 @@ if (-not $mise) {
   throw "The Neovim Python provider bootstrap requires mise on PATH"
 }
 
-# Work around Windows uv.exe shim re-entry when Mise installs a pipx tool after
-# uv is already installed. Unix Mise shims do not have this issue.
-& $mise.Source install uv
-if ($LASTEXITCODE -ne 0) { throw "Failed to install the Mise uv tool" }
-
-& $mise.Source exec uv -- $mise.Source install pipx:pynvim
+& $mise.Source install uv pipx:pynvim
 if ($LASTEXITCODE -ne 0) { throw "Failed to install the Mise pynvim provider" }
 {{- end }}
