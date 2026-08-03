@@ -17,7 +17,6 @@ mosh
 # Native bootstrap and host services
 base-devel
 chezmoi
-mise
 mkcert
 docker
 docker-compose

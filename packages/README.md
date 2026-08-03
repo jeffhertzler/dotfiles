@@ -58,6 +58,13 @@ grep -Ev '^\s*(#|$)' packages/arch-aur.txt |
   xargs yay -S --needed --
 ```
 
+Mise is bootstrapped with its official installer so it can update independently
+with `mise self-update` instead of waiting for the Arch package:
+
+```bash
+curl https://mise.run | sh
+```
+
 The list restores the user-facing remote development layer, not a bare-metal
 Arch installation or every project-specific AUR package. The AUR list contains
 only the 1Password CLI needed for optional secret bootstrap.
