@@ -46,6 +46,20 @@ config = vim.api.nvim_win_get_config(input.window.win)
 assert(config.height > 1, "wrapped input must grow the window")
 assert(config.height <= input.opts.max_height, "wrapped input must respect max_height")
 
+vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { "autocomplete" })
+input:_resize()
+local plain_height = vim.api.nvim_win_get_config(input.window.win).height
+local completion_ns = vim.api.nvim_create_namespace("AgentBridgeInputCompletionTest")
+vim.api.nvim_buf_set_extmark(input.buffer, completion_ns, 0, 4, {
+  virt_text = { { string.rep(" ghost text", 20), "Comment" } },
+  virt_text_pos = "inline",
+  virt_lines = { { { "multiline completion", "Comment" } } },
+})
+input:_resize()
+config = vim.api.nvim_win_get_config(input.window.win)
+assert(config.height == plain_height, "completion decorations must not resize the input")
+vim.api.nvim_buf_clear_namespace(input.buffer, completion_ns, 0, -1)
+
 vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { "first line", "second line" })
 input:_resize()
 assert(vim.wo[input.window.win].cursorline)

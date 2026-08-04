@@ -64,13 +64,35 @@ function Input:_resize()
   if not self:_valid_buffer() or not self:_valid_window() then
     return
   end
-  local lines = vim.api.nvim_buf_line_count(self.buffer)
-  local display_lines = vim.api.nvim_win_text_height(self.window.win, {
-    max_height = self.opts.max_height,
-  }).all
-  self.window.opts.height = math.max(self.opts.min_height, math.min(self.opts.max_height, display_lines))
-  self.window.opts.wo.cursorline = self.opts.cursorline and lines > 1
-  self.window:update()
+  local line_count = vim.api.nvim_buf_line_count(self.buffer)
+  local lines = vim.api.nvim_buf_get_lines(self.buffer, 0, math.min(line_count, self.opts.max_height), false)
+  local widths = vim.api.nvim_win_call(self.window.win, function()
+    return vim.tbl_map(vim.fn.strdisplaywidth, lines)
+  end)
+  local display_lines = 0
+  for row, width in ipairs(widths) do
+    -- Measure only the buffer text. Completion ghost text uses inline virtual
+    -- text and virtual lines, which otherwise make the input briefly expand.
+    local height = vim.api.nvim_win_text_height(self.window.win, {
+      start_row = row - 1,
+      start_vcol = 0,
+      end_row = row - 1,
+      end_vcol = width,
+      max_height = self.opts.max_height - display_lines,
+    }).all
+    display_lines = display_lines + math.max(1, height)
+    if display_lines >= self.opts.max_height then
+      break
+    end
+  end
+
+  local height = math.max(self.opts.min_height, math.min(self.opts.max_height, display_lines))
+  local cursorline = self.opts.cursorline and line_count > 1
+  if self.window.opts.height ~= height or self.window.opts.wo.cursorline ~= cursorline then
+    self.window.opts.height = height
+    self.window.opts.wo.cursorline = cursorline
+    self.window:update()
+  end
 end
 
 function Input:_save_view(insert_mode)
