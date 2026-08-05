@@ -25,7 +25,10 @@ export PUPPETEER_SKIP_DOWNLOAD=1
 abbrev-alias -c cdgg="cd $GG"
 
 gggm() {
-  (cd "$GG/local" && ./gg.sh "good morning")
+  cd "$GG/local"
+  git config --global user.email jeff.hertzler@greenlight.guru
+  ./gg.sh "good morning"
+  git config --global user.email jeffhertzler@gmail.com
 }
 
 gg() { (cd "$GG/local" && ./gg.sh $@) }
