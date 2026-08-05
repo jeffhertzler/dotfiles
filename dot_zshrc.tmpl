@@ -44,10 +44,6 @@ if [[ "$HERDR_ENV" == "1" && -n "$HERDR_SESSION" && -n "$HERDR_WORKSPACE_ID" ]];
     --seq "$(date +%s)" >/dev/null 2>&1 &!
 fi
 
-if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
-  alias cd="z"
-fi
-
 alias ve="nvim ~/.local/share/chezmoi/dot_config/nvim"
 alias ze="chezmoi edit ~/.zshrc"
 
@@ -94,5 +90,8 @@ function zvm_after_init() {
   if command -v zoxide >/dev/null 2>&1 && [[ "$CLAUDECODE" != "1" ]]; then
     _ZO_DOCTOR=0
     eval "$(zoxide init zsh)"
+    # Keep builtin cd available until this deferred hook initializes zoxide.
+    # Non-prompt agent shells can exit before zsh-vi-mode invokes the hook.
+    alias cd="z"
   fi
 }
