@@ -17,6 +17,7 @@ import { join } from "node:path";
 
 interface ProfileDefinition {
   provider: string;
+  providers?: string[];
   cloneFrom?: string;
   model?: string;
   footer?: string;
@@ -56,8 +57,25 @@ function parseConfig(raw: string): ProfilesConfig {
     if (!isRecord(value)) throw new Error(`${CONFIG_PATH}: profile ${name} must be an object`);
 
     const provider = requireNonEmptyString(value.provider, `profiles.${name}.provider`);
-    if (providers.has(provider)) {
-      throw new Error(`${CONFIG_PATH}: provider ${provider} is assigned to multiple profiles`);
+    const associatedProviders = value.providers === undefined ? [] : value.providers;
+    if (!Array.isArray(associatedProviders)) {
+      throw new Error(`${CONFIG_PATH}: profiles.${name}.providers must be an array`);
+    }
+    const profileProviders = [
+      provider,
+      ...associatedProviders.map((candidate, index) =>
+        requireNonEmptyString(candidate, `profiles.${name}.providers[${index}]`),
+      ),
+    ];
+    if (new Set(profileProviders).size !== profileProviders.length) {
+      throw new Error(`${CONFIG_PATH}: profile ${name} assigns a provider more than once`);
+    }
+    for (const profileProvider of profileProviders) {
+      if (providers.has(profileProvider)) {
+        throw new Error(
+          `${CONFIG_PATH}: provider ${profileProvider} is assigned to multiple profiles`,
+        );
+      }
     }
 
     const cloneFrom =
@@ -70,6 +88,7 @@ function parseConfig(raw: string): ProfilesConfig {
 
     profiles[name] = {
       provider,
+      providers: profileProviders.slice(1),
       cloneFrom,
       model:
         value.model === undefined
@@ -80,7 +99,7 @@ function parseConfig(raw: string): ProfilesConfig {
           ? undefined
           : requireNonEmptyString(value.footer, `profiles.${name}.footer`),
     };
-    providers.add(provider);
+    for (const profileProvider of profileProviders) providers.add(profileProvider);
   }
 
   if (Object.keys(profiles).length === 0) {
@@ -124,9 +143,20 @@ function cloneProvider(pi: ExtensionAPI, name: string, profile: ProfileDefinitio
   pi.registerProvider(provider);
 }
 
+function findProviderProfile(
+  entries: ProfileEntry[],
+  provider: string | undefined,
+): ProfileEntry | undefined {
+  if (provider === undefined) return undefined;
+  return entries.find(
+    ([, profile]) =>
+      profile.provider === provider || profile.providers?.includes(provider) === true,
+  );
+}
+
 function updateProfileState(entries: ProfileEntry[], provider: string | undefined): void {
   const state = globalThis as Record<PropertyKey, unknown>;
-  const entry = entries.find(([, profile]) => profile.provider === provider);
+  const entry = findProviderProfile(entries, provider);
   if (entry) state[PROFILE_STATE] = entry[1].footer ?? entry[0];
   else delete state[PROFILE_STATE];
 }
@@ -216,10 +246,12 @@ function parseCommandArgs(args: string): {
 export default function (pi: ExtensionAPI) {
   const config = loadConfig();
   const entries = Object.entries(config.profiles);
+  let switchingProfiles = false;
+  let revertingModel = false;
   for (const [name, profile] of entries) cloneProvider(pi, name, profile);
 
   pi.registerCommand("profile", {
-    description: "Switch profiles; add --project to save the choice for this repository",
+    description: "Switch locked profiles; add --project to save the choice for this repository",
     handler: async (args, ctx) => {
       try {
         const command = parseCommandArgs(args);
@@ -231,7 +263,13 @@ export default function (pi: ExtensionAPI) {
           ));
         if (!profileName) return;
 
-        const model = await activateProfile(pi, config, profileName, ctx);
+        switchingProfiles = true;
+        let model: Model<Api> | undefined;
+        try {
+          model = await activateProfile(pi, config, profileName, ctx);
+        } finally {
+          switchingProfiles = false;
+        }
         if (model && command.saveForProject) saveProjectProfile(profileName, model, ctx);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -243,7 +281,31 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", (_event, ctx) => {
     updateProfileState(entries, ctx.model?.provider);
   });
-  pi.on("model_select", (event) => updateProfileState(entries, event.model.provider));
+  pi.on("model_select", async (event, ctx) => {
+    if (switchingProfiles || revertingModel || event.source === "restore") {
+      updateProfileState(entries, event.model.provider);
+      return;
+    }
+
+    const previousProfile = findProviderProfile(entries, event.previousModel?.provider);
+    const nextProfile = findProviderProfile(entries, event.model.provider);
+    if (previousProfile && previousProfile[0] !== nextProfile?.[0] && event.previousModel) {
+      const target = nextProfile?.[0] ?? "unassigned";
+      ctx.ui.notify(
+        `Blocked ${event.model.provider}: ${target} provider while profile is ${previousProfile[0]}. Use /profile ${target} to switch profiles.`,
+        "warning",
+      );
+      revertingModel = true;
+      try {
+        await pi.setModel(event.previousModel);
+      } finally {
+        revertingModel = false;
+      }
+      return;
+    }
+
+    updateProfileState(entries, event.model.provider);
+  });
   pi.on("session_shutdown", (event) => {
     if (event.reason === "quit") updateProfileState(entries, undefined);
   });

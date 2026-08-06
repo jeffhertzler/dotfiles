@@ -8,6 +8,7 @@
     },
     "work": {
       "provider": "openai-codex-work",
+      "providers": ["cursor", "anthropic"],
       "cloneFrom": "openai-codex",
       "model": "gpt-5.6-sol",
       "footer": "W"
