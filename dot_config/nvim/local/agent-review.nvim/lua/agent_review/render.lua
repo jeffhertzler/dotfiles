@@ -387,6 +387,34 @@ function M.sync()
   end
 end
 
+function M.reveal(annotation, bufnr)
+  if not (annotation and valid_buffer(bufnr)) then
+    return
+  end
+
+  local target = clamped_target(bufnr, annotation.target)
+  if target.start_line ~= target.end_line or target.end_line ~= vim.api.nvim_buf_line_count(bufnr) then
+    return
+  end
+
+  -- Neovim does not move the viewport when virtual lines are added below EOF.
+  local note_highlight = annotation_highlights(annotation)
+  local box_height = #comment_box(annotation, note_highlight)
+  for _, winid in ipairs(vim.fn.win_findbuf(bufnr)) do
+    if vim.api.nvim_win_is_valid(winid) then
+      local cursor_line = vim.api.nvim_win_get_cursor(winid)[1]
+      if cursor_line == target.end_line then
+        vim.api.nvim_win_call(winid, function()
+          if vim.fn.winline() + box_height > vim.api.nvim_win_get_height(winid) then
+            vim.cmd("normal! zz")
+          end
+        end)
+        return
+      end
+    end
+  end
+end
+
 function M.refresh_visible()
   local seen = {}
   for _, winid in ipairs(vim.api.nvim_list_wins()) do

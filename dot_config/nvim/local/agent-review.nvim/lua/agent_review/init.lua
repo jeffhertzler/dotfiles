@@ -44,6 +44,7 @@ local function create_annotation(capture, body)
     render.refresh_visible()
   else
     render.refresh_buffer(capture.bufnr)
+    render.reveal(annotation, capture.bufnr)
   end
   notify("Added annotation " .. annotation.id)
   return annotation

@@ -34,6 +34,13 @@ for name in core columns input commands rpc rpc_unopened bridge_send codediff_ma
   run_case "$name" "$state" "$file" 20
  done
 
+file="$tmp/last-line.lua"
+state="$tmp/last-line.json"
+for line in $(seq 1 80); do
+  printf 'line %d\n' "$line"
+done >"$file"
+run_case last_line "$state" "$file" 20
+
 file="$tmp/persistence.lua"
 state="$tmp/persistence.json"
 make_file "$file"
