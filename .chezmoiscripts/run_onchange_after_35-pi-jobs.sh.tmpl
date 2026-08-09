@@ -1,0 +1,14 @@
+{{- $profile := includeTemplate "profile" . | trim -}}
+{{- if eq $profile "arch" -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+systemctl --user daemon-reload
+systemctl --user enable herdr.service
+
+# Avoid starting a second server while an older, manually launched Herdr server
+# owns the default socket. On a fresh login or boot, systemd owns it instead.
+if ! herdr --session default status server >/dev/null 2>&1; then
+  systemctl --user start herdr.service
+fi
+{{- end }}

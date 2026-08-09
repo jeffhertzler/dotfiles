@@ -1,0 +1,350 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+config_home=${XDG_CONFIG_HOME:-"$HOME/.config"}
+state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
+jobs_root=${PI_JOB_CONFIG_DIR:-"$config_home/pi-jobs/jobs"}
+state_root=${PI_JOB_STATE_DIR:-"$state_home/pi-jobs"}
+systemd_user_dir="$config_home/systemd/user"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  pi-job init NAME
+  pi-job edit NAME
+  pi-job install NAME
+  pi-job uninstall NAME
+  pi-job run NAME
+  pi-job list
+
+Job definitions live in ~/.config/pi-jobs/jobs/ and are intentionally not
+managed by chezmoi. Every run opens a new Pi tab in the Scheduled workspace of
+the default Herdr session. `install` validates and enables the local timer.
+EOF
+}
+
+fail() {
+  printf 'pi-job: %s\n' "$*" >&2
+  exit 1
+}
+
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || fail "required command is unavailable: $1"
+}
+
+validate_name() {
+  local name=${1:-}
+  [[ $name =~ ^[a-z][a-z0-9_-]{0,39}$ ]] ||
+    fail 'job names must start with a lowercase letter and contain at most 40 lowercase letters, digits, underscores, or hyphens'
+}
+
+job_dir() {
+  printf '%s/%s\n' "$jobs_root" "$1"
+}
+
+job_config() {
+  printf '%s/job.json\n' "$(job_dir "$1")"
+}
+
+validate_job() {
+  local name=$1 config directory calendar topology session workspace_label tab_label timeout
+  validate_name "$name"
+  config=$(job_config "$name")
+  [[ -f $config ]] || fail "job does not exist: $name (expected $config)"
+  require_command jq
+  jq -e 'type == "object"' "$config" >/dev/null || fail "invalid JSON object: $config"
+
+  directory=$(jq -er '.cwd | select(type == "string" and length > 0)' "$config") ||
+    fail "$config must contain a non-empty cwd"
+  [[ $directory = /* ]] || fail "cwd must be an absolute path: $directory"
+  [[ -d $directory ]] || fail "cwd does not exist: $directory"
+
+  calendar=$(jq -er '.calendar | select(type == "string" and length > 0)' "$config") ||
+    fail "$config must contain a non-empty calendar"
+  [[ $calendar != *$'\n'* ]] || fail 'calendar must be a single line'
+  require_command systemd-analyze
+  systemd-analyze calendar "$calendar" >/dev/null || fail "invalid systemd calendar: $calendar"
+
+  session=$(jq -r '.herdrSession // "default"' "$config")
+  [[ $session == default ]] || fail 'herdrSession must be default'
+  topology=$(jq -r '.topology // "tab"' "$config")
+  [[ $topology == tab ]] || fail 'topology must be tab'
+  workspace_label=$(jq -r '.workspaceLabel // "Scheduled"' "$config")
+  [[ $workspace_label == Scheduled ]] || fail 'workspaceLabel must be Scheduled'
+  tab_label=$(jq -r --arg fallback "${name:0:12}" '.tabLabel // $fallback' "$config")
+  [[ -n $tab_label && $tab_label != *$'\n'* && ${#tab_label} -le 16 ]] ||
+    fail 'tabLabel must be a non-empty single-line string of at most 16 characters'
+
+  timeout=$(jq -r '.timeoutMs // 21600000' "$config")
+  [[ $timeout =~ ^[0-9]+$ ]] && (( timeout >= 60000 )) || fail 'timeoutMs must be an integer of at least 60000'
+
+  jq -e '(.piArgs // []) | type == "array" and all(.[]; type == "string")' "$config" >/dev/null ||
+    fail 'piArgs must be an array of strings'
+}
+
+prompt_path() {
+  local name=$1 config path
+  config=$(job_config "$name")
+  path=$(jq -r '.promptFile // "prompt.md"' "$config")
+  [[ $path = /* ]] || path="$(job_dir "$name")/$path"
+  printf '%s\n' "$path"
+}
+
+init_job() {
+  local name=$1 directory config settings provider model thinking
+  validate_name "$name"
+  directory=$(job_dir "$name")
+  config="$directory/job.json"
+  [[ ! -e $directory ]] || fail "job already exists: $directory"
+  require_command jq
+  install -d -m 700 "$directory"
+  settings="${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/settings.json"
+  provider=$(jq -r '.defaultProvider // empty' "$settings" 2>/dev/null || true)
+  model=$(jq -r '.defaultModel // empty' "$settings" 2>/dev/null || true)
+  thinking=$(jq -r '.defaultThinkingLevel // empty' "$settings" 2>/dev/null || true)
+  jq -n \
+    --arg cwd "$PWD" \
+    --arg tab_label "${name:0:12}" \
+    --arg provider "$provider" \
+    --arg model "$model" \
+    --arg thinking "$thinking" \
+    '{
+      calendar: "daily",
+      cwd: $cwd,
+      topology: "tab",
+      workspaceLabel: "Scheduled",
+      tabLabel: $tab_label,
+      herdrSession: "default",
+      timeoutMs: 21600000,
+      piArgs: (
+        (if $provider != "" then ["--provider", $provider] else [] end) +
+        (if $model != "" then ["--model", $model] else [] end) +
+        (if $thinking != "" then ["--thinking", $thinking] else [] end)
+      )
+    }' >"$config"
+  cat >"$directory/prompt.md" <<'EOF'
+Replace this text with the task Pi should perform.
+EOF
+  chmod 600 "$config" "$directory/prompt.md"
+  printf 'Created private job %s\nEdit: %s and %s\nThen run: pi-job install %s\n' \
+    "$name" "$config" "$directory/prompt.md" "$name"
+}
+
+edit_job() {
+  local name=$1 directory editor
+  validate_name "$name"
+  directory=$(job_dir "$name")
+  [[ -d $directory ]] || fail "job does not exist: $name"
+  editor=${VISUAL:-${EDITOR:-vi}}
+  "$editor" "$directory/job.json" "$directory/prompt.md"
+}
+
+timer_unit_name() {
+  printf 'pi-job-%s.timer\n' "$1"
+}
+
+install_job() {
+  local name=$1 config calendar randomized accuracy timer unit tmp prompt
+  validate_job "$name"
+  config=$(job_config "$name")
+  prompt=$(prompt_path "$name")
+  [[ -s $prompt ]] || fail "prompt is missing or empty: $prompt"
+  calendar=$(jq -r '.calendar' "$config")
+  randomized=$(jq -r '.randomizedDelaySec // "0"' "$config")
+  accuracy=$(jq -r '.accuracySec // "1min"' "$config")
+  [[ $randomized != *$'\n'* && $accuracy != *$'\n'* ]] || fail 'timer spans must be single-line values'
+  systemd-analyze timespan "$randomized" >/dev/null || fail "invalid randomizedDelaySec: $randomized"
+  systemd-analyze timespan "$accuracy" >/dev/null || fail "invalid accuracySec: $accuracy"
+
+  install -d -m 700 "$systemd_user_dir"
+  unit=$(timer_unit_name "$name")
+  timer="$systemd_user_dir/$unit"
+  tmp=$(mktemp "$systemd_user_dir/.${unit}.XXXXXX")
+  cat >"$tmp" <<EOF
+[Unit]
+Description=Schedule private Pi job $name
+
+[Timer]
+OnCalendar=$calendar
+Persistent=true
+RandomizedDelaySec=$randomized
+AccuracySec=$accuracy
+Unit=pi-job@$name.service
+
+[Install]
+WantedBy=timers.target
+EOF
+  chmod 600 "$tmp"
+  mv -f "$tmp" "$timer"
+  systemctl --user daemon-reload
+  systemctl --user enable --now "$unit"
+  systemctl --user list-timers "$unit" --no-pager
+}
+
+uninstall_job() {
+  local name=$1 unit timer
+  validate_name "$name"
+  unit=$(timer_unit_name "$name")
+  timer="$systemd_user_dir/$unit"
+  systemctl --user disable --now "$unit" >/dev/null 2>&1 || true
+  rm -f -- "$timer"
+  systemctl --user daemon-reload
+  systemctl --user reset-failed "pi-job@$name.service" >/dev/null 2>&1 || true
+  printf 'Removed timer %s; private job files remain in %s\n' "$unit" "$(job_dir "$name")"
+}
+
+ensure_herdr() {
+  local session=$1 attempt
+  if herdr --session "$session" status server >/dev/null 2>&1; then
+    return
+  fi
+  [[ $session == default ]] || fail "Herdr session $session is not running; only the default session can be started automatically"
+  systemctl --user start herdr.service
+  for attempt in {1..30}; do
+    herdr --session "$session" status server >/dev/null 2>&1 && return
+    sleep 1
+  done
+  fail "Herdr session $session did not become ready"
+}
+
+create_destination() {
+  local name=$1 cwd=$2 topology=$3 session=$4 run_label=$5 config=$6
+  local response workspace_label list count workspace_id tab_id
+  if [[ $topology == workspace ]]; then
+    response=$(herdr --session "$session" workspace create --cwd "$cwd" --label "$run_label" --env PI_SCHEDULED_JOB=1 --no-focus)
+    jq -er '.result.root_pane.pane_id' <<<"$response"
+    return
+  fi
+
+  workspace_label=$(jq -r '.workspaceLabel // "Scheduled"' "$config")
+  list=$(herdr --session "$session" workspace list)
+  count=$(jq --arg label "$workspace_label" '[.result.workspaces[] | select(.label == $label)] | length' <<<"$list")
+  (( count <= 1 )) || fail "more than one Herdr workspace is labeled $workspace_label"
+  if (( count == 0 )); then
+    response=$(herdr --session "$session" workspace create --cwd "$cwd" --label "$workspace_label" --env PI_SCHEDULED_JOB=1 --no-focus)
+    tab_id=$(jq -er '.result.tab.tab_id' <<<"$response")
+    herdr --session "$session" tab rename "$tab_id" "$run_label" >/dev/null
+  else
+    workspace_id=$(jq -er --arg label "$workspace_label" '.result.workspaces[] | select(.label == $label) | .workspace_id' <<<"$list")
+    response=$(herdr --session "$session" tab create --workspace "$workspace_id" --cwd "$cwd" --label "$run_label" --env PI_SCHEDULED_JOB=1 --no-focus)
+  fi
+  jq -er '.result.root_pane.pane_id' <<<"$response"
+}
+
+run_job() {
+  local name=$1 config cwd topology session timeout prompt_file prompt tab_label run_label pane agent_name agent_suffix result
+  local attempt start_output tab_info tab_id workspace_id tab_count
+  local started=false
+  local -a pi_args=()
+  validate_job "$name"
+  config=$(job_config "$name")
+  prompt_file=$(prompt_path "$name")
+  [[ -s $prompt_file ]] || fail "prompt is missing or empty: $prompt_file"
+  prompt=$(<"$prompt_file")
+  [[ -n ${prompt//[[:space:]]/} ]] || fail "prompt is blank: $prompt_file"
+
+  install -d -m 700 "$state_root/locks"
+  exec 9>"$state_root/locks/$name.lock"
+  if ! flock -n 9; then
+    printf 'pi-job: %s is already running; skipping this occurrence\n' "$name"
+    return 0
+  fi
+
+  cwd=$(jq -r '.cwd' "$config")
+  topology=$(jq -r '.topology // "tab"' "$config")
+  session=$(jq -r '.herdrSession // "default"' "$config")
+  timeout=$(jq -r '.timeoutMs // 21600000' "$config")
+  mapfile -t pi_args < <(jq -r '.piArgs // [] | .[]' "$config")
+  if [[ $(jq -r '.approveProject // false' "$config") == true ]]; then
+    pi_args+=(--approve)
+  fi
+
+  require_command herdr
+  ensure_herdr "$session"
+  tab_label=$(jq -r --arg fallback "${name:0:12}" '.tabLabel // $fallback' "$config")
+  run_label="$tab_label $(date '+%m-%d')"
+  pane=$(create_destination "$name" "$cwd" "$topology" "$session" "$run_label" "$config")
+  agent_suffix=$(tr -d '-' </proc/sys/kernel/random/uuid)
+  agent_name="job_${name:0:8}_$(date +%s)_${agent_suffix:0:8}"
+
+  printf 'pi-job: starting %s in Herdr pane %s (%s)\n' "$agent_name" "$pane" "$run_label"
+  for attempt in {1..120}; do
+    if (( ${#pi_args[@]} > 0 )); then
+      if start_output=$(herdr --session "$session" agent start "$agent_name" --kind pi --pane "$pane" --timeout 60000 -- "${pi_args[@]}" 2>&1); then
+        started=true
+        break
+      fi
+    else
+      if start_output=$(herdr --session "$session" agent start "$agent_name" --kind pi --pane "$pane" --timeout 60000 2>&1); then
+        started=true
+        break
+      fi
+    fi
+    if jq -e '.error.code == "agent_pane_busy"' <<<"$start_output" >/dev/null 2>&1; then
+      sleep 0.5
+      continue
+    fi
+    break
+  done
+
+  if [[ $started != true ]]; then
+    printf '%s\n' "$start_output" >&2
+    tab_info=$(herdr --session "$session" pane get "$pane" 2>/dev/null || true)
+    tab_id=$(jq -r '.result.pane.tab_id // empty' <<<"$tab_info")
+    workspace_id=$(jq -r '.result.pane.workspace_id // empty' <<<"$tab_info")
+    if [[ -n $workspace_id ]]; then
+      tab_count=$(herdr --session "$session" tab list --workspace "$workspace_id" 2>/dev/null |
+        jq '.result.tabs | length' 2>/dev/null || printf '0')
+      if [[ $tab_count == 1 ]]; then
+        herdr --session "$session" workspace close "$workspace_id" >/dev/null 2>&1 || true
+      elif [[ -n $tab_id ]]; then
+        herdr --session "$session" tab close "$tab_id" >/dev/null 2>&1 || true
+      fi
+    fi
+    fail "could not start Pi in the scheduled Herdr tab"
+  fi
+  printf '%s\n' "$start_output"
+
+  if ! result=$(herdr --session "$session" agent prompt "$agent_name" "$prompt" --wait --timeout "$timeout"); then
+    printf '%s\n' "$result" >&2
+    fail "scheduled Pi job failed or timed out; its Herdr tab remains available"
+  fi
+  printf '%s\n' "$result"
+  if [[ $(jq -r '.result.agent.agent_status // .result.agent_status // empty' <<<"$result") == blocked ]]; then
+    fail "scheduled Pi job is blocked and needs input"
+  fi
+}
+
+list_jobs() {
+  local directory name unit enabled next
+  printf '%-24s %-10s %s\n' NAME TIMER NEXT
+  [[ -d $jobs_root ]] || return 0
+  shopt -s nullglob
+  for directory in "$jobs_root"/*; do
+    [[ -d $directory && -f $directory/job.json ]] || continue
+    name=${directory##*/}
+    unit=$(timer_unit_name "$name")
+    enabled=$(systemctl --user is-enabled "$unit" 2>/dev/null || true)
+    next=$(systemctl --user show "$unit" -p NextElapseUSecRealtime --value 2>/dev/null || true)
+    printf '%-24s %-10s %s\n' "$name" "${enabled:-no}" "${next:--}"
+  done
+}
+
+command=${1:-}
+case "$command" in
+  init|edit|install|uninstall|run)
+    [[ $# == 2 ]] || { usage >&2; exit 2; }
+    "${command}_job" "$2"
+    ;;
+  list)
+    [[ $# == 1 ]] || { usage >&2; exit 2; }
+    list_jobs
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

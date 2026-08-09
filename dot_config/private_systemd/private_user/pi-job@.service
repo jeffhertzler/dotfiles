@@ -1,0 +1,12 @@
+[Unit]
+Description=Private scheduled Pi agent job %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/pi-job run %i
+TimeoutStartSec=infinity
+Nice=10
+IOSchedulingClass=idle
+Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin

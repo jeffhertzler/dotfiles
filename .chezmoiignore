@@ -5,6 +5,13 @@ packages
 .config/git/local.config
 .config/nvim/lazy-lock.json
 
+# Scheduled job definitions and generated timers are private, machine-local
+# state. Chezmoi manages only the shared runner and service templates.
+.config/pi-jobs/jobs
+.config/systemd/user/pi-job-*.timer
+.config/systemd/user/timers.target.wants/pi-job-*.timer
+.config/systemd/user/default.target.wants/herdr.service
+
 {{- if ne (env "CHEZMOI_INCLUDE_SECRETS") "1" }}
 .private.zsh
 .ssh/id_rsa
@@ -48,6 +55,13 @@ packages
 .local/bin/tmux-preview-update
 .local/bin/tmux-yazi-split
 .local/bin/worktrunk-seed
+{{- end }}
+
+# Scheduled Pi jobs currently use systemd user services on the Arch host.
+{{- if ne $profile "arch" }}
+.config/systemd/user/herdr.service
+.config/systemd/user/pi-job@.service
+.local/bin/pi-job
 {{- end }}
 
 # LazyDocker and Posting are workstation applications on macOS and Arch.

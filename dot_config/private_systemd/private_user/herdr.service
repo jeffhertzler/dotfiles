@@ -1,0 +1,14 @@
+[Unit]
+Description=Herdr persistent terminal workspace server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/herdr --session default server
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
+
+[Install]
+WantedBy=default.target
