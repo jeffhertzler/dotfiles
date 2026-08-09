@@ -57,12 +57,14 @@ with its official installer so it can update independently with
 curl https://mise.run | sh
 ```
 
+Update the full Arch system first; selective Pacman upgrades are unsupported.
 After Chezmoi has applied the managed Mise config, preview and converge the
 Pacman package layer, Docker and Tailscale services, and shared Mise tools:
 
 ```bash
+sudo pacman -Syu
 mise bootstrap plan
-mise bootstrap --yes --update
+mise bootstrap --yes
 ```
 
 The AUR package remains a separate additive step:

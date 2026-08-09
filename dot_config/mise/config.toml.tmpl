@@ -68,7 +68,7 @@ uv = "latest"
 "pipx:pynvim" = { version = "latest", depends = ["uv"] }
 "pipx:sqlit-tui" = { version = "latest", depends = ["uv"] }
 {{- if eq $profile "wsl" }}
-chezmoi = "2.71.1"
+chezmoi = "latest"
 {{- else if or (eq $profile "macos") (eq $profile "arch") }}
 java = ["17", "11"]
 maven = "latest"
