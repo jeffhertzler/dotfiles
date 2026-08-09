@@ -142,6 +142,24 @@ check_optional_alternative() {
   optional "$label is not installed (tried: $*)"
 }
 
+check_mise_bootstrap_state() {
+  local output
+
+  if ! command -v mise >/dev/null 2>&1; then
+    fail 'Mise bootstrap state could not be inspected because Mise is missing'
+    return
+  fi
+
+  if output=$(mise bootstrap status --missing 2>&1); then
+    pass 'Mise bootstrap state is converged'
+  else
+    fail 'Mise bootstrap state is not converged'
+    while IFS= read -r line; do
+      printf '     %s\n' "$line"
+    done <<< "$output"
+  fi
+}
+
 printf '%sDotfiles doctor%s\n' "$bold" "$reset"
 printf 'Profile: %s\n' "$profile"
 printf 'Host: %s\n' "$(hostname 2>/dev/null || printf unknown)"
@@ -238,6 +256,11 @@ if [[ $profile == wsl || $profile == macos ]]; then
   else
     fail "Managed tunnel helper is missing: $HOME/.local/bin/tunnel"
   fi
+fi
+
+if [[ $profile == arch ]]; then
+  section 'Managed bootstrap state'
+  check_mise_bootstrap_state
 fi
 
 section 'Git and GitHub policy'

@@ -35,10 +35,10 @@ dependency. Shared runtimes and portable CLIs remain declared through Mise.
 ## Health check
 
 Run `dotfiles-doctor` from any supported shell for a read-only report covering
-required tools, resolved versions and paths, Git and Chezmoi state, Herdr
-plugins, and optional Yazi preview support. It exits nonzero for required or
-managed-state failures; optional capabilities are reported without failing the
-check.
+required tools, resolved versions and paths, Git and Chezmoi state, Arch Mise
+bootstrap convergence, Herdr plugins, and optional Yazi preview support. It
+exits nonzero for required or managed-state failures; optional capabilities are
+reported without failing the check.
 
 ## Git layout
 
