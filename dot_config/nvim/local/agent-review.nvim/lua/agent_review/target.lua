@@ -50,6 +50,16 @@ local function agent_diff_context(bufnr)
   }
 end
 
+local function codediff_path(path)
+  if type(path) ~= "table" then
+    return path
+  end
+  if path.absolute and path.absolute ~= "" then
+    return path.absolute
+  end
+  return path.relative
+end
+
 local function codediff_context(bufnr)
   local ok, lifecycle = pcall(require, "codediff.ui.lifecycle")
   if not ok then
@@ -64,6 +74,8 @@ local function codediff_context(bufnr)
 
   local original_buf, modified_buf = lifecycle.get_buffers(tabpage)
   local original_path, modified_path = lifecycle.get_paths(tabpage)
+  original_path = codediff_path(original_path)
+  modified_path = codediff_path(modified_path)
   local view_side, path, selected_revision
   if bufnr == original_buf then
     view_side = "old"
