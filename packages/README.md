@@ -58,7 +58,7 @@ curl https://mise.run | sh
 ```
 
 After Chezmoi has applied the managed Mise config, preview and converge the
-Pacman package layer and shared Mise tools:
+Pacman package layer, Docker and Tailscale services, and shared Mise tools:
 
 ```bash
 mise bootstrap plan

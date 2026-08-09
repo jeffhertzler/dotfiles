@@ -35,6 +35,14 @@ corepack = true
 "pacman:tailscale" = "latest"
 "pacman:lazydocker" = "latest"
 "pacman:tmux" = "latest"
+
+[bootstrap.services.docker]
+state = "running"
+enabled = true
+
+[bootstrap.services.tailscaled]
+state = "running"
+enabled = true
 {{ end }}
 [tools]
 bun = "latest"
