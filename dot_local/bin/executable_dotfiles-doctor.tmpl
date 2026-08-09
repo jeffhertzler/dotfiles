@@ -363,6 +363,19 @@ else
   fi
 fi
 
+section 'Herdr integrations'
+integration_status=$(herdr integration status --outdated-only 2>&1)
+integration_code=$?
+if (( integration_code != 0 )); then
+  fail "Could not inspect Herdr integrations (exit $integration_code)"
+  [[ -z $integration_status ]] || printf '%s\n' "$integration_status" | sed 's/^/     /'
+elif [[ -n $integration_status ]]; then
+  fail 'Herdr integrations need updates'
+  printf '%s\n' "$integration_status" | sed 's/^/     /'
+else
+  pass 'Installed Herdr integrations are current'
+fi
+
 {{ if eq $profile "windows" -}}
 section 'Windows Herdr compatibility clones'
 {{ range .herdrPlugins -}}
