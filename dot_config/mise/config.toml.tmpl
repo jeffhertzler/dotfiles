@@ -1,7 +1,9 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 [settings]
 idiomatic_version_file_enable_tools = ["java", "node", "python"]
-
+{{ if eq $profile "arch" -}}
+system_packages.managers = ["pacman"]
+{{ end }}
 [settings.java]
 shorthand_vendor = "temurin"
 
@@ -11,6 +13,29 @@ set_gobin = false
 [settings.node]
 corepack = true
 
+{{ if eq $profile "arch" -}}
+[bootstrap.packages]
+"pacman:git" = "latest"
+"pacman:git-lfs" = "latest"
+"pacman:github-cli" = "latest"
+"pacman:zsh" = "latest"
+"pacman:bat" = "latest"
+"pacman:fd" = "latest"
+"pacman:fzf" = "latest"
+"pacman:ripgrep" = "latest"
+"pacman:btop" = "latest"
+"pacman:duf" = "latest"
+"pacman:eza" = "latest"
+"pacman:mosh" = "latest"
+"pacman:base-devel" = "latest"
+"pacman:chezmoi" = "latest"
+"pacman:mkcert" = "latest"
+"pacman:docker" = "latest"
+"pacman:docker-compose" = "latest"
+"pacman:tailscale" = "latest"
+"pacman:lazydocker" = "latest"
+"pacman:tmux" = "latest"
+{{ end }}
 [tools]
 bun = "latest"
 go = "latest"
