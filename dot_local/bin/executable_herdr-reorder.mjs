@@ -113,13 +113,6 @@ async function notifyError(error) {
   console.error(`herdr-reorder: ${body}`);
 }
 
-function moveInArray(items, sourceIndex, insertIndex) {
-  const targetIndex = sourceIndex < insertIndex ? insertIndex - 1 : insertIndex;
-  if (sourceIndex === targetIndex) return;
-  const [item] = items.splice(sourceIndex, 1);
-  items.splice(targetIndex, 0, item);
-}
-
 async function reorderTab() {
   if (!['left', 'right'].includes(direction) || kind !== 'tab') usage();
   if (!workspaceId || !tabId) throw new Error('active Herdr tab is unavailable');
@@ -183,23 +176,6 @@ function workspaceUnits(workspaces) {
   return units;
 }
 
-async function applyWorkspaceOrder(current, desired) {
-  const order = current.map((workspace) => workspace.workspace_id);
-  const wanted = desired.map((workspace) => workspace.workspace_id);
-
-  for (let index = 0; index < wanted.length; index += 1) {
-    if (order[index] === wanted[index]) continue;
-    const sourceIndex = order.indexOf(wanted[index]);
-    if (sourceIndex < index) throw new Error('failed to calculate workspace reorder');
-
-    await socket('workspace.move', {
-      workspace_id: wanted[index],
-      insert_index: index,
-    });
-    moveInArray(order, sourceIndex, index);
-  }
-}
-
 async function reorderWorkspace() {
   if (!['up', 'down'].includes(direction) || kind !== 'workspace') usage();
   if (!workspaceId) throw new Error('active Herdr workspace is unavailable');
@@ -213,8 +189,21 @@ async function reorderWorkspace() {
   const targetIndex = direction === 'up' ? unitIndex - 1 : unitIndex + 1;
   if (targetIndex < 0 || targetIndex >= units.length) return;
 
-  [units[unitIndex], units[targetIndex]] = [units[targetIndex], units[unitIndex]];
-  await applyWorkspaceOrder(workspaces, units.flat());
+  const movingUnit = units[unitIndex];
+  const beforeUnit = direction === 'up' ? units[targetIndex] : units[targetIndex + 1];
+  const params = {
+    workspace_ids: movingUnit.map((workspace) => workspace.workspace_id),
+  };
+  if (beforeUnit) params.before_workspace_id = beforeUnit[0].workspace_id;
+
+  const moved = await socket('workspace.move_block', params);
+  const expected = [...units];
+  [expected[unitIndex], expected[targetIndex]] = [expected[targetIndex], expected[unitIndex]];
+  const expectedIds = expected.flat().map((workspace) => workspace.workspace_id);
+  const actualIds = (moved?.workspaces || []).map((workspace) => workspace.workspace_id);
+  if (actualIds.join('\0') !== expectedIds.join('\0')) {
+    throw new Error('Herdr returned an unexpected workspace order');
+  }
 }
 
 let releaseLock;
