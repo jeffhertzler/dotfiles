@@ -1,3 +1,10 @@
+herdrIntegrations:
+  - pi
+  - claude
+  - codex
+  - opencode
+  - cursor
+
 herdrPlugins:
   - id: edi.layout-tools
     source: edouard-andrei/herdr-layout-tools

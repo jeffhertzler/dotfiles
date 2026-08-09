@@ -1,25 +1,39 @@
-# Herdr plugin management
+# Herdr integration and plugin management
 
-Chezmoi manages the desired shared plugin inventory, shared keybindings, and
-user-owned plugin configuration. Herdr continues to own its generated
-`plugins.json` registry, managed GitHub checkouts, caches, logs, and state.
+Chezmoi manages the desired agent integrations and shared plugin inventory,
+shared keybindings, and user-owned plugin configuration. Herdr continues to own
+its generated integration files, `plugins.json` registry, managed GitHub
+checkouts, caches, logs, and state.
 
 The source-only files are:
 
-- `.chezmoidata/herdr-plugins.yaml` — the four desired plugins and Windows
-  compatibility-clone metadata
-- `.chezmoiscripts/run_onchange_after_30-herdr-plugins.sh.tmpl` — install,
-  update, and enable desired plugins on Arch, macOS, and WSL
-- `.chezmoiscripts/run_onchange_after_30-herdr-plugins.ps1.tmpl` — clone,
-  update, validate, and link the private Windows-compatible repositories
+- `.chezmoidata/herdr.yaml` — the desired integrations, four desired plugins,
+  and Windows compatibility-clone metadata
+- `.chezmoiscripts/run_onchange_after_30-herdr.sh.tmpl` — install or update
+  desired integrations and plugins on Arch, macOS, and WSL
+- `.chezmoiscripts/run_onchange_after_30-herdr.ps1.tmpl` — install or update
+  desired integrations, then clone, update, validate, and link the private
+  Windows-compatible plugin repositories
 
-The rendered scripts include the current year and month. Consequently, the
-first `chezmoi apply` in a new month refreshes plugins automatically, and the
-scripts also run immediately whenever their inventory or implementation
+The rendered scripts include the current date. Consequently, the first
+`chezmoi apply` each day refreshes integrations and plugins automatically, and
+the scripts also run immediately whenever their inventory or implementation
 changes. Once they run, `chezmoi status` returns to clean instead of permanently
 showing an always-run script.
 
-## Update and removal policy
+## Agent integrations
+
+Every profile installs the Herdr integrations for Pi, Claude, Codex, OpenCode,
+and Cursor. Installation is idempotent and updates an older generated hook or
+extension in place. `dotfiles-doctor` requires every declared integration to be
+installed and current, while ignoring undeclared integrations.
+
+Herdr owns the generated integration files because their formats and versions
+follow the installed Herdr release. Removing an integration remains an explicit
+`herdr integration uninstall <name>` operation followed by removing it from the
+inventory.
+
+## Plugin update and removal policy
 
 On WSL, macOS, and Arch, reconciliation reruns `herdr plugin install` for every
 desired upstream source. That resolves the current upstream default ref and

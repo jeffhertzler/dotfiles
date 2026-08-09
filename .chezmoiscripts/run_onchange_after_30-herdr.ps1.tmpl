@@ -2,13 +2,20 @@
 {{- if eq $profile "windows" -}}
 $ErrorActionPreference = "Stop"
 
-# Automatic refresh period: {{ now | date "2006-01" }}
+# Automatic refresh date: {{ now | date "2006-01-02" }}
 
 $herdr = Get-Command herdr -ErrorAction SilentlyContinue
 if (-not $herdr) {
-  throw "Herdr plugin reconciliation requires herdr on PATH"
+  throw "Herdr reconciliation requires herdr on PATH"
 }
 
+{{ range .herdrIntegrations -}}
+$integration = {{ . | quote }}
+Write-Output "Installing or updating Herdr integration $integration"
+& $herdr.Source integration install $integration
+if ($LASTEXITCODE -ne 0) { throw "Failed to install Herdr integration $integration" }
+
+{{ end -}}
 function Get-NormalizedPath {
   param([Parameter(Mandatory = $true)][string] $Path)
 

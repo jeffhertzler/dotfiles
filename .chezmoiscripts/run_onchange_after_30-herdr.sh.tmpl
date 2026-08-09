@@ -3,13 +3,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Automatic refresh period: {{ now | date "2006-01" }}
+# Automatic refresh date: {{ now | date "2006-01-02" }}
 
 if ! command -v herdr >/dev/null 2>&1; then
-  echo "Herdr plugin reconciliation requires herdr on PATH" >&2
+  echo "Herdr reconciliation requires herdr on PATH" >&2
   exit 1
 fi
 
+{{ range .herdrIntegrations -}}
+integration={{ . | quote }}
+echo "Installing or updating Herdr integration $integration"
+herdr integration install "$integration"
+
+{{ end -}}
 {{ range .herdrPlugins -}}
 plugin_id={{ .id | quote }}
 plugin_source={{ .source | quote }}
