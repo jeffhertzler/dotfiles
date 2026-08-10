@@ -11,9 +11,13 @@ if (-not $herdr) {
 
 {{ range .herdrIntegrations -}}
 $integration = {{ . | quote }}
-Write-Output "Installing or updating Herdr integration $integration"
-& $herdr.Source integration install $integration
-if ($LASTEXITCODE -ne 0) { throw "Failed to install Herdr integration $integration" }
+if (-not (Get-Command $integration -ErrorAction SilentlyContinue)) {
+  Write-Warning "Skipping Herdr integration $integration because its executable is not installed"
+} else {
+  Write-Output "Installing or updating Herdr integration $integration"
+  & $herdr.Source integration install $integration
+  if ($LASTEXITCODE -ne 0) { throw "Failed to install Herdr integration $integration" }
+}
 
 {{ end -}}
 function Get-NormalizedPath {
