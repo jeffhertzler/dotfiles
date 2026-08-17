@@ -17,7 +17,7 @@ run_case() {
       "+lua dofile([[$root/tests/harness.lua]])"
 }
 
-for name in core context input; do
+for name in core context input targets; do
   run_case "$name"
 done
 

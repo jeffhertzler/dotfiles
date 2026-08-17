@@ -181,6 +181,19 @@ function M.resolve(opts, callback)
     vim.notify("pinned agent is no longer available", vim.log.levels.WARN)
   end
 
+  if not opts.force_select then
+    local same_tab = {}
+    for _, candidate in ipairs(items) do
+      if candidate.tab_id == vim.env.HERDR_TAB_ID then
+        table.insert(same_tab, candidate)
+      end
+    end
+    if #same_tab == 1 then
+      callback(same_tab[1])
+      return
+    end
+  end
+
   if #items == 1 then
     if opts.pin then
       pinned_target = items[1]
