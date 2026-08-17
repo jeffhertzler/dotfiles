@@ -476,6 +476,10 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     label: "Subagent",
     description:
       "Start one autonomous Pi subagent in a visible Herdr tab and return its job ID. Call subagent_wait to join it; otherwise its final result is delivered automatically later. Multiple calls run independently.",
+    promptGuidelines: [
+      "When using subagent, partition the task before launch: give the child an independent deliverable and reserve a different parent deliverable. While it runs, work only on the reserved parent deliverable.",
+      "Call subagent_wait for every child whose result the response depends on. After all required waits return, synthesize the combined result once.",
+    ],
     parameters: Type.Object({
       name: Type.String({ description: "Short human-readable task label" }),
       task: Type.String({ description: "Complete instructions for the child" }),

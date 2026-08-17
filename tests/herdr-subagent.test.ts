@@ -187,6 +187,10 @@ test("subagent starts a visible child using the parent runtime by default", asyn
 
   const tool = harness.tools.get("subagent");
   assert.ok(tool, "registers the canonical subagent tool");
+  assert.deepEqual(tool.promptGuidelines, [
+    "When using subagent, partition the task before launch: give the child an independent deliverable and reserve a different parent deliverable. While it runs, work only on the reserved parent deliverable.",
+    "Call subagent_wait for every child whose result the response depends on. After all required waits return, synthesize the combined result once.",
+  ]);
 
   const result = await tool.execute(
     "call-1",
