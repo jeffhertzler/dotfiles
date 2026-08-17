@@ -2,6 +2,7 @@
 README.md
 docs
 packages
+tests
 .config/git/local.config
 .config/nvim/lazy-lock.json
 
