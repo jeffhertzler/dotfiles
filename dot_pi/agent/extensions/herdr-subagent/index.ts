@@ -60,6 +60,8 @@ interface ActiveJob {
   token: string;
   timer: ReturnType<typeof setInterval>;
   settling: boolean;
+  claimed: boolean;
+  resolveWait?: (result: unknown) => void;
 }
 
 export interface HerdrClient {
@@ -80,7 +82,11 @@ interface PiLike {
   getActiveTools(): string[];
   getAllTools(): Array<{ name: string }>;
   sendMessage(message: unknown, options?: unknown): void;
-  exec?(command: string, args: string[], options?: unknown): Promise<{
+  exec?(
+    command: string,
+    args: string[],
+    options?: unknown,
+  ): Promise<{
     stdout: string;
     stderr: string;
     code: number;
@@ -99,7 +105,9 @@ function requireCommandSuccess(
   result: { stdout: string; stderr: string; code: number },
 ): string {
   if (result.code !== 0) {
-    throw new Error(`${command} failed: ${result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`}`);
+    throw new Error(
+      `${command} failed: ${result.stderr.trim() || result.stdout.trim() || `exit ${result.code}`}`,
+    );
   }
   return result.stdout;
 }
@@ -202,12 +210,18 @@ function slugifyName(name: string, id: string): string {
   return `${base}-${id.replace(/-/g, "").slice(0, 6)}`;
 }
 
-function parseModelReference(reference: string): { provider: string; model: string } {
+function parseModelReference(reference: string): {
+  provider: string;
+  model: string;
+} {
   const separator = reference.indexOf("/");
   if (separator <= 0 || separator === reference.length - 1) {
     throw new Error(`Model must be an exact provider/model-id reference: ${reference}`);
   }
-  return { provider: reference.slice(0, separator), model: reference.slice(separator + 1) };
+  return {
+    provider: reference.slice(0, separator),
+    model: reference.slice(separator + 1),
+  };
 }
 
 function readChildResult(path: string, token: string): ChildResult | undefined {
@@ -228,17 +242,26 @@ function readChildResult(path: string, token: string): ChildResult | undefined {
   }
 }
 
-function boundParentOutput(output: string, resultFile: string): { text: string; truncated: boolean } {
+function boundParentOutput(
+  output: string,
+  resultFile: string,
+): { text: string; truncated: boolean } {
   const bytes = Buffer.from(output, "utf8");
   if (bytes.length <= MAX_PARENT_OUTPUT_BYTES) return { text: output, truncated: false };
-  const prefix = bytes.subarray(0, MAX_PARENT_OUTPUT_BYTES).toString("utf8").replace(/\uFFFD$/, "");
+  const prefix = bytes
+    .subarray(0, MAX_PARENT_OUTPUT_BYTES)
+    .toString("utf8")
+    .replace(/\uFFFD$/, "");
   return {
     text: `${prefix}\n\n[Output truncated. Full result retained at ${resultFile}]`,
     truncated: true,
   };
 }
 
-function assistantResult(entries: any[]): { status: "completed" | "failed"; output: string } {
+function assistantResult(entries: any[]): {
+  status: "completed" | "failed";
+  output: string;
+} {
   for (let index = entries.length - 1; index >= 0; index -= 1) {
     const message = entries[index]?.type === "message" ? entries[index].message : undefined;
     if (message?.role !== "assistant" || !Array.isArray(message.content)) continue;
@@ -250,7 +273,10 @@ function assistantResult(entries: any[]): { status: "completed" | "failed"; outp
     const failed = message.stopReason === "error" || message.stopReason === "aborted" || !output;
     return { status: failed ? "failed" : "completed", output };
   }
-  return { status: "failed", output: "No final assistant response was produced." };
+  return {
+    status: "failed",
+    output: "No final assistant response was produced.",
+  };
 }
 
 function writeChildResult(path: string, result: ChildResult): void {
@@ -301,7 +327,7 @@ function resolveTools(pi: PiLike, requested: string[] | undefined): string[] {
   const available = new Set(pi.getAllTools().map((tool) => tool.name));
   const tools = requested ?? pi.getActiveTools();
   const normalized = [...new Set(tools.map((tool) => tool.trim()).filter(Boolean))].filter(
-    (tool) => tool !== "subagent",
+    (tool) => tool !== "subagent" && tool !== "subagent_wait",
   );
   const unknown = normalized.filter((tool) => !available.has(tool));
   if (unknown.length > 0) throw new Error(`Unknown subagent tools: ${unknown.join(", ")}`);
@@ -348,38 +374,60 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     const completed = result.status === "completed" && result.output.trim().length > 0;
     const status = completed ? "completed" : "failed";
     const bounded = boundParentOutput(result.output || "No result was produced.", job.resultFile);
-    pi.sendMessage(
-      {
-        customType: "subagent_result",
-        content: `Subagent ${job.name} ${status}:\n\n${bounded.text}`,
-        display: true,
-        details: {
-          name: job.name,
-          status,
-          tabId: job.tabId,
-          ...(bounded.truncated ? { resultFile: job.resultFile } : {}),
+    const toolResult = {
+      content: [
+        {
+          type: "text",
+          text: `Subagent ${job.name} ${status}:\n\n${bounded.text}`,
         },
+      ],
+      details: {
+        id,
+        name: job.name,
+        status,
+        tabId: job.tabId,
+        ...(bounded.truncated ? { resultFile: job.resultFile } : {}),
       },
-      { deliverAs: "followUp", triggerTurn: jobs.size === 0 },
-    );
+    };
+    if (!job.claimed) {
+      pi.sendMessage(
+        {
+          customType: "subagent_result",
+          content: toolResult.content[0].text,
+          display: true,
+          details: {
+            name: job.name,
+            status,
+            tabId: job.tabId,
+            ...(bounded.truncated ? { resultFile: job.resultFile } : {}),
+          },
+        },
+        { deliverAs: "followUp", triggerTurn: jobs.size === 0 },
+      );
+    }
 
-    if (!completed) return;
-    try {
-      await herdr.closeTab(job.tabId);
-      if (!bounded.truncated) rmSync(job.resultDirectory, { recursive: true, force: true });
-    } catch {
-      // The result is already durable in the parent. Leave any resource that
-      // could not be safely closed for manual inspection.
+    job.resolveWait?.(toolResult);
+    if (completed) {
+      try {
+        await herdr.closeTab(job.tabId);
+        if (!bounded.truncated) rmSync(job.resultDirectory, { recursive: true, force: true });
+      } catch {
+        // The result is already durable in the parent. Leave any resource that
+        // could not be safely closed for manual inspection.
+      }
     }
   };
 
-  const watchJob = (id: string, job: Omit<ActiveJob, "timer" | "settling">): void => {
+  const watchJob = (
+    id: string,
+    job: Omit<ActiveJob, "timer" | "settling" | "claimed" | "resolveWait">,
+  ): void => {
     const timer = setInterval(() => {
       const result = readChildResult(job.resultFile, job.token);
       if (result) void settleJob(id, result);
     }, pollIntervalMs);
     timer.unref?.();
-    jobs.set(id, { ...job, timer, settling: false });
+    jobs.set(id, { ...job, timer, settling: false, claimed: false });
     renderJobs();
   };
 
@@ -391,15 +439,56 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   });
 
   pi.registerTool({
+    name: "subagent_wait",
+    label: "Wait for subagent",
+    description:
+      "Wait for a started subagent by job ID and return its result. Claiming a job prevents automatic redelivery.",
+    parameters: Type.Object({
+      id: Type.String({ description: "Job ID returned by subagent" }),
+    }),
+    async execute(_toolCallId: string, params: any, signal: AbortSignal | undefined) {
+      const id = params.id.trim();
+      const job = jobs.get(id);
+      if (!job) throw new Error(`Unknown or completed subagent job: ${id}`);
+      if (job.claimed) throw new Error(`Subagent job is already being waited for: ${id}`);
+      if (signal?.aborted) throw signal.reason ?? new Error("Subagent wait aborted");
+      job.claimed = true;
+      job.timer.ref?.();
+      return new Promise((resolve, reject) => {
+        const abort = () => {
+          if (job.settling) return;
+          job.claimed = false;
+          job.resolveWait = undefined;
+          job.timer.unref?.();
+          reject(signal?.reason ?? new Error("Subagent wait aborted"));
+        };
+        job.resolveWait = (result) => {
+          signal?.removeEventListener("abort", abort);
+          resolve(result);
+        };
+        signal?.addEventListener("abort", abort, { once: true });
+      });
+    },
+  });
+
+  pi.registerTool({
     name: "subagent",
     label: "Subagent",
     description:
-      "Start one autonomous Pi subagent in a visible Herdr tab. Returns immediately; the final result is delivered later. Multiple calls run independently.",
+      "Start one autonomous Pi subagent in a visible Herdr tab and return its job ID. Call subagent_wait to join it; otherwise its final result is delivered automatically later. Multiple calls run independently.",
     parameters: Type.Object({
       name: Type.String({ description: "Short human-readable task label" }),
       task: Type.String({ description: "Complete instructions for the child" }),
-      tools: Type.Optional(Type.Array(Type.String(), { description: "Exact tool allowlist; defaults to parent tools" })),
-      model: Type.Optional(Type.String({ description: "Exact provider/model-id; defaults to the parent model" })),
+      tools: Type.Optional(
+        Type.Array(Type.String(), {
+          description: "Exact tool allowlist; defaults to parent tools",
+        }),
+      ),
+      model: Type.Optional(
+        Type.String({
+          description: "Exact provider/model-id; defaults to the parent model",
+        }),
+      ),
       thinking: Type.Optional(
         Type.String({
           description: "Thinking level; defaults to the parent level",
@@ -407,7 +496,13 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
         }),
       ),
     }),
-    async execute(_toolCallId: string, params: any, _signal: AbortSignal | undefined, _onUpdate: unknown, ctx: any) {
+    async execute(
+      _toolCallId: string,
+      params: any,
+      _signal: AbortSignal | undefined,
+      _onUpdate: unknown,
+      ctx: any,
+    ) {
       parentUi = ctx.ui;
       if (env.HERDR_ENV !== "1" || !env.HERDR_WORKSPACE_ID) {
         throw new Error("subagent requires Pi to be running inside Herdr");
@@ -418,7 +513,8 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
 
       const parentModel = ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : undefined;
       const model = params.model?.trim() || parentModel;
-      if (!model) throw new Error("No subagent model was specified and the parent has no active model");
+      if (!model)
+        throw new Error("No subagent model was specified and the parent has no active model");
       const parsedModel = parseModelReference(model);
       if (!ctx.modelRegistry.find(parsedModel.provider, parsedModel.model)) {
         throw new Error(`Unknown subagent model: ${model}`);
@@ -461,7 +557,12 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       });
 
       return {
-        content: [{ type: "text", text: `Subagent ${displayName} started in ${surface.tabId}.` }],
+        content: [
+          {
+            type: "text",
+            text: `Subagent ${displayName} started in ${surface.tabId}.\nJob ID: ${id}. Use subagent_wait with this ID to collect the result in this turn.`,
+          },
+        ],
         details: { id, name: displayName, agentName, tabId: surface.tabId },
       };
     },

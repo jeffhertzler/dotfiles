@@ -47,10 +47,12 @@ function createPiHarness() {
       handlers.set(event, registered);
     },
     getActiveTools() {
-      return ["read", "bash", "subagent"];
+      return ["read", "bash", "subagent", "subagent_wait"];
     },
     getAllTools() {
-      return ["read", "bash", "subagent"].map((name) => ({ name }));
+      return ["read", "bash", "subagent", "subagent_wait"].map((name) => ({
+        name,
+      }));
     },
     sendMessage(message: unknown, options: unknown) {
       messages.push({ message, options });
@@ -107,27 +109,31 @@ test("a child publishes its final answer without exposing another subagent tool"
   });
 
   assert.equal(harness.tools.has("subagent"), false);
+  assert.equal(harness.tools.has("subagent_wait"), false);
   const settled = harness.handlers.get("agent_settled")?.[0];
   assert.ok(settled, "registers child completion handling");
-  await settled({}, {
-    sessionManager: {
-      getBranch() {
-        return [
-          {
-            type: "message",
-            message: {
-              role: "assistant",
-              content: [{ type: "text", text: "The review found no issues." }],
-              stopReason: "end",
+  await settled(
+    {},
+    {
+      sessionManager: {
+        getBranch() {
+          return [
+            {
+              type: "message",
+              message: {
+                role: "assistant",
+                content: [{ type: "text", text: "The review found no issues." }],
+                stopReason: "end",
+              },
             },
-          },
-        ];
+          ];
+        },
+      },
+      shutdown() {
+        shutdowns += 1;
       },
     },
-    shutdown() {
-      shutdowns += 1;
-    },
-  });
+  );
 
   assert.deepEqual(JSON.parse(readFileSync(resultFile, "utf8")), {
     schemaVersion: 1,
@@ -191,6 +197,9 @@ test("subagent starts a visible child using the parent runtime by default", asyn
   );
 
   assert.match(result.content[0].text, /started/i);
+  assert.match(result.details.id, /^[a-f0-9-]{36}$/);
+  assert.match(result.content[0].text, new RegExp(`Job ID: ${result.details.id}`));
+  assert.match(result.content[0].text, /subagent_wait/);
   assert.equal(herdr.createRequests.length, 1);
   const createRequest = herdr.createRequests[0] as any;
   assert.equal(createRequest.workspaceId, "w1");
@@ -239,7 +248,9 @@ test("the real adapter launches Pi through Herdr without disabling child skills"
       return {
         code: 1,
         stdout: "",
-        stderr: JSON.stringify({ error: { code: "agent_pane_busy", message: "not an available shell" } }),
+        stderr: JSON.stringify({
+          error: { code: "agent_pane_busy", message: "not an available shell" },
+        }),
       };
     }
     return { code: 0, stderr: "", stdout: JSON.stringify({ result: {} }) };
@@ -250,20 +261,25 @@ test("the real adapter launches Pi through Herdr without disabling child skills"
     pollIntervalMs: 5,
     env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
   });
-  await harness.tools.get("subagent").execute(
-    "call-1",
-    { name: "CLI check", task: "Return OK." },
-    undefined,
-    undefined,
-    createContext(),
-  );
+  await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "CLI check", task: "Return OK." },
+      undefined,
+      undefined,
+      createContext(),
+    );
 
-  assert.deepEqual(commands.map((args) => args.slice(0, 2)), [
-    ["tab", "create"],
-    ["agent", "start"],
-    ["agent", "start"],
-    ["agent", "prompt"],
-  ]);
+  assert.deepEqual(
+    commands.map((args) => args.slice(0, 2)),
+    [
+      ["tab", "create"],
+      ["agent", "start"],
+      ["agent", "start"],
+      ["agent", "prompt"],
+    ],
+  );
   const start = commands[2];
   assert.ok(start.includes("--no-session"));
   assert.ok(start.includes("--append-system-prompt"));
@@ -320,13 +336,15 @@ test("invalid runtime options fail before Herdr resources are created", async (t
   });
 
   await assert.rejects(
-    harness.tools.get("subagent").execute(
-      "call-1",
-      { name: "Invalid", task: "Do work.", tools: ["not-a-tool"] },
-      undefined,
-      undefined,
-      createContext(),
-    ),
+    harness.tools
+      .get("subagent")
+      .execute(
+        "call-1",
+        { name: "Invalid", task: "Do work.", tools: ["not-a-tool"] },
+        undefined,
+        undefined,
+        createContext(),
+      ),
     /Unknown subagent tools: not-a-tool/,
   );
   assert.deepEqual(herdr.createRequests, []);
@@ -346,8 +364,20 @@ test("concurrent children with the same display name receive unique Herdr names"
   });
 
   const tool = harness.tools.get("subagent");
-  await tool.execute("call-1", { name: "Review", task: "Review A." }, undefined, undefined, createContext());
-  await tool.execute("call-2", { name: "Review", task: "Review B." }, undefined, undefined, createContext());
+  await tool.execute(
+    "call-1",
+    { name: "Review", task: "Review A." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  await tool.execute(
+    "call-2",
+    { name: "Review", task: "Review B." },
+    undefined,
+    undefined,
+    createContext(),
+  );
 
   const names = herdr.startRequests.map((request: any) => request.name);
   assert.equal(new Set(names).size, 2);
@@ -368,13 +398,15 @@ test("active children are visible until the parent session shuts down", async (t
     env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
   });
 
-  await harness.tools.get("subagent").execute(
-    "call-1",
-    { name: "Architecture scan", task: "Map the current architecture." },
-    undefined,
-    undefined,
-    createContext(widgets),
-  );
+  await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "Architecture scan", task: "Map the current architecture." },
+      undefined,
+      undefined,
+      createContext(widgets),
+    );
 
   assert.deepEqual(widgets.at(-1), {
     id: "herdr-subagents",
@@ -392,6 +424,113 @@ test("active children are visible until the parent session shuts down", async (t
   });
 });
 
+test("subagent_wait claims a job and returns its result without automatic redelivery", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+
+  const started = await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "Joined review", task: "Review the change." },
+      undefined,
+      undefined,
+      createContext(),
+    );
+  const waitTool = harness.tools.get("subagent_wait");
+  assert.ok(waitTool, "registers the result collection tool");
+  const waiting = waitTool.execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  const createRequest = herdr.createRequests[0] as any;
+  const resultFile = createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE;
+  writeFileSync(
+    resultFile,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "The joined review passed.",
+    }),
+  );
+
+  const result = await waiting;
+  assert.deepEqual(result, {
+    content: [
+      {
+        type: "text",
+        text: "Subagent Joined review completed:\n\nThe joined review passed.",
+      },
+    ],
+    details: {
+      id: started.details.id,
+      name: "Joined review",
+      status: "completed",
+      tabId: "w1:t2",
+    },
+  });
+  assert.deepEqual(harness.messages, []);
+  assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
+  assert.equal(existsSync(dirname(resultFile)), false);
+});
+
+test("aborting subagent_wait releases the job for automatic delivery", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "Released review", task: "Review the change." },
+      undefined,
+      undefined,
+      createContext(),
+    );
+  const controller = new AbortController();
+  const waiting = harness.tools
+    .get("subagent_wait")
+    .execute("call-2", { id: started.details.id }, controller.signal, undefined, createContext());
+  controller.abort();
+
+  const createRequest = herdr.createRequests[0] as any;
+  writeFileSync(
+    createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "The released review passed.",
+    }),
+  );
+
+  await assert.rejects(waiting, /aborted/i);
+  await waitFor(() => harness.messages.length === 1);
+  assert.match((harness.messages[0] as any).message.content, /The released review passed/);
+});
+
 test("a failed child is reported but its tab and artifacts are preserved", async (t) => {
   const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
   t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
@@ -405,13 +544,15 @@ test("a failed child is reported but its tab and artifacts are preserved", async
     env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
   });
 
-  await harness.tools.get("subagent").execute(
-    "call-1",
-    { name: "Broken review", task: "Attempt the review." },
-    undefined,
-    undefined,
-    createContext(),
-  );
+  await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "Broken review", task: "Attempt the review." },
+      undefined,
+      undefined,
+      createContext(),
+    );
   const createRequest = herdr.createRequests[0] as any;
   const resultFile = createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE;
   writeFileSync(
@@ -442,13 +583,15 @@ test("large results are bounded in parent context and retained on disk", async (
     pollIntervalMs: 5,
     env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
   });
-  await harness.tools.get("subagent").execute(
-    "call-1",
-    { name: "Large report", task: "Produce a report." },
-    undefined,
-    undefined,
-    createContext(),
-  );
+  await harness.tools
+    .get("subagent")
+    .execute(
+      "call-1",
+      { name: "Large report", task: "Produce a report." },
+      undefined,
+      undefined,
+      createContext(),
+    );
   const createRequest = herdr.createRequests[0] as any;
   const resultFile = createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE;
   writeFileSync(
