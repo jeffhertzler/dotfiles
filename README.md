@@ -40,6 +40,18 @@ bootstrap convergence, Herdr plugins and integrations, and optional Yazi preview
 support. It exits nonzero for required or managed-state failures; optional
 capabilities are reported without failing the check.
 
+## Tests
+
+Run TypeScript tests from the repository root with `tsx`, which supplies the
+TypeScript loader and resolves the runtime dependencies used by Pi extensions:
+
+```sh
+tsx --test tests/herdr-subagent.test.ts
+```
+
+Use `tsx --test tests/*.test.ts` to run the complete TypeScript test suite.
+Do not use plain `node --test` for `.ts` test files.
+
 ## Git layout
 
 Portable identity, defaults, and global ignores live in `.config/git`. Profile
