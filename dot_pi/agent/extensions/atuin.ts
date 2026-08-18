@@ -2,10 +2,14 @@
  * Atuin extension for pi.
  *
  * Tracks bash commands executed by pi in Atuin history with author `pi`.
- * Managed by chezmoi from the extension bundled with Atuin 18.19.0.
+ *
+ * Install with:
+ *   atuin hook install pi
+ *
+ * Then restart pi or run /reload.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@mariozechner/pi-coding-agent";
 
 const ATUIN_AUTHOR = "pi";
 const ATUIN_TIMEOUT_MS = 10_000;

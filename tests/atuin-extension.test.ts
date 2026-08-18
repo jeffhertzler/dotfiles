@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import atuinPiExtension from "../dot_pi/agent/extensions/atuin.ts";
 
 type Handler = (event: any, ctx: any) => unknown;
+
+const managedExtension = new URL("../dot_pi/agent/extensions/atuin.ts", import.meta.url);
 
 function createHarness() {
 	const calls: Array<{ command: string; args: string[]; options: unknown }> = [];
@@ -23,6 +29,24 @@ function createHarness() {
 	atuinPiExtension(pi as any);
 	return { calls, handlers };
 }
+
+test("managed extension exactly matches the installed Atuin release", (t) => {
+	const home = mkdtempSync(join(tmpdir(), "atuin-pi-extension-test-"));
+	t.after(() => rmSync(home, { recursive: true, force: true }));
+
+	const result = spawnSync("atuin", ["hook", "install", "pi"], {
+		encoding: "utf8",
+		env: { ...process.env, HOME: home, USERPROFILE: home },
+	});
+	assert.equal(result.status, 0, result.stderr || result.stdout);
+
+	const generated = readFileSync(join(home, ".pi", "agent", "extensions", "atuin.ts"), "utf8");
+	assert.equal(
+		readFileSync(managedExtension, "utf8"),
+		generated,
+		"Atuin's bundled pi extension changed; regenerate the managed snapshot and review the diff",
+	);
+});
 
 test("records a pi bash command with its cwd and exit code", async () => {
 	const { calls, handlers } = createHarness();

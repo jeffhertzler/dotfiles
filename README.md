@@ -52,6 +52,13 @@ tsx --test tests/herdr-subagent.test.ts
 Use `tsx --test tests/*.test.ts` to run the complete TypeScript test suite.
 Do not use plain `node --test` for `.ts` test files.
 
+The managed Atuin extension is an exact snapshot of `atuin hook install pi`, not
+locally customized. Its test generates the extension from the installed Atuin
+release and compares it byte-for-byte, while `dotfiles-doctor` performs the same
+check against the deployed extension. When Atuin changes its bundled extension,
+regenerate the snapshot in a temporary home and review the diff before applying
+it through chezmoi.
+
 ## Git layout
 
 Portable identity, defaults, and global ignores live in `.config/git`. Profile

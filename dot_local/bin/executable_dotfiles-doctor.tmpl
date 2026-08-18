@@ -263,6 +263,27 @@ if [[ $profile == arch ]]; then
   check_mise_bootstrap_state
 fi
 
+section 'Atuin integration'
+atuin_hook_home=$(mktemp -d "${TMPDIR:-/tmp}/atuin-pi-hook.XXXXXX")
+atuin_hook_output=$(HOME="$atuin_hook_home" USERPROFILE="$atuin_hook_home" atuin hook install pi 2>&1)
+atuin_hook_code=$?
+atuin_generated_extension=$atuin_hook_home/.pi/agent/extensions/atuin.ts
+atuin_managed_extension=$HOME/.pi/agent/extensions/atuin.ts
+if (( atuin_hook_code != 0 )); then
+  fail "Could not generate Atuin's bundled pi extension (exit $atuin_hook_code)"
+  [[ -z $atuin_hook_output ]] || printf '%s\n' "$atuin_hook_output" | sed 's/^/     /'
+elif [[ ! -f $atuin_generated_extension ]]; then
+  fail "Atuin did not generate the expected pi extension: $atuin_generated_extension"
+elif [[ ! -f $atuin_managed_extension ]]; then
+  fail "Managed Atuin pi extension is missing: $atuin_managed_extension"
+elif cmp -s "$atuin_generated_extension" "$atuin_managed_extension"; then
+  pass "Managed pi extension matches Atuin $(atuin --version 2>/dev/null | first_line)"
+else
+  fail "Managed pi extension differs from the extension bundled with the installed Atuin"
+  info "Regenerate it with: HOME=<temporary-directory> atuin hook install pi"
+fi
+rm -rf "$atuin_hook_home"
+
 section 'Git and GitHub policy'
 git_protocol=$(gh config get git_protocol 2>/dev/null | first_line)
 if [[ $git_protocol == ssh ]]; then
