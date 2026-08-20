@@ -60,7 +60,6 @@ end
 function M.open()
   local counts = M.counts()
   if not counts.session then
-    vim.notify("No annotations in this review", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
   require("agent_review.picker").open({ session = counts.session })

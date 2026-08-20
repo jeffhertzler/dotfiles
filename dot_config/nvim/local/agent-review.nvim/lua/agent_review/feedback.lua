@@ -3,7 +3,7 @@ local M = {}
 local contexts = {}
 
 local function notify(message, level)
-  vim.notify(message, level or vim.log.levels.INFO, { title = "Feedback" })
+  vim.notify(message, level, { title = "Feedback" })
 end
 
 local function read_json(path)
@@ -168,7 +168,6 @@ function M.submit(opts)
   end
 
   context.disposition = "submit"
-  notify(string.format("Submitted %d feedback comment%s", #comments, #comments == 1 and "" or "s"))
   if opts.quit ~= false then
     quit()
   end
@@ -188,7 +187,6 @@ function M.keep(opts)
     return false
   end
   context.disposition = "keep"
-  notify("Kept feedback draft")
   if opts.quit ~= false then
     quit()
   end
@@ -209,10 +207,6 @@ function M.discard(opts)
 end
 
 M.cancel = M.discard
-
-local function show_help()
-  notify("<leader>ra annotate · visual <leader>ra range · <leader>rc clear · <leader>rk keep · <leader>rs submit · q discard")
-end
 
 function M.attach(opts)
   opts = opts or {}
@@ -255,7 +249,6 @@ function M.attach(opts)
   vim.keymap.set("n", "<leader>rk", M.keep, vim.tbl_extend("force", map_opts, { desc = "Keep feedback draft" }))
   vim.keymap.set("n", "<leader>rq", M.discard, vim.tbl_extend("force", map_opts, { desc = "Discard feedback" }))
   vim.keymap.set("n", "q", M.discard, vim.tbl_extend("force", map_opts, { desc = "Discard feedback" }))
-  vim.keymap.set("n", "?", show_help, vim.tbl_extend("force", map_opts, { desc = "Feedback controls" }))
   vim.api.nvim_buf_create_user_command(bufnr, "AgentFeedbackSubmit", function()
     M.submit()
   end, { desc = "Submit Pi feedback annotations" })
@@ -280,7 +273,6 @@ function M.attach(opts)
 
   vim.api.nvim_win_set_cursor(0, { 1, 0 })
   review.refresh()
-  show_help()
   return true
 end
 

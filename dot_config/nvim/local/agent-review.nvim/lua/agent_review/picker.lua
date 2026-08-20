@@ -35,7 +35,6 @@ local function navigate(tabpage, annotation)
 
   local ok, lifecycle = pcall(require, "codediff.ui.lifecycle")
   if not ok or not lifecycle.get_session(tabpage) then
-    vim.notify("Open the annotation's diff before navigating to it", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
 
@@ -46,7 +45,6 @@ local function navigate(tabpage, annotation)
   local winid = side == "old" and original_win or modified_win
 
   if lifecycle.get_layout(tabpage) == "inline" and side == "old" then
-    vim.notify("Old-side inline navigation is part of the next spike", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
   if not (winid and vim.api.nvim_win_is_valid(winid) and bufnr and vim.api.nvim_buf_is_valid(bufnr)) then
@@ -55,7 +53,6 @@ local function navigate(tabpage, annotation)
 
   local context = require("agent_review.target").context_for_buffer(bufnr)
   if not context or context.path ~= annotation.target.file then
-    vim.notify("Select the annotation's file in CodeDiff first", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
 
@@ -82,7 +79,6 @@ function M.open(opts)
     or (opts.scope and scope.list(scope_key))
     or {}
   if #annotations == 0 then
-    vim.notify("No annotations in this review", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
 
@@ -174,12 +170,10 @@ function M.sessions(opts)
   local store = require("agent_review.sessions")
   local workspace = opts.workspace or require("agent_review.scope").current()
   if not workspace then
-    vim.notify("No current review workspace", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
   local available = store.list(workspace, { include_archived = true })
   if #available == 0 then
-    vim.notify("No review sessions in this workspace", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
 
@@ -263,7 +257,6 @@ end
 function M.workspaces()
   local groups = require("agent_review.scope").groups()
   if #groups == 0 then
-    vim.notify("No persisted review workspaces", vim.log.levels.INFO, { title = "Agent Review" })
     return
   end
 

@@ -7,7 +7,7 @@ local render = require("agent_review.render")
 local initialized = false
 
 local function notify(message, level)
-  vim.notify(message, level or vim.log.levels.INFO, { title = "Agent Review" })
+  vim.notify(message, level, { title = "Agent Review" })
 end
 
 local function create_annotation(capture, body)
@@ -46,7 +46,6 @@ local function create_annotation(capture, body)
     render.refresh_buffer(capture.bufnr)
     render.reveal(annotation, capture.bufnr)
   end
-  notify("Added annotation " .. annotation.id)
   return annotation
 end
 
@@ -145,7 +144,6 @@ function M.session_new(name)
     return nil
   end
   render.refresh_visible()
-  notify("Created review session " .. session.name)
   return session
 end
 
@@ -156,7 +154,6 @@ function M.session_switch(id)
     return nil
   end
   render.refresh_visible()
-  notify("Active review session: " .. session.name)
   return session
 end
 
@@ -169,7 +166,6 @@ function M.session_archive(id)
   end
   session = sessions.archive(session.id)
   render.refresh_visible()
-  notify("Archived review session " .. session.name)
   return session
 end
 
@@ -260,7 +256,6 @@ function M.remove(id)
   end
 
   render.remove(annotation)
-  notify("Removed annotation " .. annotation.id)
   return true
 end
 
@@ -275,7 +270,6 @@ local function update_annotation(annotation, body, on_done)
   annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
   state.changed()
   render.refresh_annotation(annotation)
-  notify("Updated annotation " .. annotation.id)
   if on_done then
     on_done(annotation)
   end
@@ -297,7 +291,6 @@ function M.set_status(id, status)
   annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
   state.changed()
   render.refresh_annotation(annotation)
-  notify(string.format("%s annotation %s", status == "resolved" and "Resolved" or "Reopened", annotation.id))
   return annotation
 end
 
@@ -352,14 +345,12 @@ function M.clear_session()
     return 0
   end
   local count = remove_annotations(require("agent_review.sessions").annotations(session.id))
-  notify(string.format("Cleared %d annotation%s from %s", count, count == 1 and "" or "s", session.name))
   return count
 end
 
 function M.clear_current()
   local annotations = require("agent_review.scope").current_annotations()
   local count = remove_annotations(annotations)
-  notify(string.format("Cleared %d annotation%s from the current workspace", count, count == 1 and "" or "s"))
   return count
 end
 
@@ -373,14 +364,12 @@ function M.prune(opts)
     end
   end
   local count = remove_annotations(removable)
-  notify(string.format("Pruned %d annotation%s", count, count == 1 and "" or "s"))
   return count
 end
 
 function M.clear()
   render.clear_all()
   state.clear()
-  notify("Cleared all review annotations")
 end
 
 function M.annotations()

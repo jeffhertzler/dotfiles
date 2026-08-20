@@ -1,7 +1,7 @@
 local M = {}
 
 local function notify(message, level)
-  vim.notify(message, level or vim.log.levels.INFO, { title = "Agent Review" })
+  vim.notify(message, level, { title = "Agent Review" })
 end
 
 local function words(args)
@@ -90,7 +90,7 @@ local function dispatch(api, command)
       notify("Refusing global clear without --all", vim.log.levels.WARN)
     end
   elseif action == "help" then
-    notify("add [old] · list [--all] · edit/resolve/reopen/remove [id] · send/compose · session · workspace · prune · clear --all")
+    return
   else
     notify("Unknown :AgentReview subcommand: " .. action, vim.log.levels.WARN)
   end
@@ -101,7 +101,7 @@ local function candidates(cmdline, cursorpos)
   local args = before:gsub("^%s*AgentReview!?%s*", "")
   local parsed = words(args)
   local trailing = before:sub(-1):match("%s") ~= nil
-  local top = { "add", "list", "edit", "resolve", "reopen", "remove", "send", "compose", "session", "workspace", "prune", "clear", "help" }
+  local top = { "add", "list", "edit", "resolve", "reopen", "remove", "send", "compose", "session", "workspace", "prune", "clear" }
   if #parsed == 0 or (#parsed == 1 and not trailing) then
     return top
   end

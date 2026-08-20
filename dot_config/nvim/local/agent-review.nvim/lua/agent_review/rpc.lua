@@ -317,7 +317,6 @@ function M.apply(payload)
     table.insert(ids, annotation.id)
   end
   render.refresh_visible()
-  vim.notify(string.format("Imported %d agent annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Agent Review" })
   return { ok = true, count = #ids, ids = ids }
 end
 
@@ -407,7 +406,6 @@ function M.update(payload)
   end
   state.changed()
   render.refresh_visible()
-  vim.notify(string.format("Updated %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Agent Review" })
   return { ok = true, count = #ids, ids = ids }
 end
 
@@ -426,7 +424,6 @@ function M.resolve(payload)
   end
   state.changed()
   render.refresh_visible()
-  vim.notify(string.format("Resolved %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Agent Review" })
   return { ok = true, count = #ids, ids = ids }
 end
 
@@ -444,7 +441,6 @@ function M.remove(payload)
   for _, annotation in ipairs(annotations) do
     render.remove(annotation)
   end
-  vim.notify(string.format("Removed %d annotation%s", #ids, #ids == 1 and "" or "s"), vim.log.levels.INFO, { title = "Agent Review" })
   return { ok = true, count = #ids, ids = ids }
 end
 
