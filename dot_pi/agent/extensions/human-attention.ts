@@ -9,11 +9,15 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export const HUMAN_ATTENTION_REQUESTED = "human-attention:requested";
 export const HUMAN_ATTENTION_RESOLVED = "human-attention:resolved";
+export const HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED = "human-attention:notifications-suppressed";
 
 type DialogKind = "select" | "confirm" | "input" | "editor" | "custom";
 
 interface PiLike {
-  events: { emit(name: string, data: unknown): void };
+  events: {
+    emit(name: string, data: unknown): void;
+    on(name: string, handler: (data: unknown) => void): () => void;
+  };
   on(event: string, handler: (event: unknown, ctx: any) => unknown): void;
 }
 
@@ -142,6 +146,8 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
   let activeCount = 0;
   let activeRequest: AttentionRequest | undefined;
   let activeContext: any;
+  let notificationSuppressionCount = 0;
+  const moshiNotifiedRequestIds = new Set<string>();
   const moshi = options.moshi === false
     ? undefined
     : options.moshi ?? createMoshiAttentionClient(createMoshiEnvelopeSender());
@@ -166,7 +172,10 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     };
     activeContext = ctx;
     pi.events.emit(HUMAN_ATTENTION_REQUESTED, activeRequest);
-    notifyMoshi("requestAttention", activeRequest, ctx);
+    if (notificationSuppressionCount === 0) {
+      moshiNotifiedRequestIds.add(activeRequest.id);
+      notifyMoshi("requestAttention", activeRequest, ctx);
+    }
     pi.events.emit("herdr:blocked", {
       active: true,
       label: activeRequest.title ?? "Waiting for user input",
@@ -181,7 +190,9 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     activeRequest = undefined;
     activeContext = undefined;
     pi.events.emit(HUMAN_ATTENTION_RESOLVED, request);
-    notifyMoshi("resolveAttention", request, resolvedContext);
+    if (moshiNotifiedRequestIds.delete(request.id)) {
+      notifyMoshi("resolveAttention", request, resolvedContext);
+    }
     pi.events.emit("herdr:blocked", { active: false });
   }
 
@@ -189,6 +200,15 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     activeCount = Math.max(0, activeCount - 1);
     if (activeCount === 0) clearAttention(request);
   }
+
+  const stopNotificationSuppressionListener = pi.events.on(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, (data) => {
+    if (!data || typeof data !== "object" || !("active" in data)) return;
+    if ((data as { active: unknown }).active === true) {
+      notificationSuppressionCount += 1;
+    } else if ((data as { active: unknown }).active === false) {
+      notificationSuppressionCount = Math.max(0, notificationSuppressionCount - 1);
+    }
+  });
 
   pi.on("session_start", (_event, ctx) => {
     const ui = ctx.ui as Record<string, any>;
@@ -220,6 +240,9 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     clearAttention();
     restore?.();
     restore = undefined;
+    stopNotificationSuppressionListener();
+    notificationSuppressionCount = 0;
+    moshiNotifiedRequestIds.clear();
   });
 }
 

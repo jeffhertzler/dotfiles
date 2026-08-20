@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED,
   HUMAN_ATTENTION_REQUESTED,
   HUMAN_ATTENTION_RESOLVED,
   createMoshiAttentionClient,
@@ -19,11 +20,21 @@ function deferred<T>() {
 
 function createHarness() {
   const handlers = new Map<string, Array<(event: unknown, ctx: any) => unknown>>();
+  const eventHandlers = new Map<string, Array<(data: unknown) => void>>();
   const events: Array<{ name: string; data: any }> = [];
   const pi = {
     events: {
       emit(name: string, data: unknown) {
         events.push({ name, data });
+        for (const handler of eventHandlers.get(name) ?? []) handler(data);
+      },
+      on(name: string, handler: (data: unknown) => void) {
+        const existing = eventHandlers.get(name) ?? [];
+        existing.push(handler);
+        eventHandlers.set(name, existing);
+        return () => {
+          eventHandlers.set(name, (eventHandlers.get(name) ?? []).filter((item) => item !== handler));
+        };
       },
     },
     on(name: string, handler: (event: unknown, ctx: any) => unknown) {
@@ -107,6 +118,42 @@ test("Moshi receives the same attention lifecycle with prompt context", async ()
   assert.equal(calls.length, 2);
   assert.equal(calls[1].phase, "resolved");
   assert.equal(calls[1].request.id, calls[0].request.id);
+});
+
+test("user-initiated workflows can suppress Moshi while retaining Herdr wait state", async () => {
+  const harness = createHarness();
+  const first = deferred<string | undefined>();
+  const second = deferred<string | undefined>();
+  let invocation = 0;
+  const ui = {
+    select: async (..._args: unknown[]) => (invocation++ === 0 ? first.promise : second.promise),
+  };
+  const calls: string[] = [];
+  const moshi = {
+    requestAttention() { calls.push("requested"); },
+    resolveAttention() { calls.push("resolved"); },
+  };
+
+  installHumanAttention(harness.pi as any, { moshi });
+  await harness.handlers.get("session_start")?.[0]({}, { ui });
+  harness.pi.events.emit(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, { active: true });
+
+  const suppressedAnswer = ui.select("Feedback response", ["Latest", "Earlier"]);
+  assert.deepEqual(calls, []);
+  assert.deepEqual(harness.events.at(-1), {
+    name: "herdr:blocked",
+    data: { active: true, label: "Feedback response" },
+  });
+  first.resolve("Earlier");
+  await suppressedAnswer;
+  assert.deepEqual(calls, []);
+
+  harness.pi.events.emit(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, { active: false });
+  const normalAnswer = ui.select("Agent question", ["Yes", "No"]);
+  assert.deepEqual(calls, ["requested"]);
+  second.resolve("Yes");
+  await normalAnswer;
+  assert.deepEqual(calls, ["requested", "resolved"]);
 });
 
 test("the Moshi adapter maps a question wait to terminal input without approval controls", async () => {

@@ -11,7 +11,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-interface AssistantCapture {
+export interface AssistantCapture {
   entryId: string;
   markdown: string;
 }
@@ -60,12 +60,23 @@ function assistantMarkdown(entry: SessionEntry): AssistantCapture | undefined {
   return { entryId: entry.id, markdown };
 }
 
-function findLatestAssistant(entries: SessionEntry[]): AssistantCapture | undefined {
-  for (let index = entries.length - 1; index >= 0; index -= 1) {
-    const capture = assistantMarkdown(entries[index]);
-    if (capture) return capture;
+export function collectAssistantCaptures(entries: SessionEntry[]): AssistantCapture[] {
+  const captures: AssistantCapture[] = [];
+  for (const entry of entries) {
+    const capture = assistantMarkdown(entry);
+    if (capture) captures.push(capture);
   }
-  return undefined;
+  return captures;
+}
+
+function assistantChoiceLabel(capture: AssistantCapture, position: number | undefined): string {
+  const preview = capture.markdown.replace(/\s+/g, " ").trim().slice(0, 100);
+  const location = position === 0
+    ? "Latest response"
+    : position === undefined
+      ? "Other branch"
+      : `${position} response${position === 1 ? "" : "s"} back`;
+  return `${location} · ${preview} [${capture.entryId}]`;
 }
 
 function safeSegment(value: string): string {
@@ -98,9 +109,9 @@ function quoteLines(lines: string[] | undefined): string[] {
 
 function buildPrompt(feedback: FeedbackPayload): string {
   const out = [
-    "# Feedback on your previous response",
+    "# Feedback on your selected response",
     "",
-    "I added line-specific feedback to your previous response. Address each comment below.",
+    "I added line-specific feedback to a selected assistant response. Address each comment below.",
     `Assistant response ID: \`${feedback.assistantMessageId}\``,
   ];
 
@@ -143,6 +154,18 @@ function parseFeedback(path: string, metadata: FeedbackMetadata): FeedbackPayloa
   return feedback as FeedbackPayload;
 }
 
+async function withoutAttentionNotifications<T>(
+  pi: ExtensionAPI,
+  action: () => Promise<T>,
+): Promise<T> {
+  pi.events.emit("human-attention:notifications-suppressed", { active: true });
+  try {
+    return await action();
+  } finally {
+    pi.events.emit("human-attention:notifications-suppressed", { active: false });
+  }
+}
+
 function launchNeovim(
   metadataPath: string,
   sourcePath: string,
@@ -167,7 +190,7 @@ function launchNeovim(
 
 export default function feedbackExtension(pi: ExtensionAPI) {
   pi.registerCommand("feedback", {
-    description: "Annotate the latest assistant response in Neovim; use /feedback clear to remove drafts",
+    description: "Choose an assistant response from the session tree and annotate it in Neovim; use /feedback clear to remove drafts",
     handler: async (args, ctx) => {
       if (ctx.mode !== "tui") {
         ctx.ui.notify("Feedback requires interactive mode", "error");
@@ -193,9 +216,38 @@ export default function feedbackExtension(pi: ExtensionAPI) {
       }
 
       await ctx.waitForIdle();
-      const capture = findLatestAssistant(ctx.sessionManager.getBranch());
-      if (!capture) {
+      const captures = collectAssistantCaptures(ctx.sessionManager.getEntries());
+      const branchCaptures = collectAssistantCaptures(ctx.sessionManager.getBranch()).reverse();
+      const branchCaptureIds = new Set(branchCaptures.map((capture) => capture.entryId));
+      const orderedCaptures = [
+        ...branchCaptures,
+        ...captures.filter((capture) => !branchCaptureIds.has(capture.entryId)).reverse(),
+      ];
+      if (captures.length === 0) {
         ctx.ui.notify("No assistant response found for feedback", "warning");
+        return;
+      }
+
+      let capture: AssistantCapture | undefined;
+      if (orderedCaptures.length === 1) {
+        capture = orderedCaptures[0];
+      } else {
+        const choices = orderedCaptures.map((candidate) => {
+          const position = branchCaptures.findIndex((item) => item.entryId === candidate.entryId);
+          return {
+            capture: candidate,
+            label: assistantChoiceLabel(candidate, position === -1 ? undefined : position),
+          };
+        });
+        const selectedLabel = await withoutAttentionNotifications(pi, () => ctx.ui.select(
+          "Choose assistant response from the session tree",
+          choices.map((choice) => choice.label),
+        ));
+        if (!selectedLabel) return;
+        capture = choices.find((choice) => choice.label === selectedLabel)?.capture;
+      }
+      if (!capture) {
+        ctx.ui.notify("The selected assistant response is unavailable", "warning");
         return;
       }
 
@@ -222,19 +274,21 @@ export default function feedbackExtension(pi: ExtensionAPI) {
 
       let exitStatus: number | null | undefined;
       try {
-        exitStatus = await ctx.ui.custom<number | null>((tui, _theme, _keybindings, done) => {
-          tui.stop();
-          process.stdout.write("\x1b[2J\x1b[H");
-          let status: number | null = null;
-          try {
-            status = launchNeovim(metadataPath, sourcePath, feedbackStatePath);
-          } finally {
-            tui.start();
-            tui.requestRender(true);
-          }
-          done(status);
-          return { render: () => [], invalidate: () => {} };
-        });
+        exitStatus = await withoutAttentionNotifications(pi, () =>
+          ctx.ui.custom<number | null>((tui, _theme, _keybindings, done) => {
+            tui.stop();
+            process.stdout.write("\x1b[2J\x1b[H");
+            let status: number | null = null;
+            try {
+              status = launchNeovim(metadataPath, sourcePath, feedbackStatePath);
+            } finally {
+              tui.start();
+              tui.requestRender(true);
+            }
+            done(status);
+            return { render: () => [], invalidate: () => {} };
+          }),
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         ctx.ui.notify(`Failed to open feedback: ${message}`, "error");
