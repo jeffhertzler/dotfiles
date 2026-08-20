@@ -236,6 +236,9 @@ function M.attach(opts)
 
   contexts[bufnr] = { metadata = metadata, metadata_path = metadata_path }
   vim.b[bufnr].pi_feedback = vim.deepcopy(metadata)
+  vim.b[bufnr].pi_feedback_disable_lint = true
+  vim.diagnostic.enable(false, { bufnr = bufnr })
+  vim.diagnostic.reset(nil, bufnr)
   vim.bo[bufnr].filetype = "markdown"
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false

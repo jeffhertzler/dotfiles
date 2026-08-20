@@ -23,6 +23,10 @@ return {
       linters = {
         ["markdownlint-cli2"] = {
           args = { "--config", vim.fs.joinpath(vim.fn.expand("~"), ".markdownlint.json"), "-" },
+          condition = function(ctx)
+            local bufnr = vim.fn.bufnr(ctx.filename)
+            return bufnr < 1 or vim.b[bufnr].pi_feedback_disable_lint ~= true
+          end,
         },
       },
     },

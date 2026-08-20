@@ -21,6 +21,8 @@ assert(feedback_adapter.attach({ metadata_path = metadata_path }))
 assert(vim.bo.filetype == "markdown")
 assert(not vim.bo.modifiable and vim.bo.readonly and not vim.bo.swapfile)
 assert(type(vim.b.pi_feedback) == "table")
+assert(vim.b.pi_feedback_disable_lint == true)
+assert(not vim.diagnostic.is_enabled({ bufnr = 0 }))
 assert(vim.fn.maparg("<leader>rs", "n") ~= "")
 assert(vim.fn.maparg("<leader>rk", "n") ~= "")
 
