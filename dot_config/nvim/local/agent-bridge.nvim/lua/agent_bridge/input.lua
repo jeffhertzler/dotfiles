@@ -70,17 +70,24 @@ function Input:_resize()
     return vim.tbl_map(vim.fn.strdisplaywidth, lines)
   end)
   local display_lines = 0
+  local content_fits = #lines == line_count
   for row, width in ipairs(widths) do
+    local remaining = self.opts.max_height - display_lines
     -- Measure only the buffer text. Completion ghost text uses inline virtual
     -- text and virtual lines, which otherwise make the input briefly expand.
-    local height = vim.api.nvim_win_text_height(self.window.win, {
+    -- Measuring one row beyond the available space tells us whether Neovim
+    -- truncated a wrapped line at max_height.
+    local row_height = math.max(1, vim.api.nvim_win_text_height(self.window.win, {
       start_row = row - 1,
       start_vcol = 0,
       end_row = row - 1,
       end_vcol = width,
-      max_height = self.opts.max_height - display_lines,
-    }).all
-    display_lines = display_lines + math.max(1, height)
+      max_height = remaining + 1,
+    }).all)
+    if row_height > remaining then
+      content_fits = false
+    end
+    display_lines = display_lines + math.min(row_height, remaining)
     if display_lines >= self.opts.max_height then
       break
     end
@@ -92,6 +99,20 @@ function Input:_resize()
     self.window.opts.height = height
     self.window.opts.wo.cursorline = cursorline
     self.window:update()
+  end
+
+  -- With smoothscroll enabled, Neovim preserves skipcol while the window grows
+  -- and renders "<<<" even when every wrapped row now fits. Reveal the full
+  -- first line once growth has made that possible; preserve scrolling when the
+  -- content is genuinely capped by max_height.
+  if content_fits then
+    vim.api.nvim_win_call(self.window.win, function()
+      local view = vim.fn.winsaveview()
+      if view.skipcol > 0 then
+        view.skipcol = 0
+        vim.fn.winrestview(view)
+      end
+    end)
   end
 end
 

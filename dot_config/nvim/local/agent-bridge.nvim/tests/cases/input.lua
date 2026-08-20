@@ -40,11 +40,30 @@ for _, mapping in ipairs(vim.api.nvim_buf_get_keymap(input.buffer, "i")) do
   assert(mapping.lhs ~= "<Esc>", "insert Escape must leave insert mode")
 end
 
-vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { string.rep("wrapped input ", 20) })
+local fitting_wrap = string.rep("wrapped input ", 8)
+vim.wo[input.window.win].smoothscroll = true
+vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { fitting_wrap })
+vim.api.nvim_win_set_cursor(input.window.win, { 1, #fitting_wrap })
+vim.api.nvim_win_call(input.window.win, function() vim.cmd("redraw") end)
+local scrolled_view = vim.api.nvim_win_call(input.window.win, vim.fn.winsaveview)
+assert(scrolled_view.skipcol > 0, "wrapped input fixture must reproduce smooth-scroll hiding")
+input:_resize()
+config = vim.api.nvim_win_get_config(input.window.win)
+local wrapped_height = vim.api.nvim_win_text_height(input.window.win, { start_row = 0, end_row = 0 }).all
+assert(wrapped_height <= input.opts.max_height and config.height >= wrapped_height, "wrapped input fixture must fit after growth")
+local grown_view = vim.api.nvim_win_call(input.window.win, vim.fn.winsaveview)
+assert(grown_view.skipcol == 0, "grown input must not hide wrapped text behind <<<")
+
+local capped_wrap = string.rep("wrapped input ", 20)
+vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { capped_wrap })
+vim.api.nvim_win_set_cursor(input.window.win, { 1, #capped_wrap })
+vim.api.nvim_win_call(input.window.win, function() vim.cmd("redraw") end)
 input:_resize()
 config = vim.api.nvim_win_get_config(input.window.win)
 assert(config.height > 1, "wrapped input must grow the window")
 assert(config.height <= input.opts.max_height, "wrapped input must respect max_height")
+local capped_view = vim.api.nvim_win_call(input.window.win, vim.fn.winsaveview)
+assert(capped_view.skipcol > 0, "capped input must keep the cursor-visible smooth-scroll view")
 
 vim.api.nvim_buf_set_lines(input.buffer, 0, -1, false, { "autocomplete" })
 input:_resize()
