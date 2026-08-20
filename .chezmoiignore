@@ -1,5 +1,7 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 README.md
+AGENTS.md
+CLAUDE.md
 docs
 packages
 tests
