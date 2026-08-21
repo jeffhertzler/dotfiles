@@ -53,6 +53,17 @@ same repository. Public `devashish2203/herdr-worktrunk` is `upstream` on both.
 Reviewed upstream changes land on maintained `main` before a separate reviewed
 merge carries them into the Windows branch.
 
+The Worktrunk fork reports a checkout's PR as the `$pr` workspace token. Herdr's
+second space row keeps `$session`, branch, and Git status, then adds that token.
+Opening a native worktree workspace starts a nonblocking refresh. Run
+`herdr plugin action invoke refresh-pr --plugin worktrunk` to refresh the focused
+workspace after a PR changes state. A branch with no PR clears an old value;
+missing GitHub CLI authentication and network failures do not stop checkout
+opening.
+
+There is no separate open-PR action. Worktrunk's native picker opens the selected
+PR with `Alt+O`.
+
 Reconciliation is additive. Every declared plugin must be present and enabled,
 but an undeclared plugin is only reported by `dotfiles-doctor`; it is not
 silently uninstalled. This allows temporary plugin evaluation without an apply
