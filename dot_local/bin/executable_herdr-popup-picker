@@ -9,6 +9,14 @@ if command -v cygpath >/dev/null 2>&1; then
   self=$(cygpath -u "$(cygpath -m -s "$self")")
 fi
 
+# Popup commands start in the workspace directory. Follow the pane that opened
+# the popup so tabs backed by a subagent worktree launch repository tools there.
+launcher_cwd=${HERDR_ACTIVE_PANE_CWD:-$PWD}
+if command -v cygpath >/dev/null 2>&1; then
+  launcher_cwd=$(cygpath -u "$launcher_cwd")
+fi
+cd -- "$launcher_cwd"
+
 # Herdr's detached server may not have inherited a locale. Unicode TUIs such as
 # btop refuse to start under the resulting POSIX locale.
 if [[ $(locale charmap 2>/dev/null || true) != UTF-8 ]]; then
