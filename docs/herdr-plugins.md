@@ -51,7 +51,10 @@ Worktrunk is the first maintained plugin. Linux, macOS, and WSL link `main` from
 `jeffhertzler/herdr-worktrunk`; Windows links `agent/windows-support` from the
 same repository. Public `devashish2203/herdr-worktrunk` is `upstream` on both.
 Reviewed upstream changes land on maintained `main` before a separate reviewed
-merge carries them into the Windows branch.
+merge carries them into the Windows branch. That branch uses a PowerShell entry
+adapter to resolve real Node, Worktrunk, jq, and fzf executables before handing
+off to Git Bash, avoiding Windows Terminal's `wt` alias and inaccessible package
+manager shims.
 
 The Worktrunk fork reports a checkout's PR as the `$pr` workspace token. Herdr's
 second space row keeps `$session`, branch, and Git status, then adds that token.
@@ -87,10 +90,11 @@ picker; overlay placement ignores the popup dimensions. The separate
 the current branch.
 
 `prefix+ctrl+x` invokes `worktrunk.remove-current`. It pins the focused linked
-checkout before showing its confirmation, keeps Worktrunk's safety checks and
-hooks, and closes the matching Herdr workspace only after successful removal.
-Removing another checkout remains available through `Alt+X` in the native
-picker.
+checkout before showing its confirmation and keeps Worktrunk's safety checks and
+hooks. Unix closes the matching Herdr workspace after successful removal.
+Windows closes it first to release the checkout's directory handle and reopens
+it if Worktrunk refuses the removal. Removing another checkout remains available
+through `Alt+X` in the native picker.
 
 ## Private plugin clones
 
