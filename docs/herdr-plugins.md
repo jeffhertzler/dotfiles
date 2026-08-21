@@ -83,7 +83,14 @@ The managed plugin config uses an `85%` by `75%` popup. Change
 `picker_placement` to `"overlay"` in
 `dot_config/herdr/plugins/config/worktrunk/config.toml` for a full-terminal
 picker; overlay placement ignores the popup dimensions. The separate
-`worktrunk.open-current` binding stays unchanged for current-branch creation.
+`worktrunk.new-current` action uses a compact popup for creating a checkout from
+the current branch.
+
+`prefix+ctrl+x` invokes `worktrunk.remove-current`. It pins the focused linked
+checkout before showing its confirmation, keeps Worktrunk's safety checks and
+hooks, and closes the matching Herdr workspace only after successful removal.
+Removing another checkout remains available through `Alt+X` in the native
+picker.
 
 ## Private plugin clones
 
