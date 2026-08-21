@@ -59,6 +59,21 @@ silently uninstalled. This allows temporary plugin evaluation without an apply
 deleting it. Removing an unwanted plugin remains an explicit
 `herdr plugin uninstall` operation.
 
+## Worktrunk picker
+
+`prefix+shift+g` invokes `worktrunk.open`, which runs Worktrunk's native switch
+picker with linked worktrees, local branches, remote branches, and open pull or
+merge requests. Worktrunk owns its previews and `Enter`, `Alt-C`, `Alt-X`, and
+`Escape` behavior. The maintained plugin passes a successful switch result to
+Herdr's worktree workspace command and closes Herdr workspaces whose checkouts
+`Alt-X` removed.
+
+The managed plugin config uses an `85%` by `75%` popup. Change
+`picker_placement` to `"overlay"` in
+`dot_config/herdr/plugins/config/worktrunk/config.toml` for a full-terminal
+picker; overlay placement ignores the popup dimensions. The separate
+`worktrunk.open-current` binding stays unchanged for current-branch creation.
+
 ## Private plugin clones
 
 Private clones live under `~/dev`. They are not submitted to the Herdr registry

@@ -1,4 +1,6 @@
 open_mode = "workspace"
+# The main action uses Worktrunk's native picker. Change this to "overlay" for
+# a full-terminal picker; popup dimensions apply only in popup placement.
 picker_placement = "popup"
 popup_width = "85%"
 popup_height = "75%"
