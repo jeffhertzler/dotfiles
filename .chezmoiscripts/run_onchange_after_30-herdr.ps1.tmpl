@@ -20,81 +20,25 @@ if (-not (Get-Command $integration -ErrorAction SilentlyContinue)) {
 }
 
 {{ end -}}
-function Get-NormalizedPath {
-  param([Parameter(Mandatory = $true)][string] $Path)
-
-  $withoutDevicePrefix = $Path -replace '^\\\\\?\\', ''
-  [IO.Path]::GetFullPath($withoutDevicePrefix).TrimEnd(
-    [IO.Path]::DirectorySeparatorChar,
-    [IO.Path]::AltDirectorySeparatorChar
-  )
+$node = Get-Command node -ErrorAction SilentlyContinue
+if (-not $node) {
+  throw "Herdr plugin reconciliation requires node on PATH"
 }
-
-function Invoke-Git {
-  param(
-    [Parameter(Mandatory = $true)][string] $WorkingDirectory,
-    [Parameter(Mandatory = $true)][string[]] $Arguments
-  )
-
-  & git -C $WorkingDirectory @Arguments
-  if ($LASTEXITCODE -ne 0) {
-    throw "git $($Arguments -join ' ') failed in $WorkingDirectory"
-  }
+$reconciler = Join-Path $HOME ".local/bin/herdr-plugin-reconcile.mjs"
+if (-not (Test-Path -LiteralPath $reconciler -PathType Leaf)) {
+  throw "Herdr plugin reconciler is missing: $reconciler"
 }
 
 {{ range .herdrPlugins -}}
-$pluginId = {{ .id | quote }}
-$pluginPath = Get-NormalizedPath (Join-Path $HOME {{ .windowsLink | quote }})
-$pluginParent = Split-Path -Parent $pluginPath
-$manifestPath = Join-Path $pluginPath "herdr-plugin.toml"
-$originUrl = "git@github.com:{{ .windowsRepo }}.git"
-$upstreamUrl = "https://github.com/{{ .source }}.git"
-$expectedBranch = {{ .windowsRef | quote }}
-
-if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) {
-  New-Item -ItemType Directory -Path $pluginParent -Force | Out-Null
-  & git clone --branch $expectedBranch --single-branch $originUrl $pluginPath
-  if ($LASTEXITCODE -ne 0) {
-    throw "Could not clone Herdr plugin $pluginId from $originUrl"
-  }
-}
-
-if (-not (& git -C $pluginPath rev-parse --is-inside-work-tree 2>$null)) {
-  throw "Herdr plugin $pluginId is not a Git worktree: $pluginPath"
-}
-if (& git -C $pluginPath status --porcelain) {
-  throw "Herdr plugin $pluginId has uncommitted changes: $pluginPath"
-}
-
-$branch = (& git -C $pluginPath branch --show-current).Trim()
-if ($branch -ne $expectedBranch) {
-  throw "Herdr plugin $pluginId is on $branch, expected $expectedBranch"
-}
-$origin = (& git -C $pluginPath remote get-url origin).Trim()
-if ($origin -notlike "*{{ .windowsRepo }}*") {
-  throw "Herdr plugin $pluginId has unexpected origin: $origin"
-}
-
-$upstream = & git -C $pluginPath remote get-url upstream 2>$null
+& $node.Source $reconciler `
+  --id {{ .id | quote }} `
+  --path (Join-Path $HOME {{ .windowsLink | quote }}) `
+  --origin-url {{ printf "git@github.com:%s.git" .windowsRepo | quote }} `
+  --upstream-url {{ printf "https://github.com/%s.git" .source | quote }} `
+  --ref {{ .windowsRef | quote }}
 if ($LASTEXITCODE -ne 0) {
-  Invoke-Git -WorkingDirectory $pluginPath -Arguments @("remote", "add", "upstream", $upstreamUrl)
-} elseif ($upstream.Trim() -notlike "*{{ .source }}*") {
-  throw "Herdr plugin $pluginId has unexpected upstream: $($upstream.Trim())"
+  throw "Failed to reconcile Herdr plugin {{ .id }}"
 }
-
-Write-Output "Updating Herdr plugin $pluginId from $originUrl"
-Invoke-Git -WorkingDirectory $pluginPath -Arguments @("fetch", "origin", $expectedBranch)
-Invoke-Git -WorkingDirectory $pluginPath -Arguments @("merge", "--ff-only", "origin/$expectedBranch")
-
-# Public upstream is fetched for visibility, but never auto-merged into a
-# compatibility branch because that could discard or conflict with its fixes.
-& git -C $pluginPath fetch upstream 2>$null
-if ($LASTEXITCODE -ne 0) {
-  Write-Warning "Could not fetch public upstream for Herdr plugin $pluginId"
-}
-
-& $herdr.Source plugin link $pluginPath
-if ($LASTEXITCODE -ne 0) { throw "Failed to link Herdr plugin $pluginId" }
 
 {{ end -}}
 # A running server picks up the new registry immediately. No server is also a

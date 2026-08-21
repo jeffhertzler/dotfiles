@@ -18,8 +18,11 @@ herdrPlugins:
     windowsRef: agent/windows-support
   - id: worktrunk
     source: devashish2203/herdr-worktrunk
-    windowsLink: dev/herdr-worktrunk-windows
-    windowsRepo: jeffhertzler/herdr-worktrunk-windows
+    managedLink: dev/herdr-worktrunk
+    managedRepo: jeffhertzler/herdr-worktrunk
+    managedRef: main
+    windowsLink: dev/herdr-worktrunk
+    windowsRepo: jeffhertzler/herdr-worktrunk
     windowsRef: agent/windows-support
   - id: rjyo.window-title-sync
     source: rjyo/herdr-window-title-sync

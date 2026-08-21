@@ -407,39 +407,69 @@ else
   done
 fi
 
-{{ if eq $profile "windows" -}}
-section 'Windows Herdr compatibility clones'
-{{ range .herdrPlugins -}}
-plugin_clone="$HOME/{{ .windowsLink }}"
-if [[ ! -f $plugin_clone/herdr-plugin.toml ]]; then
-  fail "{{ .id }} clone is missing: $plugin_clone"
-elif ! git -C "$plugin_clone" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  fail "{{ .id }} clone is not a Git worktree: $plugin_clone"
-else
+check_herdr_plugin_clone() {
+  local plugin_id=$1 plugin_clone=$2 expected_branch=$3 expected_origin=$4 expected_upstream=$5 clone_kind=$6
+  if [[ ! -f $plugin_clone/herdr-plugin.toml ]]; then
+    fail "$plugin_id clone is missing: $plugin_clone"
+    return
+  fi
+  if ! git -C "$plugin_clone" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    fail "$plugin_id clone is not a Git worktree: $plugin_clone"
+    return
+  fi
+
+  local clone_branch clone_head clone_origin clone_upstream clone_changes
   clone_branch=$(git -C "$plugin_clone" branch --show-current 2>/dev/null)
   clone_head=$(git -C "$plugin_clone" rev-parse --short HEAD 2>/dev/null)
   clone_origin=$(git -C "$plugin_clone" remote get-url origin 2>/dev/null)
-  if [[ $clone_branch == {{ .windowsRef | quote }} ]]; then
-    pass "{{ .id }} is on {{ .windowsRef }} at $clone_head"
-  else
-    fail "{{ .id }} is on ${clone_branch:-detached}, expected {{ .windowsRef }}"
-  fi
-  if [[ $clone_origin == *{{ .windowsRepo | quote }}* ]]; then
-    pass "{{ .id }} origin matches {{ .windowsRepo }}"
-  else
-    fail "{{ .id }} has unexpected origin: ${clone_origin:-none}"
-  fi
   clone_upstream=$(git -C "$plugin_clone" remote get-url upstream 2>/dev/null)
-  if [[ $clone_upstream == *{{ .source | quote }}* ]]; then
-    pass "{{ .id }} upstream matches {{ .source }}"
-  else
-    fail "{{ .id }} has unexpected upstream: ${clone_upstream:-none}"
-  fi
   clone_changes=$(git -C "$plugin_clone" status --short 2>/dev/null)
-  if [[ -n $clone_changes ]]; then
-    warn "{{ .id }} compatibility clone has uncommitted changes"
+
+  if [[ $clone_branch == "$expected_branch" ]]; then
+    pass "$plugin_id is on $expected_branch at $clone_head"
+  else
+    fail "$plugin_id is on ${clone_branch:-detached}, expected $expected_branch"
   fi
-fi
+  if [[ $clone_origin == "$expected_origin" ]]; then
+    pass "$plugin_id origin matches ${expected_origin#*github.com[:/]}"
+  else
+    fail "$plugin_id has unexpected origin: ${clone_origin:-none}"
+  fi
+  if [[ $clone_upstream == "$expected_upstream" ]]; then
+    pass "$plugin_id upstream matches ${expected_upstream#*github.com/}"
+  else
+    fail "$plugin_id has unexpected upstream: ${clone_upstream:-none}"
+  fi
+  if [[ -n $clone_changes ]]; then
+    warn "$plugin_id $clone_kind clone has uncommitted changes"
+  fi
+}
+
+{{ if ne $profile "windows" -}}
+section 'Maintained Herdr plugin clones'
+{{ range .herdrPlugins -}}
+{{ if get . "managedRepo" -}}
+check_herdr_plugin_clone \
+  {{ .id | quote }} \
+  "$HOME/{{ .managedLink }}" \
+  {{ .managedRef | quote }} \
+  {{ printf "git@github.com:%s.git" .managedRepo | quote }} \
+  {{ printf "https://github.com/%s.git" .source | quote }} \
+  maintained
+{{ end -}}
+{{ end -}}
+{{ end -}}
+
+{{ if eq $profile "windows" -}}
+section 'Windows Herdr compatibility clones'
+{{ range .herdrPlugins -}}
+check_herdr_plugin_clone \
+  {{ .id | quote }} \
+  "$HOME/{{ .windowsLink }}" \
+  {{ .windowsRef | quote }} \
+  {{ printf "git@github.com:%s.git" .windowsRepo | quote }} \
+  {{ printf "https://github.com/%s.git" .source | quote }} \
+  compatibility
 {{ end -}}
 
 section 'Windows environment'

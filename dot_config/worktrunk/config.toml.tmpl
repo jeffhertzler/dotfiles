@@ -4,9 +4,10 @@
 # Keep the sibling directory layout used by workmux.
 worktree-path = "{{ $wtOpen }} repo_path {{ $wtClose }}/../{{ $wtOpen }} repo {{ $wtClose }}__worktrees/{{ $wtOpen }} branch | sanitize {{ $wtClose }}"
 
-# herdr-worktrunk 0.4 expects Worktrunk's original bare-array JSON output.
+# Worktrunk's current structured list format is supported by the maintained
+# Herdr integration and keeps status fields available to future picker work.
 [list]
-json-schema = 1
+json-schema = 2
 {{ if eq $profile "arch" }}
 [pre-remove]
 opencode = "sh -lc 'oc-cleanup kill >/dev/null 2>&1 || true'"

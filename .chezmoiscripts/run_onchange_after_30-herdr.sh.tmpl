@@ -19,6 +19,14 @@ herdr integration install "$integration"
 {{ range .herdrPlugins -}}
 plugin_id={{ .id | quote }}
 plugin_source={{ .source | quote }}
+{{ if get . "managedRepo" -}}
+node "$HOME/.local/bin/herdr-plugin-reconcile.mjs" \
+  --id "$plugin_id" \
+  --path "$HOME/{{ .managedLink }}" \
+  --origin-url {{ printf "git@github.com:%s.git" .managedRepo | quote }} \
+  --upstream-url {{ printf "https://github.com/%s.git" .source | quote }} \
+  --ref {{ .managedRef | quote }}
+{{ else -}}
 plugin_json=$(herdr plugin list --plugin "$plugin_id" --json)
 plugin_present=false
 if printf '%s' "$plugin_json" | grep -Fq "\"plugin_id\":\"$plugin_id\""; then
@@ -39,6 +47,7 @@ if ! printf '%s' "$plugin_json" | grep -Fq '"enabled":true'; then
   echo "Enabling Herdr plugin $plugin_id"
   herdr plugin enable "$plugin_id"
 fi
+{{ end }}
 
 {{ end -}}
 # A running server picks up the new registry immediately. No server is also a
