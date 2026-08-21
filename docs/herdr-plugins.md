@@ -76,8 +76,9 @@ deleting it. Removing an unwanted plugin remains an explicit
 ## Worktrunk picker
 
 `prefix+shift+g` invokes `worktrunk.open`, which runs Worktrunk's native switch
-picker with linked worktrees, local branches, remote branches, and open pull or
-merge requests. Worktrunk owns its previews and `Enter`, `Alt-C`, `Alt-X`, and
+picker with linked worktrees, local branches, and open pull or merge requests.
+Remote branches without open PRs are omitted so same-repository PRs remain
+visible as PR rows instead of being folded into `origin/*` rows. Worktrunk owns its previews and `Enter`, `Alt-C`, `Alt-X`, and
 `Escape` behavior. The maintained plugin passes a successful switch result to
 Herdr's worktree workspace command and closes Herdr workspaces whose checkouts
 `Alt-X` removed.
