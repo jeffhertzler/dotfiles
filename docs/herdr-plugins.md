@@ -7,7 +7,7 @@ checkouts, caches, logs, and state.
 
 The source-only files are:
 
-- `.chezmoidata/herdr.yaml` — the desired integrations, four desired plugins,
+- `.chezmoidata/herdr.yaml` — the desired integrations, five desired plugins,
   maintained-fork metadata, and Windows compatibility metadata
 - `dot_local/bin/executable_herdr-plugin-reconcile.mjs` — clone, validate,
   fast-forward, fetch upstream, and link a user-maintained plugin checkout
@@ -47,14 +47,16 @@ private `origin` and public `upstream`, fast-forwards only from the matching
 `origin` branch, fetches public upstream for comparison, and links the checkout
 into Herdr. It never merges upstream or pushes either remote.
 
-Worktrunk is the first maintained plugin. Linux, macOS, and WSL link `main` from
-`jeffhertzler/herdr-worktrunk`; Windows links `agent/windows-support` from the
-same repository. Public `devashish2203/herdr-worktrunk` is `upstream` on both.
-Reviewed upstream changes land on maintained `main` before a separate reviewed
-merge carries them into the Windows branch. That branch uses a PowerShell entry
-adapter to resolve real Node, Worktrunk, jq, and fzf executables before handing
-off to Git Bash, avoiding Windows Terminal's `wt` alias and inaccessible package
-manager shims.
+Worktrunk and Command Palette use maintained private repositories. Linux,
+macOS, and WSL link each repository's `main`; Windows links
+`agent/windows-support`. Public `devashish2203/herdr-worktrunk` and
+`fabiogaliano/herdr-command-palette` remain their respective `upstream`
+remotes. Reviewed upstream changes land on maintained `main` before a separate
+reviewed merge carries them into each Windows branch.
+
+Worktrunk's Windows branch uses a PowerShell entry adapter to resolve real Node,
+Worktrunk, jq, and fzf executables before handing off to Git Bash, avoiding
+Windows Terminal's `wt` alias and inaccessible package-manager shims.
 
 The Worktrunk fork reports a checkout's PR as the `$pr` workspace token. Herdr's
 second space row keeps `$session`, branch, and Git status, then adds that token.
@@ -72,6 +74,19 @@ but an undeclared plugin is only reported by `dotfiles-doctor`; it is not
 silently uninstalled. This allows temporary plugin evaluation without an apply
 deleting it. Removing an unwanted plugin remains an explicit
 `herdr plugin uninstall` operation.
+
+## Command palette
+
+`prefix+space` opens the maintained `fabiogaliano/herdr-command-palette`. It
+searches executable Herdr operations, live agents, workspaces, tabs, configured
+custom commands, and installed plugin actions such as `worktrunk.refresh-pr`.
+Client-only terminal modes remain shortcut references. The fzf interface uses
+Herdr's popup frame rather than drawing a second nested border.
+
+The private repository fixes plugin-action discovery for Herdr 0.8 on `main`.
+Its `agent/windows-support` branch supplies a native Windows launcher while
+keeping the same Python palette. Chezmoi links both profiles from
+`~/dev/herdr-command-palette`; it does not install the public package directly.
 
 ## Worktrunk picker
 
@@ -104,6 +119,8 @@ and are not intended as supported public packages.
 
 | Plugin | Private repository | Ref | Profiles | Local path |
 | --- | --- | --- | --- | --- |
+| Command Palette | `jeffhertzler/herdr-command-palette` | `main` | Linux, macOS, WSL | `~/dev/herdr-command-palette` |
+| Command Palette | `jeffhertzler/herdr-command-palette` | `agent/windows-support` | Windows | `~/dev/herdr-command-palette` |
 | Layout Tools | `jeffhertzler/herdr-layout-tools-windows` | `agent/windows-support` | Windows | `~/dev/herdr-layout-tools-windows` |
 | Herdr Splits | `jeffhertzler/herdr-splits-windows` | `agent/windows-support` | Windows | `~/dev/herdr-splits-windows` |
 | Worktrunk | `jeffhertzler/herdr-worktrunk` | `main` | Linux, macOS, WSL | `~/dev/herdr-worktrunk` |

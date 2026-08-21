@@ -110,6 +110,12 @@ width = "90%"
 height = "90%"
 
 [[keys.command]]
+key = "prefix+space"
+type = "shell"
+command = 'herdr plugin pane open --plugin palette --entrypoint palette'
+description = "open command palette"
+
+[[keys.command]]
 key = "ctrl+h"
 type = "plugin_action"
 command = "herdr-splits.nav-left{{ $herdrSplitsSuffix }}"

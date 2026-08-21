@@ -6,6 +6,14 @@ herdrIntegrations:
   - cursor
 
 herdrPlugins:
+  - id: palette
+    source: fabiogaliano/herdr-command-palette
+    managedLink: dev/herdr-command-palette
+    managedRepo: jeffhertzler/herdr-command-palette
+    managedRef: main
+    windowsLink: dev/herdr-command-palette
+    windowsRepo: jeffhertzler/herdr-command-palette
+    windowsRef: agent/windows-support
   - id: edi.layout-tools
     source: edouard-andrei/herdr-layout-tools
     windowsLink: dev/herdr-layout-tools-windows
