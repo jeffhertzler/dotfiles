@@ -84,9 +84,11 @@ Client-only terminal modes remain shortcut references. The fzf interface uses
 Herdr's popup frame rather than drawing a second nested border.
 
 The private repository fixes plugin-action discovery for Herdr 0.8 on `main`.
-Its `agent/windows-support` branch supplies a native Windows launcher while
-keeping the same Python palette. Chezmoi links both profiles from
-`~/dev/herdr-command-palette`; it does not install the public package directly.
+Its `agent/windows-support` branch launches the same Python palette through
+PowerShell. It normalizes Herdr's extended plugin paths, resolves real mise
+executables instead of shims, and runs WinGet's restricted fzf package through
+Git Bash. Chezmoi links both profiles from `~/dev/herdr-command-palette`; it
+does not install the public package directly.
 
 ## Worktrunk picker
 
