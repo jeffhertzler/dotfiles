@@ -1,3 +1,15 @@
+## Tests
+
+Run the complete TypeScript suite from the repository root with:
+
+```sh
+tsx --test tests/*.test.ts
+```
+
+This is the authoritative test command. The TSX loader resolves the runtime
+dependencies used by the managed Pi extensions; `bun test` and plain
+`node --test` do not exercise the suite correctly.
+
 ## Agent skills
 
 ### Issue tracker
