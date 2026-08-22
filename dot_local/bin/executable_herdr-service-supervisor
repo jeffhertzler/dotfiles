@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+set -u -o pipefail
+
+herdr=${HERDR_BIN:-"$HOME/.local/bin/herdr"}
+session=${HERDR_SESSION:-default}
+poll_seconds=${HERDR_SUPERVISOR_POLL_SECONDS:-1}
+startup_limit=${HERDR_SUPERVISOR_STARTUP_POLLS:-30}
+post_child_limit=${HERDR_SUPERVISOR_POST_CHILD_POLLS:-5}
+handoff_limit=${HERDR_SUPERVISOR_HANDOFF_POLLS:-70}
+
+for value in "$startup_limit" "$post_child_limit" "$handoff_limit"; do
+  [[ $value =~ ^[1-9][0-9]*$ ]] || {
+    printf 'herdr-service-supervisor: poll limits must be positive integers\n' >&2
+    exit 2
+  }
+done
+command -v jq >/dev/null 2>&1 || {
+  printf 'herdr-service-supervisor: jq is unavailable\n' >&2
+  exit 1
+}
+[[ -x $herdr ]] || {
+  printf 'herdr-service-supervisor: Herdr is unavailable at %s\n' "$herdr" >&2
+  exit 1
+}
+
+stopping=0
+direct_pid=
+direct_was_ready=0
+state=initial
+misses=0
+
+server_running() {
+  local status
+  status=$("$herdr" --session "$session" status server --json 2>/dev/null) || return 1
+  jq -e '.running == true' <<<"$status" >/dev/null 2>&1
+}
+
+direct_child_running() {
+  [[ -n $direct_pid ]] || return 1
+  jobs -pr | grep -qxF "$direct_pid"
+}
+
+launch_server() {
+  printf 'herdr-service-supervisor: starting session %s\n' "$session"
+  "$herdr" --session "$session" server &
+  direct_pid=$!
+  direct_was_ready=0
+  state=direct
+  misses=0
+}
+
+shutdown() {
+  (( stopping )) && return
+  stopping=1
+  trap - TERM INT
+  printf 'herdr-service-supervisor: stopping session %s\n' "$session"
+  "$herdr" --session "$session" server stop >/dev/null 2>&1 || true
+  if direct_child_running; then
+    wait "$direct_pid" 2>/dev/null || true
+  fi
+}
+
+trap shutdown TERM INT
+
+while (( !stopping )); do
+  if [[ -n $direct_pid ]] && ! direct_child_running; then
+    wait "$direct_pid" 2>/dev/null || true
+    direct_pid=
+    state=post-child
+    misses=0
+  fi
+
+  if server_running; then
+    misses=0
+    if [[ -n $direct_pid ]]; then
+      direct_was_ready=1
+    else
+      state=adopted
+    fi
+  else
+    ((misses += 1))
+    case $state in
+      initial)
+        if (( misses >= post_child_limit )); then
+          launch_server
+        fi
+        ;;
+      direct)
+        if (( direct_was_ready )); then
+          (( misses < handoff_limit )) || exit 1
+        else
+          (( misses < startup_limit )) || exit 1
+        fi
+        ;;
+      post-child)
+        (( misses < post_child_limit )) || exit 1
+        ;;
+      adopted)
+        (( misses < handoff_limit )) || exit 1
+        ;;
+      *)
+        printf 'herdr-service-supervisor: invalid state %s\n' "$state" >&2
+        exit 1
+        ;;
+    esac
+  fi
+
+  sleep "$poll_seconds" &
+  wait "$!" 2>/dev/null || true
+done
+
+exit 0

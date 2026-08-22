@@ -32,6 +32,7 @@ Private job state:
 ```text
 ~/.config/pi-jobs/jobs/<name>/job.json
 ~/.config/pi-jobs/jobs/<name>/prompt.md
+~/.config/pi-jobs/jobs/<name>/<additional-prompt>.md
 ~/.config/systemd/user/pi-job-<name>.timer
 ~/.local/state/pi-jobs/
 ```
@@ -45,6 +46,7 @@ Resolve the managed source root with `chezmoi source-path`. Mechanism source is:
 
 ```text
 <source-root>/dot_local/bin/executable_pi-job
+<source-root>/dot_local/bin/executable_herdr-service-supervisor
 <source-root>/dot_config/private_systemd/private_user/herdr.service
 <source-root>/dot_config/private_systemd/private_user/pi-job@.service
 <source-root>/.chezmoiscripts/run_onchange_after_35-pi-jobs.sh.tmpl
@@ -93,9 +95,44 @@ Fields:
 - `piArgs`: optional string array of Pi startup arguments such as `--model`,
   `--thinking`, `--tools`, or `--name`.
 
-The entire `prompt.md` is submitted literally. No shell expansion or prompt
-interpolation occurs. Tell Pi to obtain dynamic facts such as the date, Git
-state, CI results, or release versions with its tools.
+Without `steps`, the runner submits the entire `prompt.md` literally. No shell
+expansion or prompt interpolation occurs. Tell Pi to obtain dynamic facts such
+as the date, Git state, CI results, or release versions with its tools.
+
+### Staged jobs
+
+Use `steps` when work must pause between Pi turns for a command run by the job
+runner rather than the agent:
+
+```json
+{
+  "steps": [
+    { "type": "prompt", "promptFile": "prompt.md" },
+    {
+      "type": "exec",
+      "argv": ["/absolute/path/to/command", "arg"],
+      "timeoutMs": 300000,
+      "continueOnError": true
+    },
+    { "type": "prompt", "promptFile": "prompt.after.md" }
+  ]
+}
+```
+
+A staged job retains one Pi agent across every prompt step. An `exec` step:
+
+- runs directly in the runner with no shell interpolation;
+- uses the job's `cwd`;
+- removes inherited `HERDR_*` pane and session variables;
+- defaults to the job timeout and stops the workflow on failure;
+- may continue after failure only with `continueOnError: true`;
+- captures the final 16 KiB of combined output and prepends the exit status and
+  output to the next prompt.
+
+Before the next prompt, the runner waits for Herdr and the retained agent to
+reconnect. This supports commands that replace the Herdr server between turns.
+Every staged job must contain at least one prompt step. Prefer absolute command
+paths, and never put credentials in `argv` or command output.
 
 ## Create a job
 
@@ -170,6 +207,13 @@ Run immediately only when requested:
 
 ```bash
 pi-job run <name>
+```
+
+If an `exec` step may replace Herdr, do not synchronously run it from a Herdr
+pane. Start the normal user service and return before handoff begins:
+
+```bash
+systemctl --user start --no-block 'pi-job@<name>.service'
 ```
 
 The runner takes a non-blocking per-job lock. If an earlier service invocation

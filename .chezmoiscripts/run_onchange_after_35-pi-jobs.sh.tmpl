@@ -7,8 +7,10 @@ systemctl --user daemon-reload
 systemctl --user enable herdr.service
 
 # Avoid starting a second server while an older, manually launched Herdr server
-# owns the default socket. On a fresh login or boot, systemd owns it instead.
-if ! herdr --session default status server >/dev/null 2>&1; then
+# owns the default socket. Herdr status exits zero even when no server is running,
+# so inspect the structured liveness field.
+status=$(herdr --session default status server --json 2>/dev/null || true)
+if ! jq -e '.running == true' <<<"$status" >/dev/null 2>&1; then
   systemctl --user start herdr.service
 fi
 {{- end }}

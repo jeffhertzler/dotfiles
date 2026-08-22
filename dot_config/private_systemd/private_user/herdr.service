@@ -4,10 +4,11 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/herdr --session default server
+ExecStart=%h/.local/bin/herdr-service-supervisor
 Restart=on-failure
 RestartSec=5
-TimeoutStopSec=30
+KillMode=mixed
+TimeoutStopSec=45
 Environment=PATH=%h/.local/bin:%h/.local/share/mise/shims:/usr/local/bin:/usr/bin:/bin
 
 [Install]

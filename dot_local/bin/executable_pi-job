@@ -80,14 +80,55 @@ validate_job() {
 
   jq -e '(.piArgs // []) | type == "array" and all(.[]; type == "string")' "$config" >/dev/null ||
     fail 'piArgs must be an array of strings'
+
+  jq -e '
+    if has("steps") then
+      (.steps | type == "array" and length > 0) and
+      any(.steps[]; .type == "prompt") and
+      all(.steps[];
+        type == "object" and
+        if .type == "prompt" then
+          (.promptFile | type == "string" and length > 0)
+        elif .type == "exec" then
+          (.argv | type == "array" and length > 0 and all(.[]; type == "string" and length > 0)) and
+          ((.timeoutMs // 21600000) | type == "number" and floor == . and . >= 1000) and
+          ((.continueOnError // false) | type == "boolean")
+        else
+          false
+        end
+      )
+    else
+      true
+    end
+  ' "$config" >/dev/null ||
+    fail 'steps must be a non-empty array of prompt or exec step objects'
+}
+
+resolve_prompt_path() {
+  local name=$1 path=$2
+  [[ $path = /* ]] || path="$(job_dir "$name")/$path"
+  printf '%s\n' "$path"
 }
 
 prompt_path() {
   local name=$1 config path
   config=$(job_config "$name")
   path=$(jq -r '.promptFile // "prompt.md"' "$config")
-  [[ $path = /* ]] || path="$(job_dir "$name")/$path"
-  printf '%s\n' "$path"
+  resolve_prompt_path "$name" "$path"
+}
+
+validate_prompt_files() {
+  local name=$1 config path
+  config=$(job_config "$name")
+  if jq -e 'has("steps")' "$config" >/dev/null; then
+    while IFS= read -r path; do
+      path=$(resolve_prompt_path "$name" "$path")
+      [[ -s $path ]] || fail "prompt is missing or empty: $path"
+    done < <(jq -r '.steps[] | select(.type == "prompt") | .promptFile' "$config")
+  else
+    path=$(prompt_path "$name")
+    [[ -s $path ]] || fail "prompt is missing or empty: $path"
+  fi
 }
 
 init_job() {
@@ -144,11 +185,10 @@ timer_unit_name() {
 }
 
 install_job() {
-  local name=$1 config calendar randomized accuracy timer unit tmp prompt
+  local name=$1 config calendar randomized accuracy timer unit tmp
   validate_job "$name"
+  validate_prompt_files "$name"
   config=$(job_config "$name")
-  prompt=$(prompt_path "$name")
-  [[ -s $prompt ]] || fail "prompt is missing or empty: $prompt"
   calendar=$(jq -r '.calendar' "$config")
   randomized=$(jq -r '.randomizedDelaySec // "0"' "$config")
   accuracy=$(jq -r '.accuracySec // "1min"' "$config")
@@ -193,15 +233,21 @@ uninstall_job() {
   printf 'Removed timer %s; private job files remain in %s\n' "$unit" "$(job_dir "$name")"
 }
 
+herdr_server_running() {
+  local session=$1 status
+  status=$(herdr --session "$session" status server --json 2>/dev/null) || return 1
+  jq -e '.running == true' <<<"$status" >/dev/null 2>&1
+}
+
 ensure_herdr() {
   local session=$1 attempt
-  if herdr --session "$session" status server >/dev/null 2>&1; then
+  if herdr_server_running "$session"; then
     return
   fi
   [[ $session == default ]] || fail "Herdr session $session is not running; only the default session can be started automatically"
   systemctl --user start herdr.service
   for attempt in {1..30}; do
-    herdr --session "$session" status server >/dev/null 2>&1 && return
+    herdr_server_running "$session" && return
     sleep 1
   done
   fail "Herdr session $session did not become ready"
@@ -231,19 +277,29 @@ create_destination() {
   jq -er '.result.root_pane.pane_id' <<<"$response"
 }
 
+wait_for_agent_reconnect() {
+  local session=$1 agent_name=$2 attempt
+  ensure_herdr "$session"
+  for attempt in {1..90}; do
+    if herdr --session "$session" agent get "$agent_name" >/dev/null 2>&1; then
+      return
+    fi
+    sleep 1
+  done
+  fail "scheduled Pi agent $agent_name did not reconnect after an external step"
+}
+
 run_job() {
   local name=$1 config cwd topology session timeout prompt_file prompt tab_label run_label pane agent_name agent_suffix result
-  local attempt start_output tab_info tab_id workspace_id tab_count
-  local started=false
-  local -a pi_args=()
+  local attempt start_output tab_info tab_id workspace_id tab_count step step_type step_number
+  local exec_timeout_ms exec_timeout_seconds exec_status continue_on_error output_file output output_size pending_context
+  local started=false reconnect_required=false
+  local -a pi_args=() steps=() exec_argv=()
   validate_job "$name"
+  validate_prompt_files "$name"
   config=$(job_config "$name")
-  prompt_file=$(prompt_path "$name")
-  [[ -s $prompt_file ]] || fail "prompt is missing or empty: $prompt_file"
-  prompt=$(<"$prompt_file")
-  [[ -n ${prompt//[[:space:]]/} ]] || fail "prompt is blank: $prompt_file"
 
-  install -d -m 700 "$state_root/locks"
+  install -d -m 700 "$state_root/locks" "$state_root/tmp"
   exec 9>"$state_root/locks/$name.lock"
   if ! flock -n 9; then
     printf 'pi-job: %s is already running; skipping this occurrence\n' "$name"
@@ -258,8 +314,14 @@ run_job() {
   if [[ $(jq -r '.approveProject // false' "$config") == true ]]; then
     pi_args+=(--approve)
   fi
+  if jq -e 'has("steps")' "$config" >/dev/null; then
+    mapfile -t steps < <(jq -c '.steps[]' "$config")
+  else
+    steps+=("$(jq -c '{type: "prompt", promptFile: (.promptFile // "prompt.md")}' "$config")")
+  fi
 
   require_command herdr
+  require_command timeout
   ensure_herdr "$session"
   tab_label=$(jq -r --arg fallback "${name:0:12}" '.tabLabel // $fallback' "$config")
   run_label="$tab_label $(date '+%m-%d')"
@@ -305,14 +367,67 @@ run_job() {
   fi
   printf '%s\n' "$start_output"
 
-  if ! result=$(herdr --session "$session" agent prompt "$agent_name" "$prompt" --wait --timeout "$timeout"); then
-    printf '%s\n' "$result" >&2
-    fail "scheduled Pi job failed or timed out; its Herdr tab remains available"
-  fi
-  printf '%s\n' "$result"
-  if [[ $(jq -r '.result.agent.agent_status // .result.agent_status // empty' <<<"$result") == blocked ]]; then
-    fail "scheduled Pi job is blocked and needs input"
-  fi
+  step_number=0
+  pending_context=
+  for step in "${steps[@]}"; do
+    ((step_number += 1))
+    step_type=$(jq -r '.type' <<<"$step")
+    if [[ $step_type == exec ]]; then
+      mapfile -t exec_argv < <(jq -r '.argv[]' <<<"$step")
+      exec_timeout_ms=$(jq -r --argjson fallback "$timeout" '.timeoutMs // $fallback' <<<"$step")
+      exec_timeout_seconds=$(awk -v milliseconds="$exec_timeout_ms" 'BEGIN { printf "%.3fs", milliseconds / 1000 }')
+      continue_on_error=$(jq -r '.continueOnError // false' <<<"$step")
+      output_file=$(mktemp "$state_root/tmp/$name.exec.XXXXXX")
+      printf 'pi-job: running external command step %s\n' "$step_number"
+      set +e
+      (
+        cd "$cwd"
+        unset HERDR_ENV HERDR_PANE_ID HERDR_SOCKET_PATH HERDR_TAB_ID HERDR_WORKSPACE_ID
+        timeout --signal=TERM --kill-after=10s "$exec_timeout_seconds" "${exec_argv[@]}"
+      ) >"$output_file" 2>&1
+      exec_status=$?
+      set -e
+      output_size=$(wc -c <"$output_file")
+      output=$(tail -c 16384 "$output_file" | tr -d '\000')
+      rm -f -- "$output_file"
+      printf '%s\n' "$output"
+      pending_context+="External command step $step_number"
+      pending_context+=$'\n'
+      pending_context+="exit status: $exec_status"
+      pending_context+=$'\n'
+      if (( output_size > 16384 )); then
+        pending_context+="[output truncated to final 16384 bytes]"
+        pending_context+=$'\n'
+      fi
+      pending_context+="$output"
+      pending_context+=$'\n'
+      if (( exec_status != 0 )) && [[ $continue_on_error != true ]]; then
+        fail "external command step $step_number failed with exit status $exec_status"
+      fi
+      reconnect_required=true
+      continue
+    fi
+
+    if [[ $reconnect_required == true ]]; then
+      wait_for_agent_reconnect "$session" "$agent_name"
+      reconnect_required=false
+    fi
+    prompt_file=$(resolve_prompt_path "$name" "$(jq -r '.promptFile' <<<"$step")")
+    prompt=$(<"$prompt_file")
+    [[ -n ${prompt//[[:space:]]/} ]] || fail "prompt is blank: $prompt_file"
+    if [[ -n $pending_context ]]; then
+      prompt=$'The pi-job runner completed these external steps between turns. Use their exact results when continuing the job.\n\n'"${pending_context}"$'\n'"${prompt}"
+      pending_context=
+    fi
+    if ! result=$(herdr --session "$session" agent prompt "$agent_name" "$prompt" --wait --timeout "$timeout"); then
+      printf '%s\n' "$result" >&2
+      fail "scheduled Pi job failed or timed out; its Herdr tab remains available"
+    fi
+    printf '%s\n' "$result"
+    if [[ $(jq -r '.result.agent.agent_status // .result.agent_status // empty' <<<"$result") == blocked ]]; then
+      fail "scheduled Pi job is blocked and needs input"
+    fi
+  done
 }
 
 list_jobs() {
