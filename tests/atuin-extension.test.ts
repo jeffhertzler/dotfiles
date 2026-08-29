@@ -72,7 +72,7 @@ test("records a pi bash command with its cwd and exit code", async () => {
 	assert.deepEqual(calls, [
 		{
 			command: "atuin",
-			args: ["history", "start", "--author", "pi", "--", "npm test"],
+			args: ["history", "start", "--author", "pi", "--author-kind", "agent", "--", "npm test"],
 			options: { cwd: "/repo/worktree", timeout: 10_000 },
 		},
 		{
