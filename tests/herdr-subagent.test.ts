@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -10,19 +10,43 @@ import {
 } from "../dot_pi/agent/extensions/herdr-subagent/index.ts";
 
 class FakeHerdr implements HerdrClient {
+  agentRunning = true;
+  tabOpen = true;
+  agentPresenceOverride: "present" | "absent" | "unknown" | undefined;
+  tabPresenceOverride: "present" | "absent" | "unknown" | undefined;
+  startError: Error | undefined;
+  agentPresenceError: Error | undefined;
   createRequests: unknown[] = [];
   startRequests: unknown[] = [];
   promptRequests: unknown[] = [];
   closedTabs: string[] = [];
   focusedTabs: string[] = [];
+  stoppedAgents: string[] = [];
 
   async createTab(request: unknown) {
     this.createRequests.push(request);
+    this.tabOpen = true;
     return { tabId: "w1:t2", paneId: "w1:p2" };
   }
 
   async startAgent(request: unknown) {
     this.startRequests.push(request);
+    if (this.startError) throw this.startError;
+    this.agentRunning = true;
+  }
+
+  async getAgentPresence(_name: string) {
+    if (this.agentPresenceError) throw this.agentPresenceError;
+    return this.agentPresenceOverride ?? (this.agentRunning ? ("present" as const) : ("absent" as const));
+  }
+
+  async getTabPresence(_tabId: string) {
+    return this.tabPresenceOverride ?? (this.tabOpen ? ("present" as const) : ("absent" as const));
+  }
+
+  async stopAgent(name: string) {
+    this.stoppedAgents.push(name);
+    this.agentRunning = false;
   }
 
   async promptAgent(request: unknown) {
@@ -31,6 +55,7 @@ class FakeHerdr implements HerdrClient {
 
   async closeTab(tabId: string) {
     this.closedTabs.push(tabId);
+    this.tabOpen = false;
   }
 
   async focusTab(tabId: string) {
@@ -63,12 +88,26 @@ function createPiHarness() {
       handlers.set(event, registered);
     },
     getActiveTools() {
-      return ["read", "bash", "subagent", "subagent_wait", "subagent_close"];
+      return [
+        "read",
+        "bash",
+        "subagent",
+        "subagent_send",
+        "subagent_cancel",
+        "subagent_wait",
+        "subagent_close",
+      ];
     },
     getAllTools() {
-      return ["read", "bash", "subagent", "subagent_wait", "subagent_close"].map((name) => ({
-        name,
-      }));
+      return [
+        "read",
+        "bash",
+        "subagent",
+        "subagent_send",
+        "subagent_cancel",
+        "subagent_wait",
+        "subagent_close",
+      ].map((name) => ({ name }));
     },
     sendMessage(message: unknown, options: unknown) {
       messages.push({ message, options });
@@ -90,6 +129,20 @@ function createContext(widgets: unknown[] = []) {
     cwd: "/repo/task-worktree",
     model: { provider: "openai-codex-personal", id: "gpt-5.6-sol" },
     thinkingLevel: "high",
+    sessionManager: {
+      getSessionId() {
+        return "parent-session-1";
+      },
+      getLeafId() {
+        return "parent-entry-1";
+      },
+      getBranch() {
+        return [{ id: "parent-entry-1" }];
+      },
+      getEntries() {
+        return [];
+      },
+    },
     modelRegistry: {
       find(provider: string, model: string) {
         return provider === "openai-codex-personal" && model === "gpt-5.6-sol"
@@ -105,7 +158,7 @@ function createContext(widgets: unknown[] = []) {
   };
 }
 
-test("a child publishes its final answer without exposing another subagent tool", async (t) => {
+test("an autonomous child completes only through finish_task", async (t) => {
   const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
   t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
   const resultFile = join(artifactRoot, "result.json");
@@ -126,25 +179,20 @@ test("a child publishes its final answer without exposing another subagent tool"
 
   assert.equal(harness.tools.has("subagent"), false);
   assert.equal(harness.tools.has("subagent_wait"), false);
-  const settled = harness.handlers.get("agent_settled")?.[0];
-  assert.ok(settled, "registers child completion handling");
-  await settled(
-    {},
+  for (const settled of harness.handlers.get("agent_settled") ?? []) {
+    await settled({}, createContext());
+  }
+  assert.equal(existsSync(resultFile), false, "ordinary settling is not Task completion");
+
+  const finish = harness.tools.get("finish_task");
+  assert.ok(finish, "registers explicit completion for autonomous children");
+  await finish.execute(
+    "call-1",
+    { result: "The review found no issues." },
+    undefined,
+    undefined,
     {
-      sessionManager: {
-        getBranch() {
-          return [
-            {
-              type: "message",
-              message: {
-                role: "assistant",
-                content: [{ type: "text", text: "The review found no issues." }],
-                stopReason: "end",
-              },
-            },
-          ];
-        },
-      },
+      ...createContext(),
       shutdown() {
         shutdowns += 1;
       },
@@ -310,6 +358,7 @@ test("request_attention explicitly marks an interactive Task as waiting for huma
     details: {
       status: "waiting_for_human",
       reason: "Choose between the two proposed interfaces.",
+      notified: true,
     },
   });
   assert.deepEqual(harness.emittedEvents, [
@@ -327,7 +376,33 @@ test("request_attention explicitly marks an interactive Task as waiting for huma
   });
   assert.equal(existsSync(resultFile), false);
 
-  for (const started of harness.handlers.get("agent_start") ?? []) await started({}, createContext());
+  const duplicate = await requestAttention.execute(
+    "call-2",
+    { reason: "A different reason must not replace the pending request." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  assert.equal(duplicate.details.reason, "Choose between the two proposed interfaces.");
+  assert.equal(harness.emittedEvents.length, 1);
+
+  const input = harness.handlers.get("input")?.[0];
+  assert.ok(input, "tracks direct human input separately from parent steering");
+  const parentDirection = await input(
+    {
+      text: "[[pi-subagent-parent:99990000111122223333444455556666]]\nKeep investigating.",
+      source: "interactive",
+    },
+    createContext(),
+  );
+  assert.deepEqual(parentDirection, {
+    action: "transform",
+    text: "Keep investigating.",
+    images: undefined,
+  });
+  assert.equal(JSON.parse(readFileSync(stateFile, "utf8")).status, "waiting_for_human");
+
+  await input({ text: "Use the second interface.", source: "interactive" }, createContext());
   assert.deepEqual(harness.emittedEvents.at(-1), {
     name: "herdr:blocked",
     data: { active: false, label: "Choose between the two proposed interfaces." },
@@ -340,7 +415,46 @@ test("request_attention explicitly marks an interactive Task as waiting for huma
   });
 });
 
-test("a child that quits before settling reports failure for parent inspection", async (t) => {
+test("request_attention suppresses escalation during a focused conversation", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const harness = createPiHarness();
+  (harness.pi as any).exec = async () => ({
+    code: 0,
+    stderr: "",
+    stdout: JSON.stringify({ result: { pane: { focused: true } } }),
+  });
+
+  installHerdrSubagent(harness.pi as any, {
+    artifactRoot,
+    env: {
+      PI_HERDR_SUBAGENT: "1",
+      PI_HERDR_SUBAGENT_DEPTH: "1",
+      PI_HERDR_SUBAGENT_INTERACTIVE: "1",
+      PI_HERDR_SUBAGENT_RESULT_FILE: join(artifactRoot, "result.json"),
+      PI_HERDR_SUBAGENT_STATE_FILE: join(artifactRoot, "state.json"),
+      PI_HERDR_SUBAGENT_TOKEN: "abababababababababababababababab",
+    },
+  });
+
+  const result = await harness.tools.get("request_attention").execute(
+    "call-1",
+    { reason: "Choose the contract shape." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  assert.deepEqual(result.details, {
+    status: "working",
+    reason: "Choose the contract shape.",
+    notified: false,
+  });
+  assert.deepEqual(harness.emittedEvents, []);
+  assert.equal(existsSync(join(artifactRoot, "state.json")), false);
+});
+
+test("a child that quits before completion remains resumable", async (t) => {
   const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
   t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
   const resultFile = join(artifactRoot, "result.json");
@@ -360,12 +474,7 @@ test("a child that quits before settling reports failure for parent inspection",
   assert.ok(shutdown, "registers incomplete-child handling");
   await shutdown({ reason: "quit" }, {});
 
-  assert.deepEqual(JSON.parse(readFileSync(resultFile, "utf8")), {
-    schemaVersion: 1,
-    token: "fedcba9876543210fedcba9876543210",
-    status: "failed",
-    output: "Subagent exited before producing a final result.",
-  });
+  assert.equal(existsSync(resultFile), false);
 });
 
 test("subagent starts a visible child using the parent runtime by default", async (t) => {
@@ -383,12 +492,11 @@ test("subagent starts a visible child using the parent runtime by default", asyn
 
   const tool = harness.tools.get("subagent");
   assert.ok(tool, "registers the canonical subagent tool");
-  assert.deepEqual(tool.promptGuidelines, [
-    "For autonomous Tasks, partition work before launch: give the child an independent deliverable and reserve a different parent deliverable. While it runs, work only on the reserved parent deliverable.",
-    "For direct human collaboration, set interactive true and set focus true only when the human is expected to engage immediately. Call subagent_wait instead of inspecting or waiting through raw Herdr commands.",
-    "Call subagent_wait for every child whose result the response depends on. After all required waits return, synthesize the combined result once.",
-    "After collecting a completed interactive Task, call subagent_close when its retained tab is no longer needed.",
-  ]);
+  const guidelines = tool.promptGuidelines.join("\n");
+  assert.match(guidelines, /subagent_wait for every child/i);
+  assert.match(guidelines, /subagent_send to steer/i);
+  assert.match(guidelines, /subagent_cancel/i);
+  assert.match(guidelines, /pass its absolute path as subagent cwd/i);
 
   const result = await tool.execute(
     "call-1",
@@ -416,16 +524,48 @@ test("subagent starts a visible child using the parent runtime by default", asyn
   assert.match(startRequest.name, /^auth-spec-review-[a-f0-9]{6}$/);
   assert.deepEqual(startRequest, {
     name: startRequest.name,
+    label: "Auth spec review",
     paneId: "w1:p2",
+    sessionId: result.details.id,
     model: "openai-codex-personal/gpt-5.6-sol",
     thinking: "high",
-    tools: ["read", "bash"],
-    systemPrompt:
-      "You are a delegated subagent. Complete the supplied task directly. Do not spawn or control other agents. If a skill says to delegate the work assigned to you, perform that work yourself instead.",
+    tools: ["read", "bash", "finish_task", "request_attention"],
+    systemPrompt: startRequest.systemPrompt,
   });
-  assert.deepEqual(herdr.promptRequests, [
-    { name: startRequest.name, task: "Review the authentication change." },
-  ]);
+  assert.match(startRequest.systemPrompt, /finish_task only after the entire assignment is complete/i);
+  assert.match(startRequest.systemPrompt, /answering a human follow-up/i);
+  assert.match(startRequest.systemPrompt, /assigned cwd as the primary checkout/i);
+  assert.match(startRequest.systemPrompt, /access other repositories or use additional worktrees/i);
+  assert.deepEqual(
+    herdr.promptRequests.map(({ name, task }: any) => ({ name, task })),
+    [{ name: startRequest.name, task: "Review the authentication change." }],
+  );
+});
+
+test("subagent launches in an explicitly selected existing checkout", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const targetCwd = mkdtempSync(join(tmpdir(), "herdr-subagent-cwd-"));
+  t.after(() => rmSync(targetCwd, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+
+  await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Existing checkout", task: "Work in the assigned checkout.", cwd: targetCwd },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  assert.equal((herdr.createRequests[0] as any).cwd, targetCwd);
 });
 
 test("an interactive Task can focus its persistent child tab at launch", async (t) => {
@@ -474,9 +614,10 @@ test("request_attention updates parent Task status without changing focus", asyn
     herdr,
     artifactRoot,
     pollIntervalMs: 5,
+    livenessIntervalMs: 5,
     env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
   });
-  await harness.tools.get("subagent").execute(
+  const started = await harness.tools.get("subagent").execute(
     "call-1",
     { name: "Interactive design", task: "Work with me.", interactive: true },
     undefined,
@@ -508,6 +649,33 @@ test("request_attention updates parent Task status without changing focus", asyn
     value: ["Subagents", "• Interactive design — waiting for human"],
     options: undefined,
   });
+
+  await harness.tools.get("subagent_send").execute(
+    "call-2",
+    { id: started.details.id, message: "Keep investigating while the decision is pending." },
+    undefined,
+    undefined,
+    createContext(widgets),
+  );
+  assert.deepEqual(widgets.at(-1), {
+    id: "herdr-subagents",
+    value: ["Subagents", "• Interactive design — waiting for human"],
+    options: undefined,
+  });
+
+  herdr.agentRunning = false;
+  await waitFor(() => (widgets.at(-1) as any)?.value?.[1] === "• Interactive design — interrupted");
+  await harness.tools.get("subagent_send").execute(
+    "call-3",
+    { id: started.details.id, message: "Resume without clearing the pending decision." },
+    undefined,
+    undefined,
+    createContext(widgets),
+  );
+  assert.deepEqual((widgets.at(-1) as any).value, [
+    "Subagents",
+    "• Interactive design — waiting for human",
+  ]);
 });
 
 test("the real adapter launches Pi through Herdr without disabling child skills", async (t) => {
@@ -565,7 +733,8 @@ test("the real adapter launches Pi through Herdr without disabling child skills"
     ],
   );
   const start = commands[2];
-  assert.ok(start.includes("--no-session"));
+  assert.equal(start.includes("--no-session"), false);
+  assert.ok(start.includes("--session-id"));
   assert.ok(start.includes("--append-system-prompt"));
   assert.ok(start.includes("--tools"));
   assert.equal(start.includes("--no-skills"), false);
@@ -604,7 +773,7 @@ test("explicit tools, model, and thinking override parent defaults", async (t) =
   const request = herdr.startRequests[0] as any;
   assert.equal(request.model, "anthropic/claude-sonnet");
   assert.equal(request.thinking, "low");
-  assert.deepEqual(request.tools, ["read"]);
+  assert.deepEqual(request.tools, ["read", "finish_task", "request_attention"]);
 });
 
 test("invalid runtime options fail before Herdr resources are created", async (t) => {
@@ -632,6 +801,51 @@ test("invalid runtime options fail before Herdr resources are created", async (t
     /Unknown subagent tools: not-a-tool/,
   );
   assert.deepEqual(herdr.createRequests, []);
+});
+
+test("a failed launch remains visible when its recovery probe also fails", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  herdr.agentRunning = false;
+  herdr.startError = new Error("start failed");
+  herdr.agentPresenceError = new Error("presence probe failed");
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    livenessIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+
+  let launchError: Error | undefined;
+  try {
+    await harness.tools.get("subagent").execute(
+      "call-1",
+      { name: "Recoverable launch", task: "Remain discoverable after launch failure." },
+      undefined,
+      undefined,
+      createContext(),
+    );
+  } catch (error) {
+    launchError = error as Error;
+  }
+
+  const taskIds = readdirSync(artifactRoot);
+  assert.equal(taskIds.length, 1);
+  assert.match(launchError?.message ?? "", new RegExp(`Task ID: ${taskIds[0]}`));
+  herdr.agentPresenceError = undefined;
+
+  const result = await harness.tools.get("subagent_wait").execute(
+    "call-2",
+    { id: taskIds[0] },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  assert.equal(result.details.status, "interrupted");
 });
 
 test("concurrent children with the same display name receive unique Herdr names", async (t) => {
@@ -706,6 +920,191 @@ test("active children are visible until the parent session shuts down", async (t
     value: undefined,
     options: undefined,
   });
+});
+
+test("subagent_send steers a running child without completing its Task", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Steerable review", task: "Review the first design." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  const result = await harness.tools.get("subagent_send").execute(
+    "call-2",
+    { id: started.details.id, message: "Compare it with the second design too." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  assert.match(result.content[0].text, /sent/i);
+  assert.deepEqual(
+    herdr.promptRequests.map(({ name, task }: any) => ({ name, task })),
+    [
+      { name: started.details.agentName, task: "Review the first design." },
+      { name: started.details.agentName, task: "Compare it with the second design too." },
+    ],
+  );
+});
+
+test("subagent_send resumes an interrupted Agent conversation", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const first = createPiHarness();
+
+  installHerdrSubagent(first.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    livenessIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await first.tools.get("subagent").execute(
+    "call-1",
+    { name: "Resumable review", task: "Inspect the first implementation." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  herdr.agentRunning = false;
+  await waitFor(() => first.messages.length === 1);
+  await first.handlers.get("session_shutdown")?.[0]({ reason: "quit" }, createContext());
+  herdr.tabOpen = false;
+
+  const resumed = createPiHarness();
+  installHerdrSubagent(resumed.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  await resumed.handlers.get("session_start")?.[0]({ reason: "startup" }, createContext());
+  await resumed.tools.get("subagent_send").execute(
+    "call-2",
+    { id: started.details.id, message: "Continue with the corrected implementation." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  assert.equal(herdr.createRequests.length, 2, "recreates a missing retained tab");
+  assert.equal(herdr.startRequests.length, 2);
+  assert.equal((herdr.startRequests[1] as any).sessionId, started.details.id);
+  const resumedPrompt = herdr.promptRequests.at(-1) as any;
+  assert.deepEqual(
+    { name: resumedPrompt.name, task: resumedPrompt.task },
+    {
+      name: started.details.agentName,
+      task: "Continue with the corrected implementation.",
+    },
+  );
+});
+
+test("a hard-stopped child becomes resumably interrupted instead of hanging subagent_wait", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    livenessIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Interrupted review", task: "Review until stopped." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const waiting = harness.tools.get("subagent_wait").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  let waitResolved = false;
+  void waiting.then(() => {
+    waitResolved = true;
+  });
+  herdr.agentPresenceOverride = "unknown";
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  assert.equal(waitResolved, false, "transient Herdr errors do not interrupt a live Task");
+  herdr.agentPresenceOverride = "absent";
+
+  const result = await waiting;
+  assert.equal(result.details.status, "interrupted");
+  assert.match(result.content[0].text, /can be resumed with subagent_send/i);
+});
+
+test("a resumed parent session recovers ownership of an active Task", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const first = createPiHarness();
+
+  installHerdrSubagent(first.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await first.tools.get("subagent").execute(
+    "call-1",
+    { name: "Durable review", task: "Review the durable lifecycle." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  await first.handlers.get("session_shutdown")?.[0]({ reason: "quit" }, createContext());
+
+  const resumed = createPiHarness();
+  installHerdrSubagent(resumed.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  await resumed.handlers.get("session_start")?.[0]({ reason: "startup" }, createContext());
+
+  const waiting = resumed.tools.get("subagent_wait").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const createRequest = herdr.createRequests[0] as any;
+  writeFileSync(
+    createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "Recovered after the parent restart.",
+    }),
+  );
+
+  const result = await waiting;
+  assert.match(result.content[0].text, /Recovered after the parent restart/);
 });
 
 test("subagent_wait claims a Task and returns its result without automatic redelivery", async (t) => {
@@ -816,6 +1215,98 @@ test("finishing an interactive Task returns its result without closing the child
   assert.equal(existsSync(dirname(resultFile)), true);
 });
 
+test("subagent_cancel stops an active child and leaves terminal cleanup explicit", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Cancelled review", task: "Review until cancelled." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  const cancelled = await harness.tools.get("subagent_cancel").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  assert.equal(cancelled.details.status, "cancelled");
+  assert.deepEqual(herdr.stoppedAgents, [started.details.agentName]);
+  assert.deepEqual(herdr.closedTabs, []);
+
+  await harness.tools.get("subagent_close").execute(
+    "call-3",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
+  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
+});
+
+test("lifecycle transitions reject concurrent send and cancel operations", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  let releaseStop: (() => void) | undefined;
+  herdr.stopAgent = async (name: string) => {
+    herdr.stoppedAgents.push(name);
+    await new Promise<void>((resolve) => {
+      releaseStop = resolve;
+    });
+    herdr.agentRunning = false;
+  };
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Serialized lifecycle", task: "Wait for lifecycle operations." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const cancelling = harness.tools.get("subagent_cancel").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  await waitFor(() => releaseStop !== undefined);
+
+  await assert.rejects(
+    harness.tools.get("subagent_send").execute(
+      "call-3",
+      { id: started.details.id, message: "This must not race cancellation." },
+      undefined,
+      undefined,
+      createContext(),
+    ),
+    /already changing state/i,
+  );
+  releaseStop?.();
+  await cancelling;
+});
+
 test("subagent_close explicitly closes a completed interactive Task", async (t) => {
   const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
   t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
@@ -866,11 +1357,129 @@ test("subagent_close explicitly closes a completed interactive Task", async (t) 
   );
 
   assert.deepEqual(result, {
-    content: [{ type: "text", text: "Closed interactive Task Closable design." }],
+    content: [{ type: "text", text: "Closed subagent Task Closable design." }],
     details: { id: started.details.id, name: "Closable design", status: "closed" },
   });
   assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
   assert.equal(existsSync(dirname(resultFile)), false);
+});
+
+test("subagent_close retains ownership when Herdr tab state is indeterminate", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Uncertain close", task: "Complete for uncertain cleanup.", interactive: true },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const waiting = harness.tools.get("subagent_wait").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const createRequest = herdr.createRequests[0] as any;
+  writeFileSync(
+    createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "Ready for close.",
+    }),
+  );
+  await waiting;
+  herdr.tabPresenceOverride = "unknown";
+
+  await assert.rejects(
+    harness.tools.get("subagent_close").execute(
+      "call-3",
+      { id: started.details.id },
+      undefined,
+      undefined,
+      createContext(),
+    ),
+    /Could not verify/i,
+  );
+  assert.equal(existsSync(join(artifactRoot, started.details.id)), true);
+  herdr.tabPresenceOverride = "present";
+  await harness.tools.get("subagent_close").execute(
+    "call-4",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+});
+
+test("parent restart preserves terminal cleanup policy", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const first = createPiHarness();
+
+  installHerdrSubagent(first.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await first.tools.get("subagent").execute(
+    "call-1",
+    { name: "Restart cleanup", task: "Complete for cleanup.", interactive: true },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const waiting = first.tools.get("subagent_wait").execute(
+    "call-2",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+  const createRequest = herdr.createRequests[0] as any;
+  writeFileSync(
+    createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "Small terminal result.",
+    }),
+  );
+  await waiting;
+  await first.handlers.get("session_shutdown")?.[0]({ reason: "quit" }, createContext());
+
+  const resumed = createPiHarness();
+  installHerdrSubagent(resumed.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  await resumed.handlers.get("session_start")?.[0]({ reason: "startup" }, createContext());
+  await resumed.tools.get("subagent_close").execute(
+    "call-3",
+    { id: started.details.id },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
 });
 
 test("aborting subagent_wait releases the Task for automatic delivery", async (t) => {
@@ -998,6 +1607,90 @@ test("large results are bounded in parent context and retained on disk", async (
   assert.equal(existsSync(dirname(resultFile)), true);
 });
 
+test("an unclaimed interruption waits for the parent conversation branch that launched it", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+  const ctx = createContext();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    livenessIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Branch-owned interruption", task: "Stop on another branch." },
+    undefined,
+    undefined,
+    ctx,
+  );
+  ctx.sessionManager.getBranch = () => [{ id: "different-parent-entry" }];
+  herdr.agentRunning = false;
+
+  await waitFor(() => {
+    const [taskId] = readdirSync(artifactRoot);
+    if (!taskId) return false;
+    const manifest = JSON.parse(readFileSync(join(artifactRoot, taskId, "task.json"), "utf8"));
+    return manifest.status === "interrupted";
+  });
+  assert.deepEqual(harness.messages, []);
+
+  ctx.sessionManager.getBranch = () => [{ id: "parent-entry-1" }];
+  await harness.handlers.get("session_tree")?.[0]({}, ctx);
+  assert.equal(harness.messages.length, 1);
+  assert.match((harness.messages[0] as any).message.content, /can be resumed with subagent_send/i);
+
+  await harness.handlers.get("session_tree")?.[0]({}, ctx);
+  assert.equal(harness.messages.length, 1, "delivers the interruption notice only once");
+});
+
+test("an unclaimed Result waits for the parent conversation branch that launched it", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+  const ctx = createContext();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "call-1",
+    { name: "Branch-owned result", task: "Return to the launch branch." },
+    undefined,
+    undefined,
+    ctx,
+  );
+  ctx.sessionManager.getBranch = () => [{ id: "different-parent-entry" }];
+
+  const createRequest = herdr.createRequests[0] as any;
+  writeFileSync(
+    createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "Deliver only to the launch branch.",
+    }),
+  );
+  await waitFor(() => herdr.closedTabs.length === 1);
+  assert.deepEqual(harness.messages, []);
+  assert.equal(existsSync(join(artifactRoot, started.details.id)), true);
+
+  ctx.sessionManager.getBranch = () => [{ id: "parent-entry-1" }];
+  await harness.handlers.get("session_tree")?.[0]({}, ctx);
+  assert.equal(harness.messages.length, 1);
+  assert.match((harness.messages[0] as any).message.content, /Deliver only to the launch branch/);
+  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
+});
+
 test("a completed child result is delivered once and its owned tab is closed", async (t) => {
   const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
   t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
@@ -1012,7 +1705,7 @@ test("a completed child result is delivered once and its owned tab is closed", a
   });
 
   const tool = harness.tools.get("subagent");
-  await tool.execute(
+  const started = await tool.execute(
     "call-1",
     { name: "Standards review", task: "Review project standards." },
     undefined,
@@ -1043,6 +1736,7 @@ test("a completed child result is delivered once and its owned tab is closed", a
         content: "Subagent Standards review completed:\n\nNo standards violations found.",
         display: true,
         details: {
+          id: started.details.id,
           name: "Standards review",
           status: "completed",
           tabId: "w1:t2",
