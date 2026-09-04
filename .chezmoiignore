@@ -1,4 +1,5 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
+.env
 README.md
 AGENTS.md
 CLAUDE.md
