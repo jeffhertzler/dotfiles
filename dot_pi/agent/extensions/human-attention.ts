@@ -9,7 +9,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 export const HUMAN_ATTENTION_REQUESTED = "human-attention:requested";
 export const HUMAN_ATTENTION_RESOLVED = "human-attention:resolved";
-export const HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED = "human-attention:notifications-suppressed";
+export const HUMAN_ATTENTION_SUPPRESSED = "human-attention:suppressed";
 
 type DialogKind = "select" | "confirm" | "input" | "editor" | "custom";
 
@@ -146,7 +146,7 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
   let activeCount = 0;
   let activeRequest: AttentionRequest | undefined;
   let activeContext: any;
-  let notificationSuppressionCount = 0;
+  let attentionSuppressionCount = 0;
   const moshiNotifiedRequestIds = new Set<string>();
   const moshi = options.moshi === false
     ? undefined
@@ -161,7 +161,17 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     }
   }
 
-  function beginAttention(kind: DialogKind, args: unknown[], ctx: any): AttentionRequest {
+  function attentionIsSuppressed(ctx: any): boolean {
+    if (attentionSuppressionCount > 0) return true;
+    try {
+      return typeof ctx?.isIdle === "function" && ctx.isIdle() === true;
+    } catch {
+      return false;
+    }
+  }
+
+  function beginAttention(kind: DialogKind, args: unknown[], ctx: any): AttentionRequest | undefined {
+    if (attentionIsSuppressed(ctx)) return undefined;
     activeCount += 1;
     if (activeRequest) return activeRequest;
 
@@ -172,10 +182,8 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     };
     activeContext = ctx;
     pi.events.emit(HUMAN_ATTENTION_REQUESTED, activeRequest);
-    if (notificationSuppressionCount === 0) {
-      moshiNotifiedRequestIds.add(activeRequest.id);
-      notifyMoshi("requestAttention", activeRequest, ctx);
-    }
+    moshiNotifiedRequestIds.add(activeRequest.id);
+    notifyMoshi("requestAttention", activeRequest, ctx);
     pi.events.emit("herdr:blocked", {
       active: true,
       label: activeRequest.title ?? "Waiting for user input",
@@ -201,12 +209,12 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     if (activeCount === 0) clearAttention(request);
   }
 
-  const stopNotificationSuppressionListener = pi.events.on(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, (data) => {
+  const stopAttentionSuppressionListener = pi.events.on(HUMAN_ATTENTION_SUPPRESSED, (data) => {
     if (!data || typeof data !== "object" || !("active" in data)) return;
     if ((data as { active: unknown }).active === true) {
-      notificationSuppressionCount += 1;
+      attentionSuppressionCount += 1;
     } else if ((data as { active: unknown }).active === false) {
-      notificationSuppressionCount = Math.max(0, notificationSuppressionCount - 1);
+      attentionSuppressionCount = Math.max(0, attentionSuppressionCount - 1);
     }
   });
 
@@ -224,7 +232,7 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
         try {
           return await original(...args);
         } finally {
-          endAttention(request);
+          if (request) endAttention(request);
         }
       };
     }
@@ -240,8 +248,8 @@ export function installHumanAttention(pi: PiLike, options: InstallOptions = {}):
     clearAttention();
     restore?.();
     restore = undefined;
-    stopNotificationSuppressionListener();
-    notificationSuppressionCount = 0;
+    stopAttentionSuppressionListener();
+    attentionSuppressionCount = 0;
     moshiNotifiedRequestIds.clear();
   });
 }

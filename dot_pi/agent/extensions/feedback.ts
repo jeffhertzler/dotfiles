@@ -154,15 +154,15 @@ function parseFeedback(path: string, metadata: FeedbackMetadata): FeedbackPayloa
   return feedback as FeedbackPayload;
 }
 
-async function withoutAttentionNotifications<T>(
+async function withoutHumanAttention<T>(
   pi: ExtensionAPI,
   action: () => Promise<T>,
 ): Promise<T> {
-  pi.events.emit("human-attention:notifications-suppressed", { active: true });
+  pi.events.emit("human-attention:suppressed", { active: true });
   try {
     return await action();
   } finally {
-    pi.events.emit("human-attention:notifications-suppressed", { active: false });
+    pi.events.emit("human-attention:suppressed", { active: false });
   }
 }
 
@@ -239,7 +239,7 @@ export default function feedbackExtension(pi: ExtensionAPI) {
             label: assistantChoiceLabel(candidate, position === -1 ? undefined : position),
           };
         });
-        const selectedLabel = await withoutAttentionNotifications(pi, () => ctx.ui.select(
+        const selectedLabel = await withoutHumanAttention(pi, () => ctx.ui.select(
           "Choose assistant response from the session tree",
           choices.map((choice) => choice.label),
         ));
@@ -274,7 +274,7 @@ export default function feedbackExtension(pi: ExtensionAPI) {
 
       let exitStatus: number | null | undefined;
       try {
-        exitStatus = await withoutAttentionNotifications(pi, () =>
+        exitStatus = await withoutHumanAttention(pi, () =>
           ctx.ui.custom<number | null>((tui, _theme, _keybindings, done) => {
             tui.stop();
             process.stdout.write("\x1b[2J\x1b[H");

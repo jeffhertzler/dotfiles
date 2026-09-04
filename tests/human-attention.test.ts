@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED,
+  HUMAN_ATTENTION_SUPPRESSED,
   HUMAN_ATTENTION_REQUESTED,
   HUMAN_ATTENTION_RESOLVED,
   createMoshiAttentionClient,
@@ -120,7 +120,7 @@ test("Moshi receives the same attention lifecycle with prompt context", async ()
   assert.equal(calls[1].request.id, calls[0].request.id);
 });
 
-test("user-initiated workflows can suppress Moshi while retaining Herdr wait state", async () => {
+test("user-initiated workflows do not enter the human-attention lifecycle", async () => {
   const harness = createHarness();
   const first = deferred<string | undefined>();
   const second = deferred<string | undefined>();
@@ -136,24 +136,55 @@ test("user-initiated workflows can suppress Moshi while retaining Herdr wait sta
 
   installHumanAttention(harness.pi as any, { moshi });
   await harness.handlers.get("session_start")?.[0]({}, { ui });
-  harness.pi.events.emit(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, { active: true });
+  harness.pi.events.emit(HUMAN_ATTENTION_SUPPRESSED, { active: true });
 
   const suppressedAnswer = ui.select("Feedback response", ["Latest", "Earlier"]);
   assert.deepEqual(calls, []);
-  assert.deepEqual(harness.events.at(-1), {
-    name: "herdr:blocked",
-    data: { active: true, label: "Feedback response" },
-  });
+  assert.equal(
+    harness.events.some((event) =>
+      event.name === HUMAN_ATTENTION_REQUESTED || event.name === "herdr:blocked"
+    ),
+    false,
+  );
   first.resolve("Earlier");
   await suppressedAnswer;
   assert.deepEqual(calls, []);
 
-  harness.pi.events.emit(HUMAN_ATTENTION_NOTIFICATIONS_SUPPRESSED, { active: false });
+  harness.pi.events.emit(HUMAN_ATTENTION_SUPPRESSED, { active: false });
   const normalAnswer = ui.select("Agent question", ["Yes", "No"]);
   assert.deepEqual(calls, ["requested"]);
   second.resolve("Yes");
   await normalAnswer;
   assert.deepEqual(calls, ["requested", "resolved"]);
+});
+
+test("a custom panel opened by the user while Pi is idle does not request attention", async () => {
+  const harness = createHarness();
+  const closed = deferred<void>();
+  const ui = {
+    custom: async (..._args: unknown[]) => closed.promise,
+  };
+  const calls: string[] = [];
+  const moshi = {
+    requestAttention() { calls.push("requested"); },
+    resolveAttention() { calls.push("resolved"); },
+  };
+
+  installHumanAttention(harness.pi as any, { moshi });
+  await harness.handlers.get("session_start")?.[0]({}, { ui, isIdle: () => true });
+
+  const panel = ui.custom(() => {}, { overlay: true });
+  assert.deepEqual(calls, []);
+  assert.equal(
+    harness.events.some((event) =>
+      event.name === HUMAN_ATTENTION_REQUESTED || event.name === "herdr:blocked"
+    ),
+    false,
+  );
+
+  closed.resolve();
+  await panel;
+  assert.deepEqual(calls, []);
 });
 
 test("the Moshi adapter maps a question wait to terminal input without approval controls", async () => {

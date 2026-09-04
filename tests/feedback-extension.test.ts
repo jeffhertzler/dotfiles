@@ -128,10 +128,10 @@ test("feedback can select an older assistant response before opening Neovim", as
     assert.equal(readFileSync(sourcePath, "utf8"), "Older response to annotate\n");
     assert.equal(notifications.at(-1), "Feedback discarded");
     assert.deepEqual(attentionEvents, [
-      { name: "human-attention:notifications-suppressed", data: { active: true } },
-      { name: "human-attention:notifications-suppressed", data: { active: false } },
-      { name: "human-attention:notifications-suppressed", data: { active: true } },
-      { name: "human-attention:notifications-suppressed", data: { active: false } },
+      { name: "human-attention:suppressed", data: { active: true } },
+      { name: "human-attention:suppressed", data: { active: false } },
+      { name: "human-attention:suppressed", data: { active: true } },
+      { name: "human-attention:suppressed", data: { active: false } },
     ]);
   } finally {
     if (previousNvim === undefined) delete process.env.PI_FEEDBACK_NVIM;
