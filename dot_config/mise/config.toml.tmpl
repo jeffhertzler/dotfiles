@@ -62,7 +62,7 @@ uv = "latest"
 "aqua:jesseduffield/lazygit" = "latest"
 "aqua:tree-sitter/tree-sitter" = "0.26.11"
 "cargo:papercuts" = { version = "latest", depends = ["rust"] }
-"npm:@playwright/cli" = "latest"
+"npm:@playwright/cli" = { version = "latest", trust_policy_excludes = ["@playwright/cli@0.1.19", "playwright@1.63.0-alpha-2026-08-31", "playwright-core@1.63.0-alpha-2026-08-31"] }
 "npm:@earendil-works/pi-coding-agent" = "latest"
 "npm:neovim" = "latest"
 "pipx:pynvim" = { version = "latest", depends = ["uv"] }
