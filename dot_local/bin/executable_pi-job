@@ -277,6 +277,21 @@ create_destination() {
   jq -er '.result.root_pane.pane_id' <<<"$response"
 }
 
+wait_for_pi_initialization() {
+  local session=$1 agent_name=$2 attempt state
+  for attempt in {1..120}; do
+    if state=$(herdr --session "$session" agent get "$agent_name" 2>/dev/null) &&
+      jq -e '
+        .result.agent.interactive_ready == true and
+        ((.result.agent.agent_session.value // "") | length > 0)
+      ' <<<"$state" >/dev/null; then
+      return
+    fi
+    sleep 0.5
+  done
+  fail "scheduled Pi agent $agent_name did not finish initializing"
+}
+
 wait_for_agent_reconnect() {
   local session=$1 agent_name=$2 attempt
   ensure_herdr "$session"
@@ -366,6 +381,7 @@ run_job() {
     fail "could not start Pi in the scheduled Herdr tab"
   fi
   printf '%s\n' "$start_output"
+  wait_for_pi_initialization "$session" "$agent_name"
 
   step_number=0
   pending_context=

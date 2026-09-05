@@ -14,7 +14,7 @@ function executable(path: string, body: string) {
   chmodSync(path, 0o755);
 }
 
-function createHarness(t: test.TestContext, continueOnError: boolean) {
+function createHarness(t: test.TestContext, continueOnError: boolean, delayedAgentReady = false) {
   const root = mkdtempSync(join(tmpdir(), "pi-job-test-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   const home = join(root, "home");
@@ -45,9 +45,24 @@ case "\${args[0]:-} \${args[1]:-}" in
   "workspace list") printf '%s\\n' '{"result":{"workspaces":[]}}' ;;
   "workspace create") printf '%s\\n' '{"result":{"workspace":{"workspace_id":"w1"},"tab":{"tab_id":"w1:t1"},"root_pane":{"pane_id":"w1:p1"}}}' ;;
   "tab rename") printf '%s\\n' '{"result":{"type":"ok"}}' ;;
-  "agent start") printf '%s\\n' '{"result":{"agent":{"agent_status":"idle"}}}' ;;
-  "agent get") printf '%s\\n' '{"result":{"agent":{"agent_status":"idle"}}}' ;;
-  "agent prompt") printf '%s\\n' '{"result":{"agent":{"agent_status":"idle"}}}' ;;
+  "agent start")
+    if [[ \${PI_JOB_TEST_DELAYED_READY:-0} == 1 ]]; then
+      printf '%s\\n' '{"result":{"agent":{"agent_status":"idle","interactive_ready":true,"revision":0,"state_change_seq":8}}}'
+    else
+      printf '%s\\n' '{"result":{"agent":{"agent_status":"idle","interactive_ready":true,"revision":1,"state_change_seq":8,"agent_session":{"value":"session.jsonl"}}}}'
+    fi
+    ;;
+  "agent get")
+    : > "$PI_JOB_TEST_READY_FILE"
+    printf '%s\\n' '{"result":{"agent":{"agent_status":"idle","interactive_ready":true,"revision":1,"state_change_seq":8,"agent_session":{"value":"session.jsonl"}}}}'
+    ;;
+  "agent prompt")
+    if [[ \${PI_JOB_TEST_DELAYED_READY:-0} == 1 && ! -e $PI_JOB_TEST_READY_FILE ]]; then
+      printf '%s\\n' '{"error":{"code":"agent_prompt_stalled","message":"agent prompt produced no observed state change within 5000 ms"}}' >&2
+      exit 1
+    fi
+    printf '%s\\n' '{"result":{"agent":{"agent_status":"idle"}}}'
+    ;;
   *) printf 'unexpected fake herdr invocation: %s\\n' "\${args[*]}" >&2; exit 2 ;;
 esac
 `,
@@ -96,6 +111,8 @@ exit 23
     PI_JOB_CONFIG_DIR: jobs,
     PI_JOB_STATE_DIR: state,
     PI_JOB_TEST_LOG: log,
+    PI_JOB_TEST_READY_FILE: join(root, "agent-ready"),
+    PI_JOB_TEST_DELAYED_READY: delayedAgentReady ? "1" : "0",
     XDG_CONFIG_HOME: join(root, "config"),
   };
   return { env, log };
@@ -138,4 +155,19 @@ test("stops after a failed external command unless configured to continue", (t) 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /external command step 2 failed with exit status 23/);
   assert.equal(promptCalls(harness.log).length, 1);
+});
+
+test("waits for a newly started Pi agent to finish initializing before prompting", (t) => {
+  const harness = createHarness(t, true, true);
+  const result = spawnSync("bash", [piJob, "run", "staged"], {
+    encoding: "utf8",
+    env: harness.env,
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const calls = readFileSync(harness.log, "utf8").split("\n");
+  const ready = calls.findIndex((line) => line.includes("agent get"));
+  const prompted = calls.findIndex((line) => line.includes("agent prompt"));
+  assert.ok(ready >= 0, "expected the runner to inspect agent readiness");
+  assert.ok(ready < prompted, "expected readiness inspection before the first prompt");
 });
