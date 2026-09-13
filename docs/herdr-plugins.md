@@ -60,9 +60,11 @@ Windows Terminal's `wt` alias and inaccessible package-manager shims.
 
 The Worktrunk fork reports a checkout's PR as the `$pr` workspace token. Herdr's
 second space row keeps `$session`, branch, and Git status, then adds that token.
-Opening a native worktree workspace starts a nonblocking refresh. Run
-`herdr plugin action invoke refresh-pr --plugin worktrunk` to refresh the focused
-workspace after a PR changes state. A branch with no PR clears an old value;
+Opening a native worktree workspace starts a nonblocking refresh. Startup
+restores PR metadata for resumed workspaces, and workspace focus refreshes each
+checkout with a five-minute cooldown. Run
+`herdr plugin action invoke refresh-pr --plugin worktrunk` to bypass the cooldown
+and refresh the focused workspace after a PR changes state. A branch with no PR clears an old value;
 missing GitHub CLI authentication and network failures do not stop checkout
 opening.
 
@@ -85,9 +87,13 @@ Herdr's popup frame rather than drawing a second nested border.
 
 The private repository fixes plugin-action discovery for Herdr 0.8 on `main`.
 Its `agent/windows-support` branch launches the same Python palette through
-PowerShell. It normalizes Herdr's extended plugin paths, resolves real mise
-executables instead of shims, and runs WinGet's restricted fzf package through
-Git Bash. Chezmoi links both profiles from `~/dev/herdr-command-palette`; it
+PowerShell and requires Herdr 0.9.0 or later. Herdr now normalizes the Windows
+plugin root, so the manifest no longer strips the extended-path prefix. It still
+builds an absolute script path from `HERDR_PLUGIN_ROOT`: a relative `-File`
+argument fails when a caller supplies a checkout cwd outside the plugin.
+The launcher resolves real mise executables instead of shims and runs WinGet's
+restricted fzf package through Git Bash. Chezmoi links both profiles from
+`~/dev/herdr-command-palette`; it
 does not install the public package directly.
 
 ## Worktrunk picker
@@ -110,8 +116,12 @@ the current branch.
 `prefix+ctrl+x` invokes `worktrunk.remove-current`. It pins the focused linked
 checkout before showing its confirmation and keeps Worktrunk's safety checks and
 hooks. Unix closes the matching Herdr workspace after successful removal.
-Windows closes it first to release the checkout's directory handle and reopens
-it if Worktrunk refuses the removal. Removing another checkout remains available
+Windows opens the confirmation from the primary workspace, then closes the
+pinned linked workspace first to release the checkout's directory handle. This
+keeps the confirmation process alive while Worktrunk removes the checkout.
+If Worktrunk refuses, the linked workspace reopens with its original label.
+Canceling confirmation leaves focus on the primary workspace.
+Removing another checkout remains available
 through `Alt+X` in the native picker.
 
 ## Private plugin clones

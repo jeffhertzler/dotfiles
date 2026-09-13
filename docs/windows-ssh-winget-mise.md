@@ -35,6 +35,30 @@ The Mise failure is one step removed. Current Windows `exe` shims are ordinary c
 
 The command-palette Windows launcher currently works around this problem. It resolves real Mise executables rather than shims and runs the restricted WinGet `fzf` package through Git Bash, as recorded in [Herdr integration and plugin management](herdr-plugins.md#command-palette).
 
+## Herdr 0.9.0 retest, 2026-09-13
+
+Herdr 0.9.0's Windows plugin-path fix does not remove OpenSSH's reparse-point
+restriction. A real Herdr client and server launched through SSH still produced
+OS error 448 from Mise shims, including the unadapted Window Title Sync hook.
+The PowerShell-adapted Command Palette and Worktrunk popups both opened with real
+fzf processes in an isolated session.
+
+The Command Palette manifest no longer needs to strip the extended-path prefix
+from `HERDR_PLUGIN_ROOT`. It still needs an absolute script path: a prototype
+using `-File herdr-palette.ps1` failed when the popup's cwd was a different Git
+checkout. The retained plugin-root reference displayed all 93 palette rows in
+that same test. Real executable resolution and the Git Bash fzf bridge remain
+necessary and were retained.
+
+The real Worktrunk removal test found another independent problem: closing the
+linked workspace killed its own confirmation popup before `wt remove` ran.
+The Windows branch now owns that confirmation from the primary workspace.
+A clean disposable checkout was removed successfully; a dirty checkout was
+preserved and its workspace restored after Worktrunk refused removal. All 15
+shell suites passed on Windows and Linux. Startup PR restoration, focus refresh,
+and cooldown also passed through the real Windows adapter and Herdr event path,
+with only the GitHub response stubbed.
+
 ## Safe next steps
 
 Prefer fixes that remove reparse-point traversal from the SSH execution path:
