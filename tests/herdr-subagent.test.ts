@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import test from "node:test";
@@ -122,6 +122,13 @@ async function waitFor(predicate: () => boolean, timeoutMs = 500): Promise<void>
     if (Date.now() >= deadline) throw new Error("Timed out waiting for condition");
     await new Promise((resolve) => setTimeout(resolve, 5));
   }
+}
+
+function assertArchived(directory: string) {
+  const manifest = JSON.parse(readFileSync(join(directory, "task.json"), "utf8"));
+  assert.equal(manifest.cleaned, true);
+  assert.equal(existsSync(join(directory, "state.json")), false);
+  if (manifest.status !== "cancelled") assert.equal(existsSync(manifest.resultFile), true);
 }
 
 function createContext(widgets: unknown[] = []) {
@@ -259,7 +266,7 @@ test("an interactive child stays available until finish_task explicitly complete
   );
 
   assert.deepEqual(finished, {
-    content: [{ type: "text", text: "Task completed and its result was returned to the parent." }],
+    content: [{ type: "text", text: "Task completed. Its Result is saved for the parent to collect." }],
     details: { status: "completed" },
   });
   assert.deepEqual(JSON.parse(readFileSync(resultFile, "utf8")), {
@@ -320,7 +327,7 @@ test("a human can use /finish to return the last interactive response", async (t
     output: "Use the second interface.",
   });
   assert.deepEqual(notifications, [
-    { message: "Task completed and returned to the parent", level: "info" },
+    { message: "Task completed; Result saved for the parent", level: "info" },
   ]);
 });
 
@@ -1156,19 +1163,21 @@ test("subagent_wait claims a Task and returns its result without automatic redel
     content: [
       {
         type: "text",
-        text: "Subagent Joined review completed:\n\nThe joined review passed.",
+        text: "Subagent Joined review completed:\n\nThe joined review passed.\n\nTab closes automatically. No explicit close needed.",
       },
     ],
     details: {
       id: started.details.id,
       name: "Joined review",
       status: "completed",
+      cleanup: "automatic",
       tabId: "w1:t2",
     },
   });
   assert.deepEqual(harness.messages, []);
+  await waitFor(() => JSON.parse(readFileSync(join(dirname(resultFile), "task.json"), "utf8")).cleaned);
   assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
-  assert.equal(existsSync(dirname(resultFile)), false);
+  assertArchived(dirname(resultFile));
 });
 
 test("finishing an interactive Task returns its result without closing the child tab", async (t) => {
@@ -1254,7 +1263,7 @@ test("subagent_cancel stops an active child and leaves terminal cleanup explicit
     createContext(),
   );
   assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
-  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
+  assertArchived(join(artifactRoot, started.details.id));
 });
 
 test("lifecycle transitions reject concurrent send and cancel operations", async (t) => {
@@ -1357,11 +1366,11 @@ test("subagent_close explicitly closes a completed interactive Task", async (t) 
   );
 
   assert.deepEqual(result, {
-    content: [{ type: "text", text: "Closed subagent Task Closable design." }],
+    content: [{ type: "text", text: "Closed subagent Task Closable design. Use subagent_wait to retrieve its report." }],
     details: { id: started.details.id, name: "Closable design", status: "closed" },
   });
   assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
-  assert.equal(existsSync(dirname(resultFile)), false);
+  assertArchived(dirname(resultFile));
 });
 
 test("subagent_close retains ownership when Herdr tab state is indeterminate", async (t) => {
@@ -1479,7 +1488,7 @@ test("parent restart preserves terminal cleanup policy", async (t) => {
     createContext(),
   );
 
-  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
+  assertArchived(join(artifactRoot, started.details.id));
 });
 
 test("aborting subagent_wait releases the Task for automatic delivery", async (t) => {
@@ -1688,7 +1697,7 @@ test("an unclaimed Result waits for the parent conversation branch that launched
   await harness.handlers.get("session_tree")?.[0]({}, ctx);
   assert.equal(harness.messages.length, 1);
   assert.match((harness.messages[0] as any).message.content, /Deliver only to the launch branch/);
-  assert.equal(existsSync(join(artifactRoot, started.details.id)), false);
+  assertArchived(join(artifactRoot, started.details.id));
 });
 
 test("a completed child result is delivered once and its owned tab is closed", async (t) => {
@@ -1733,12 +1742,13 @@ test("a completed child result is delivered once and its owned tab is closed", a
     {
       message: {
         customType: "subagent_result",
-        content: "Subagent Standards review completed:\n\nNo standards violations found.",
+        content: "Subagent Standards review completed:\n\nNo standards violations found.\n\nTab closes automatically. No explicit close needed.",
         display: true,
         details: {
           id: started.details.id,
           name: "Standards review",
           status: "completed",
+          cleanup: "automatic",
           tabId: "w1:t2",
         },
       },
@@ -1746,5 +1756,361 @@ test("a completed child result is delivered once and its owned tab is closed", a
     },
   ]);
   assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
-  assert.equal(existsSync(dirname(resultFile)), false);
+  assertArchived(dirname(resultFile));
+});
+
+test("a late wait retrieves the Result after automatic delivery and tab cleanup", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-subagent-test-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const harness = createPiHarness();
+
+  installHerdrSubagent(harness.pi as any, {
+    herdr,
+    artifactRoot,
+    pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+
+  const tool = harness.tools.get("subagent");
+  const started = await tool.execute(
+    "call-1",
+    { name: "Standards review", task: "Review project standards." },
+    undefined,
+    undefined,
+    createContext(),
+  );
+
+  const createRequest = herdr.createRequests[0] as any;
+  const resultFile = createRequest.env.PI_HERDR_SUBAGENT_RESULT_FILE;
+  writeFileSync(
+    resultFile,
+    JSON.stringify({
+      schemaVersion: 1,
+      token: createRequest.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed",
+      output: "No standards violations found.",
+    }),
+  );
+
+  await waitFor(() => harness.messages.length === 1);
+  await waitFor(() => herdr.closedTabs.length === 1);
+  await new Promise((resolve) => setTimeout(resolve, 20));
+
+  const result = await harness.tools.get("subagent_wait").execute(
+    "late-wait", { id: started.details.id }, undefined, undefined, createContext(),
+  );
+  assert.match(result.content[0].text, /No standards violations found/);
+  assert.equal(harness.messages.length, 1, "retrieval must not queue another follow-up");
+});
+
+async function completedTaskHarness(t: test.TestContext, interactive = false, output = "Durable report.", status = "completed", closeGate?: Promise<void>) {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-result-retention-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const herdr = new FakeHerdr();
+  const ctx = createContext();
+  if (closeGate) {
+    herdr.closeTab = async (id: string) => {
+      herdr.closedTabs.push(id);
+      await closeGate;
+      herdr.tabOpen = false;
+    };
+  }
+  const options = { herdr, artifactRoot, pollIntervalMs: 5, env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" } };
+  const first = createPiHarness();
+  installHerdrSubagent(first.pi as any, options);
+  const started = await first.tools.get("subagent").execute(
+    "launch", { name: "Durable task", task: "Return a report.", interactive }, undefined, undefined, ctx,
+  );
+  const request = herdr.createRequests[0] as any;
+  writeFileSync(request.env.PI_HERDR_SUBAGENT_RESULT_FILE, JSON.stringify({
+    schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN, status, output,
+  }));
+  await waitFor(() => first.messages.length === 1);
+  const id = started.details.id;
+  const directory = join(artifactRoot, id);
+  const restart = async (context = ctx) => {
+    await first.handlers.get("session_shutdown")?.[0]({}, ctx);
+    const next = createPiHarness();
+    installHerdrSubagent(next.pi as any, options);
+    await next.handlers.get("session_start")?.[0]({}, context);
+    t.after(async () => { await next.handlers.get("session_shutdown")?.[0]({}, context); });
+    return next;
+  };
+  return { first, ctx, herdr, id, directory, restart };
+}
+
+test("queued automatic delivery does not lose the Result on restart; repeated wait and close are safe", async (t) => {
+  // Fake sendMessage queues only: no transcript entry has been recorded.
+  const { first, ctx, herdr, id, directory, restart } = await completedTaskHarness(t);
+  assert.equal(ctx.sessionManager.getEntries().length, 0);
+  assertArchived(directory);
+  const widgets: unknown[] = [];
+  const resumed = await restart(createContext(widgets));
+  assert.deepEqual(resumed.messages, [], "a late wait does not need another automatic turn");
+  assert.deepEqual(widgets.at(-1), { id: "herdr-subagents", value: undefined, options: undefined });
+  for (let i = 0; i < 2; i++) {
+    const result = await resumed.tools.get("subagent_wait").execute("wait", { id });
+    assert.match(result.content[0].text, /Durable report/);
+    assert.equal(result.details.cleanup, "closed");
+    const closed = await resumed.tools.get("subagent_close").execute("close", { id });
+    assert.equal(closed.details.alreadyClosed, true);
+  }
+  assert.equal(first.messages.length, 1);
+  assert.equal(resumed.messages.length, 0);
+  assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
+});
+
+for (const scenario of [
+  { name: "interactive", interactive: true, status: "completed", output: "Interactive report." },
+  { name: "failed", interactive: false, status: "failed", output: "Failure report." },
+  { name: "large", interactive: true, status: "completed", output: "Full report. ".repeat(10_000) },
+]) {
+  test(`late wait retains the ${scenario.name} Result through explicit close and restart`, async (t) => {
+    const { first, id, directory, restart } = await completedTaskHarness(t, scenario.interactive, scenario.output, scenario.status);
+    const before = await first.tools.get("subagent_wait").execute("wait", { id });
+    assert.equal(before.details.cleanup, "required");
+    await first.tools.get("subagent_close").execute("close", { id });
+    assertArchived(directory);
+    const resumed = await restart();
+    const after = await resumed.tools.get("subagent_wait").execute("wait-again", { id });
+    assert.equal(after.details.status, scenario.status);
+    assert.equal(after.details.cleanup, "closed");
+    assert.ok(Buffer.byteLength(after.content[0].text) < 50 * 1024);
+    assert.equal(JSON.parse(readFileSync(join(directory, "result.json"), "utf8")).output, scenario.output);
+    assert.deepEqual(resumed.messages, []);
+  });
+}
+
+test("explicit close can overlap automatic cleanup without closing the tab twice", async (t) => {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  t.after(() => release());
+  const { first, herdr, id, directory } = await completedTaskHarness(t, false, "Concurrent report.", "completed", gate);
+  const closing = first.tools.get("subagent_close").execute("close", { id });
+  const result = await first.tools.get("subagent_wait").execute("wait", { id });
+  assert.match(result.content[0].text, /Concurrent report/);
+  release();
+  await closing;
+  assert.deepEqual(herdr.closedTabs, ["w1:t2"]);
+  assertArchived(directory);
+});
+
+test("terminal wait and close enforce ownership even after delivery", async (t) => {
+  const { first, ctx, id, herdr, restart } = await completedTaskHarness(t, true);
+  ctx.sessionManager.getBranch = () => [{ id: "another-branch" }];
+  for (const tool of ["subagent_wait", "subagent_close"]) {
+    await assert.rejects(first.tools.get(tool).execute("wrong-branch", { id }), /another conversation branch/);
+  }
+  const foreign = createContext();
+  foreign.sessionManager.getSessionId = () => "another-session";
+  const resumed = await restart(foreign);
+  for (const tool of ["subagent_wait", "subagent_close"]) {
+    await assert.rejects(resumed.tools.get(tool).execute("wrong-session", { id }), /another conversation branch or session/);
+  }
+  assert.deepEqual(herdr.closedTabs, []);
+});
+
+test("pre-fix Results can be recovered from saved branch messages without artifacts", async (t) => {
+  const { first, ctx, id, directory, restart } = await completedTaskHarness(t);
+  const sent = (first.messages[0] as any).message;
+  const entry = { type: "custom_message", ...sent, id: "saved-result-entry" };
+  rmSync(directory, { recursive: true }); // old extension's eager cleanup
+  ctx.sessionManager.getBranch = () => [{ id: "parent-entry-1" }, entry];
+  const resumed = await restart();
+  const result = await resumed.tools.get("subagent_wait").execute("legacy-wait", { id });
+  assert.match(result.content[0].text, /Durable report/);
+  assert.deepEqual(resumed.messages, []);
+  ctx.sessionManager.getBranch = () => [{ id: "other-branch" }];
+  await assert.rejects(resumed.tools.get("subagent_wait").execute("foreign-wait", { id }), /No saved Result/);
+});
+
+test("close distinguishes active and unknown Tasks; cancelled receipts survive close", async (t) => {
+  const root = mkdtempSync(join(tmpdir(), "herdr-close-semantics-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const harness = createPiHarness();
+  const ctx = createContext();
+  installHerdrSubagent(harness.pi as any, { artifactRoot: root, herdr: new FakeHerdr(), env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" } });
+  t.after(async () => { await harness.handlers.get("session_shutdown")?.[0]({}, ctx); });
+  const started = await harness.tools.get("subagent").execute("launch", { name: "Cancel", task: "Work." }, undefined, undefined, ctx);
+  const id = started.details.id;
+  await assert.rejects(harness.tools.get("subagent_close").execute("active-close", { id }), /still active/);
+  await assert.rejects(harness.tools.get("subagent_close").execute("unknown-close", { id: "unknown" }), /Unknown subagent Task/);
+  await assert.rejects(harness.tools.get("subagent_wait").execute("unsafe-id", { id: "../../outside" }), /Unknown subagent Task/);
+  await harness.tools.get("subagent_cancel").execute("cancel", { id });
+  await harness.tools.get("subagent_close").execute("close", { id });
+  const result = await harness.tools.get("subagent_wait").execute("wait", { id });
+  assert.equal(result.details.status, "cancelled");
+  assert.equal(result.details.cleanup, "closed");
+});
+
+const DAY = 86_400_000;
+
+async function retentionIntegrationHarness(t: test.TestContext, output = "Saved parent report.") {
+  const root = mkdtempSync(join(tmpdir(), "herdr-retention-integration-"));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const artifactRoot = join(root, "subagents");
+  const sessionRoot = join(root, "sessions");
+  const sessionDirectory = join(sessionRoot, "--checkout--");
+  mkdirSync(sessionDirectory, { recursive: true });
+  const parentFile = join(sessionDirectory, "parent.jsonl");
+  const ctx: any = createContext();
+  const entries: any[] = [{ type: "message", id: "parent-entry-1", parentId: null, message: { role: "user", content: "Do work." } }];
+  writeFileSync(parentFile, [
+    { type: "session", id: ctx.sessionManager.getSessionId() }, ...entries,
+  ].map(entry => JSON.stringify(entry)).join("\n") + "\n");
+  ctx.sessionManager.getSessionFile = () => parentFile;
+  ctx.sessionManager.getEntries = () => entries;
+  ctx.sessionManager.getBranch = () => entries;
+  const notices: Array<{ text: string; level: string }> = [];
+  ctx.ui.notify = (text: string, level: string) => notices.push({ text, level });
+  let now = Date.now();
+  const first = createPiHarness();
+  const options = { artifactRoot, sessionRoot, now: () => now, herdr: new FakeHerdr(), pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" } };
+  installHerdrSubagent(first.pi as any, options);
+  t.after(async () => { await first.handlers.get("session_shutdown")?.[0]({}, ctx); });
+  const launched = await first.tools.get("subagent").execute("launch", { name: "Retained report", task: "Return the report." }, undefined, undefined, ctx);
+  const id = launched.details.id;
+  const request = options.herdr.createRequests[0] as any;
+  const directory = join(artifactRoot, id);
+  const resultFile = join(directory, "result.json");
+  const childFile = join(sessionDirectory, `2026-01-01T00-00-00-000Z_${id}.jsonl`);
+  writeFileSync(childFile, JSON.stringify({ type: "session", id }) + "\n");
+  writeFileSync(resultFile, JSON.stringify({ schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN, status: "completed", output }));
+  await waitFor(() => first.messages.length === 1 && JSON.parse(readFileSync(join(directory, "task.json"), "utf8")).cleaned);
+  utimesSync(resultFile, now / 1000, now / 1000);
+  utimesSync(childFile, now / 1000, now / 1000);
+  const saveDelivery = () => {
+    const entry = { type: "custom_message", id: "result-entry", parentId: "parent-entry-1", ...(first.messages[0] as any).message };
+    entries.push(entry);
+    appendFileSync(parentFile, JSON.stringify(entry) + "\n");
+  };
+  const manifest = () => JSON.parse(readFileSync(join(directory, "task.json"), "utf8"));
+  return { first, ctx, options, id, directory, artifactRoot, resultFile, childFile, parentFile, notices, entries,
+    manifest, saveDelivery, advance: (days: number) => { now += days * DAY; } };
+}
+
+test("retention preview is read-only; expiry preserves late wait and idempotent close", async (t) => {
+  const f = await retentionIntegrationHarness(t);
+  const prune = f.first.commands.get("subagent-prune");
+  assert.ok(prune, "registers a human cleanup preview command");
+  assert.equal(f.manifest().parentSessionFile, f.parentFile);
+  f.saveDelivery();
+  const initial = readFileSync(join(f.directory, "task.json"), "utf8");
+  await prune.handler("", f.ctx);
+  assert.equal(readFileSync(join(f.directory, "task.json"), "utf8"), initial);
+  assert.match(f.notices.at(-1)!.text, /preview/i);
+  await prune.handler("--apply", f.ctx);
+  assert.equal(typeof f.manifest().retentionEligibleAt, "number");
+  f.advance(30);
+  await prune.handler("", f.ctx);
+  assert.ok(existsSync(f.childFile));
+  assert.ok(existsSync(f.resultFile));
+  assert.match(f.notices.at(-1)!.text, new RegExp(f.id));
+  await prune.handler("--apply", f.ctx);
+  assert.equal(existsSync(f.childFile), false);
+  assert.equal(existsSync(f.resultFile), false);
+  assert.ok(existsSync(f.parentFile));
+  assert.equal(typeof f.manifest().expiredAt, "number");
+  const result = await f.first.tools.get("subagent_wait").execute("late-wait", { id: f.id });
+  assert.match(result.content[0].text, /Saved parent report/);
+  assert.match(result.content[0].text, /expired/i);
+  assert.equal(result.details.retention, "expired");
+  assert.equal(result.details.cleanup, "closed");
+  const closed = await f.first.tools.get("subagent_close").execute("late-close", { id: f.id });
+  assert.equal(closed.details.alreadyClosed, true);
+  f.entries.push({ type: "message", id: "expired-wait", parentId: "result-entry", message: {
+    role: "toolResult", toolName: "subagent_wait", content: result.content, details: result.details,
+  } });
+  const repeated = await f.first.tools.get("subagent_wait").execute("repeat", { id: f.id });
+  assert.deepEqual(repeated, result, "repeat retrieval does not grow the expiry notice");
+  assert.equal(f.first.messages.length, 1);
+});
+
+test("automatic retention requires a persisted report, not a queued follow-up", async (t) => {
+  const f = await retentionIntegrationHarness(t);
+  await f.first.handlers.get("agent_settled")?.[0]({}, f.ctx);
+  assert.equal(f.manifest().retentionEligibleAt, undefined);
+  f.advance(40);
+  await f.first.handlers.get("agent_settled")?.[0]({}, f.ctx);
+  assert.ok(existsSync(f.resultFile));
+  assert.ok(existsSync(f.childFile));
+  f.saveDelivery();
+  f.advance(1);
+  await f.first.handlers.get("agent_settled")?.[0]({}, f.ctx);
+  assert.equal(typeof f.manifest().retentionEligibleAt, "number");
+  f.advance(30);
+  await f.first.handlers.get("agent_settled")?.[0]({}, f.ctx);
+  assert.equal(existsSync(f.resultFile), false);
+  assert.equal(existsSync(f.childFile), false);
+  assert.deepEqual(f.notices, [], "automatic successful maintenance is quiet");
+});
+
+test("retention config disables cleanup and rejects malformed settings safely", async (t) => {
+  const f = await retentionIntegrationHarness(t);
+  f.saveDelivery();
+  const path = join(f.artifactRoot, "retention.json");
+  writeFileSync(path, JSON.stringify({ retentionDays: 0 }));
+  await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+  assert.equal(f.manifest().retentionEligibleAt, undefined);
+  assert.match(f.notices.at(-1)!.text, /disabled/i);
+  for (const config of ["{", JSON.stringify({ retentionDays: -1 }), JSON.stringify({ retentionDays: "1" }), JSON.stringify({ typo: 1 })]) {
+    writeFileSync(path, config);
+    await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+    assert.equal(f.notices.at(-1)!.level, "error");
+    assert.ok(existsSync(f.resultFile));
+    assert.equal(f.manifest().retentionEligibleAt, undefined);
+  }
+  writeFileSync(path, JSON.stringify({ retentionDays: 1 }));
+  await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+  f.advance(1);
+  await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+  assert.equal(existsSync(f.resultFile), false);
+});
+
+test("resuming a legacy parent starts a fresh retention window rather than immediately deleting history", async (t) => {
+  const f = await retentionIntegrationHarness(t);
+  f.saveDelivery();
+  const old = f.manifest();
+  delete old.parentSessionFile;
+  writeFileSync(join(f.directory, "task.json"), JSON.stringify(old));
+  await f.first.handlers.get("session_shutdown")?.[0]({}, f.ctx);
+  f.advance(365);
+  const resumed = createPiHarness();
+  installHerdrSubagent(resumed.pi as any, f.options);
+  await resumed.handlers.get("session_start")?.[0]({}, f.ctx);
+  t.after(async () => { await resumed.handlers.get("session_shutdown")?.[0]({}, f.ctx); });
+  assert.equal(f.manifest().parentSessionFile, f.parentFile);
+  assert.equal(f.manifest().retentionEligibleAt, f.options.now());
+  assert.equal(f.manifest().expiredAt, undefined);
+  assert.ok(existsSync(f.childFile));
+  assert.ok(existsSync(f.resultFile));
+  assert.deepEqual(resumed.messages, []);
+  const previous = readFileSync(join(f.directory, "task.json"), "utf8");
+  await resumed.commands.get("subagent-prune").handler("--force", f.ctx);
+  assert.equal(f.notices.at(-1)!.level, "error");
+  assert.equal(readFileSync(join(f.directory, "task.json"), "utf8"), previous);
+});
+
+test("expired large report returns only the saved bounded report, without dangling artifact references", async (t) => {
+  const f = await retentionIntegrationHarness(t, "Long report. ".repeat(10_000));
+  f.saveDelivery();
+  await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+  f.advance(30);
+  await f.first.commands.get("subagent-prune").handler("--apply", f.ctx);
+  await f.first.handlers.get("session_shutdown")?.[0]({}, f.ctx);
+  const resumed = createPiHarness();
+  installHerdrSubagent(resumed.pi as any, f.options);
+  await resumed.handlers.get("session_start")?.[0]({}, f.ctx);
+  t.after(async () => { await resumed.handlers.get("session_shutdown")?.[0]({}, f.ctx); });
+  const result = await resumed.tools.get("subagent_wait").execute("late-wait", { id: f.id });
+  assert.match(result.content[0].text, /Long report/);
+  assert.match(result.content[0].text, /expired/i);
+  assert.doesNotMatch(result.content[0].text, /Full result retained at/);
+  assert.equal(result.details.resultFile, undefined);
+  assert.ok(Buffer.byteLength(result.content[0].text) < 50 * 1024);
+  assert.equal(resumed.messages.length, 0);
+  f.entries.splice(1); // the parent report is unavailable, but Task identity remains known
+  await assert.rejects(resumed.tools.get("subagent_wait").execute("missing-report", { id: f.id }), /expired.*saved parent report.*unavailable/i);
 });

@@ -14,6 +14,7 @@ import {
 import { isAbsolute, join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { sweepSubagentRetention } from "./retention.ts";
 
 const CHILD_ENV = "PI_HERDR_SUBAGENT";
 const DEPTH_ENV = "PI_HERDR_SUBAGENT_DEPTH";
@@ -86,7 +87,10 @@ interface TaskManifest {
   id: string;
   token: string;
   parentSessionId: string;
+  parentSessionFile?: string;
   parentEntryId: string | null;
+  retentionEligibleAt?: number;
+  expiredAt?: number;
   name: string;
   agentName: string;
   agentSessionId: string;
@@ -168,6 +172,8 @@ interface PiLike {
 export interface InstallOptions {
   herdr?: HerdrClient;
   artifactRoot?: string;
+  sessionRoot?: string;
+  now?: () => number;
   pollIntervalMs?: number;
   livenessIntervalMs?: number;
   env?: Record<string, string | undefined>;
@@ -397,6 +403,10 @@ function readTaskManifest(path: string): TaskManifest | undefined {
       typeof manifest.id !== "string" ||
       typeof manifest.token !== "string" ||
       typeof manifest.parentSessionId !== "string" ||
+      (manifest.parentSessionFile !== undefined && typeof manifest.parentSessionFile !== "string") ||
+      [manifest.retentionEligibleAt, manifest.expiredAt].some(
+        (value) => value !== undefined && (!Number.isFinite(value) || value < 0),
+      ) ||
       (manifest.parentEntryId !== null && typeof manifest.parentEntryId !== "string") ||
       typeof manifest.name !== "string" ||
       typeof manifest.agentName !== "string" ||
@@ -623,7 +633,7 @@ function installChildCompletion(pi: PiLike, env: Record<string, string | undefin
         if (!interactive) ctx.shutdown();
         return {
           content: [
-            { type: "text", text: "Task completed and its result was returned to the parent." },
+            { type: "text", text: "Task completed. Its Result is saved for the parent to collect." },
           ],
           details: { status: "completed" },
           ...(interactive ? {} : { terminate: true }),
@@ -639,7 +649,7 @@ function installChildCompletion(pi: PiLike, env: Record<string, string | undefin
           const result = explicitResult || assistantResult(ctx.sessionManager.getBranch()).output;
           completeTask(result);
           if (!interactive) ctx.shutdown();
-          ctx.ui.notify("Task completed and returned to the parent", "info");
+          ctx.ui.notify("Task completed; Result saved for the parent", "info");
         } catch (error) {
           ctx.ui.notify(error instanceof Error ? error.message : String(error), "error");
         }
@@ -682,19 +692,36 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   const agentDirectory =
     env.PI_CODING_AGENT_DIR ?? join(env.HOME ?? process.env.HOME ?? "/tmp", ".pi", "agent");
   const artifactRoot = options.artifactRoot ?? join(agentDirectory, "subagents");
+  const sessionRoot = options.sessionRoot ?? join(agentDirectory, "sessions");
+  const now = options.now ?? Date.now;
+  let lastRetentionSweep = -Infinity;
+  let lastRetentionWarning: string | undefined;
   const pollIntervalMs = options.pollIntervalMs ?? 250;
   const livenessIntervalMs = options.livenessIntervalMs ?? 2_000;
   const activeTasks = new Map<string, ActiveTask>();
   const retainedTasks = new Map<string, RetainedTask>();
   const closingTasks = new Set<string>();
+  const tabClosures = new Map<string, Promise<void>>();
   let parentUi: any;
   let parentSessionManager: any;
 
+  const mergeReceiptFlags = (task: TaskManifest): void => {
+    // A wait may collect the Result while a tab-close request is in flight.
+    const saved = readTaskManifest(join(task.resultDirectory, "task.json"));
+    task.delivered ||= saved?.delivered === true;
+    task.cleaned ||= saved?.cleaned === true;
+    task.parentSessionFile ??= saved?.parentSessionFile;
+    task.retentionEligibleAt ??= saved?.retentionEligibleAt;
+    task.expiredAt ??= saved?.expiredAt;
+  };
+
   const persistTaskManifest = (task: TaskManifest): void => {
+    mergeReceiptFlags(task);
     writePrivateJson(join(task.resultDirectory, "task.json"), task);
   };
 
   const persistActiveTask = (task: ActiveTask): void => {
+    mergeReceiptFlags(task);
     const {
       timer: _timer,
       settling: _settling,
@@ -710,6 +737,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   };
 
   const currentBranchOwns = (task: TaskManifest): boolean => {
+    if (parentSessionManager?.getSessionId?.() !== task.parentSessionId) return false;
     if (!task.parentEntryId) return true;
     return Boolean(
       parentSessionManager
@@ -729,13 +757,189 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     );
 
   const finalizeCleanedTask = (task: TaskManifest): void => {
-    if (!task.cleaned || !task.delivered) return;
-    if (task.retainArtifacts) {
-      rmSync(join(task.resultDirectory, "task.json"), { force: true });
-      rmSync(join(task.resultDirectory, "state.json"), { force: true });
-    } else {
-      rmSync(task.resultDirectory, { recursive: true, force: true });
+    if (!task.cleaned) return;
+    // Closing a tab is not consuming a Result. Keep the ownership receipt and
+    // full report until age-based retention expires it, including when
+    // sendMessage has only queued its follow-up.
+    rmSync(task.stateFile, { force: true });
+  };
+
+  const terminalResult = (task: TaskManifest) => {
+    if (task.expiredAt !== undefined) return expiredResult(task);
+    const result = readChildResult(task.resultFile, task.token);
+    if (!result && task.status !== "cancelled") {
+      throw new Error(
+        `Subagent Task ${task.id} is ${task.status}, but its saved Result is unavailable: ${task.resultFile}`,
+      );
     }
+    const bounded = boundParentOutput(
+      result?.output || (task.status === "cancelled" ? "Task was cancelled." : "No result was produced."),
+      task.resultFile,
+    );
+    const cleanup = task.cleaned
+      ? "closed"
+      : task.status === "completed" && !task.interactive && !retainedTasks.has(task.id)
+        ? "automatic"
+        : "required";
+    const cleanupText = cleanup === "closed"
+      ? "Tab already closed. No cleanup needed."
+      : cleanup === "automatic"
+        ? "Tab closes automatically. No explicit close needed."
+        : "Tab retained. Use subagent_close when review is complete.";
+    return {
+      content: [{
+        type: "text",
+        text: `Subagent ${task.name} ${task.status}:\n\n${bounded.text}\n\n${cleanupText}`,
+      }],
+      details: {
+        id: task.id,
+        name: task.name,
+        status: task.status,
+        tabId: task.tabId,
+        cleanup,
+        ...(bounded.truncated ? { resultFile: task.resultFile } : {}),
+      },
+    };
+  };
+
+  const ownedManifest = (id: string): TaskManifest | undefined => {
+    // Task IDs come from randomUUID; never let a tool argument escape the store.
+    if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id)) return undefined;
+    const task = readTaskManifest(join(artifactRoot, id, "task.json"));
+    if (!task || task.id !== id) return undefined;
+    if (!currentBranchOwns(task)) {
+      throw new Error(`Subagent Task belongs to another conversation branch or session: ${id}`);
+    }
+    return task;
+  };
+
+  const recordedResult = (id: string) => {
+    // Migration fallback for Results whose artifacts the old extension deleted.
+    // Only use the owning session's current branch, never another child's log.
+    for (const entry of [...(parentSessionManager?.getBranch?.() ?? [])].reverse()) {
+      if (
+        entry?.type === "custom_message" && entry.customType === "subagent_result" &&
+        entry.details?.id === id && typeof entry.content === "string"
+      ) {
+        return { content: [{ type: "text", text: entry.content }], details: entry.details };
+      }
+      const message = entry?.type === "message" ? entry.message : undefined;
+      if (
+        message?.role === "toolResult" && message.toolName === "subagent_wait" &&
+        message.details?.id === id && !message.isError &&
+        ["completed", "failed", "cancelled"].includes(message.details.status)
+      ) {
+        return { content: message.content, details: message.details };
+      }
+    }
+    return undefined;
+  };
+
+  const expiredResult = (task: TaskManifest) => {
+    const recorded = recordedResult(task.id);
+    if (!recorded) {
+      throw new Error(
+        `Subagent Task ${task.id} artifacts expired on ${new Date(task.expiredAt!).toISOString()}; its saved parent report is unavailable on this branch.`,
+      );
+    }
+    // Re-reading a previously returned expired report must not grow its notice.
+    if (recorded.details.retention === "expired") return recorded;
+    const text = recorded.content
+      .filter((part: any) => part?.type === "text")
+      .map((part: any) => part.text)
+      .join("\n\n")
+      .replaceAll(
+        `[Output truncated. Full result retained at ${task.resultFile}]`,
+        "[Output truncated in the saved parent report.]",
+      )
+      .replace(
+        /\n\nTab (?:closes automatically\. No explicit close needed\.|retained\. Use subagent_close when review is complete\.|already closed\. No cleanup needed\.)$/,
+        "",
+      );
+    const { resultFile: _expiredPath, ...details } = recorded.details;
+    return {
+      content: [{
+        type: "text",
+        text: `${text}\n\n[Full Result and child transcript expired under the retention policy. This is the saved parent report. Tab already closed.]`,
+      }],
+      details: { ...details, cleanup: "closed", retention: "expired", expiredAt: task.expiredAt },
+    };
+  };
+
+  const retentionDays = (): number => {
+    const path = join(artifactRoot, "retention.json");
+    if (!existsSync(path)) return 30;
+    const settings = JSON.parse(readFileSync(path, "utf8"));
+    if (
+      !settings || typeof settings !== "object" || Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== "retentionDays") ||
+      !Number.isSafeInteger(settings.retentionDays) || settings.retentionDays < 0
+    ) {
+      throw new Error(`Invalid ${path}: expected { "retentionDays": a nonnegative integer }; 0 disables cleanup`);
+    }
+    return settings.retentionDays;
+  };
+
+  const runRetention = (dryRun: boolean) => {
+    const days = retentionDays();
+    const report = sweepSubagentRetention({ artifactRoot, sessionRoot, retentionDays: days, now: now(), dryRun });
+    return { days, ...report };
+  };
+
+  const automaticRetention = (ctx: any): void => {
+    if (now() - lastRetentionSweep < 86_400_000) return;
+    lastRetentionSweep = now();
+    try {
+      const report = runRetention(false);
+      const warning = report.warnings.length ? report.warnings.slice(0, 3).join("\n") : undefined;
+      if (warning && warning !== lastRetentionWarning) ctx.ui?.notify?.(`Subagent cleanup: ${warning}`, "warning");
+      lastRetentionWarning = warning;
+    } catch (error) {
+      const warning = String(error);
+      if (warning !== lastRetentionWarning) ctx.ui?.notify?.(`Subagent cleanup skipped: ${warning}`, "warning");
+      lastRetentionWarning = warning;
+    }
+  };
+
+  pi.registerCommand("subagent-prune", {
+    description: "Preview expired subagent artifacts; --apply runs cleanup. Active Tasks and parent transcripts are preserved.",
+    handler: async (args: string, ctx: any) => {
+      const arg = args.trim();
+      if (arg !== "" && arg !== "--apply") {
+        ctx.ui.notify("Usage: /subagent-prune [--apply]. Without --apply, nothing is changed.", "error");
+        return;
+      }
+      try {
+        const dryRun = arg !== "--apply";
+        const report = runRetention(dryRun);
+        const text = report.days === 0 ? "Subagent artifact cleanup is disabled."
+          : [
+            `Subagent cleanup ${dryRun ? "preview" : "complete"}: ${report.days}-day retention.`,
+            `${report.eligible.length} eligible Task(s); ${report.expired.length} ${dryRun ? "due for cleanup" : "cleaned"}.`,
+            ...report.expired.slice(0, 20).map((id) => `  ${id}`),
+            ...(report.expired.length > 20 ? ["  Further Task IDs omitted."] : []),
+            dryRun ? "No files changed. Use /subagent-prune --apply to run cleanup." : "Parent transcripts and Task receipts kept.",
+            ...report.warnings.slice(0, 3),
+          ].join("\n");
+        ctx.ui.notify(text, report.warnings.length ? "warning" : "info");
+      } catch (error) {
+        ctx.ui.notify(`Subagent cleanup skipped: ${String(error)}`, "error");
+      }
+    },
+  });
+
+  const closeTaskTab = (task: TaskManifest): Promise<void> => {
+    const pending = tabClosures.get(task.id);
+    if (pending) return pending;
+    const closing = (async () => {
+      const presence = await herdr.getTabPresence(task.tabId);
+      if (presence === "unknown") {
+        throw new Error(`Could not verify whether subagent tab ${task.tabId} is still open`);
+      }
+      if (presence === "present") await herdr.closeTab(task.tabId);
+    })().finally(() => tabClosures.delete(task.id));
+    tabClosures.set(task.id, closing);
+    return closing;
   };
 
   const startTransition = (task: ActiveTask): (() => void) => {
@@ -851,21 +1055,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     const bounded = boundParentOutput(result.output || "No result was produced.", task.resultFile);
     task.retainArtifacts = bounded.truncated;
     persistActiveTask(task);
-    const toolResult = {
-      content: [
-        {
-          type: "text",
-          text: `Subagent ${task.name} ${status}:\n\n${bounded.text}`,
-        },
-      ],
-      details: {
-        id,
-        name: task.name,
-        status,
-        tabId: task.tabId,
-        ...(bounded.truncated ? { resultFile: task.resultFile } : {}),
-      },
-    };
+    const toolResult = terminalResult(task);
 
     if (task.claimed) {
       task.delivered = true;
@@ -877,13 +1067,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
           customType: "subagent_result",
           content: toolResult.content[0].text,
           display: true,
-          details: {
-            id,
-            name: task.name,
-            status,
-            tabId: task.tabId,
-            ...(bounded.truncated ? { resultFile: task.resultFile } : {}),
-          },
+          details: toolResult.details,
         },
         { deliverAs: "followUp", triggerTurn: activeTasks.size === 0 },
       );
@@ -895,7 +1079,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
 
     if (completed && !task.interactive) {
       try {
-        await herdr.closeTab(task.tabId);
+        await closeTaskTab(task);
         task.cleaned = true;
         persistActiveTask(task);
       } catch {
@@ -990,20 +1174,13 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     if (recordedDeliveryExists(manifest)) manifest.delivered = true;
     const result = readChildResult(manifest.resultFile, manifest.token);
     if (!manifest.delivered && currentBranchOwns(manifest) && result) {
-      const status = result.status === "completed" && result.output.trim() ? "completed" : "failed";
-      const bounded = boundParentOutput(result.output || "No result was produced.", manifest.resultFile);
+      const toolResult = terminalResult(manifest);
       pi.sendMessage(
         {
           customType: "subagent_result",
-          content: `Subagent ${manifest.name} ${status}:\n\n${bounded.text}`,
+          content: toolResult.content[0].text,
           display: true,
-          details: {
-            id: manifest.id,
-            name: manifest.name,
-            status,
-            tabId: manifest.tabId,
-            ...(bounded.truncated ? { resultFile: manifest.resultFile } : {}),
-          },
+          details: toolResult.details,
         },
         { deliverAs: "followUp", triggerTurn: activeTasks.size === 0 },
       );
@@ -1011,15 +1188,11 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     }
 
     if (manifest.status === "completed" && !manifest.interactive && !manifest.cleaned) {
-      const tabPresence = await herdr.getTabPresence(manifest.tabId);
-      if (tabPresence === "absent") manifest.cleaned = true;
-      if (tabPresence === "present") {
-        try {
-          await herdr.closeTab(manifest.tabId);
-          manifest.cleaned = true;
-        } catch {
-          // Keep ownership for explicit cleanup.
-        }
+      try {
+        await closeTaskTab(manifest);
+        manifest.cleaned = true;
+      } catch {
+        // Keep ownership for explicit cleanup.
       }
     }
 
@@ -1057,6 +1230,11 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       const manifestFile = join(artifactRoot, entry.name, "task.json");
       const manifest = readTaskManifest(manifestFile);
       if (!manifest || manifest.parentSessionId !== parentSessionId) continue;
+      const sessionFile = parentSessionManager?.getSessionFile?.();
+      if (sessionFile && manifest.parentSessionFile !== sessionFile) {
+        manifest.parentSessionFile = sessionFile;
+        persistTaskManifest(manifest);
+      }
       const savedResult = readChildResult(manifest.resultFile, manifest.token);
       if (savedResult) {
         if (activeTasks.has(manifest.id)) {
@@ -1088,8 +1266,12 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     renderTasks();
   };
 
-  pi.on("session_start", (_event, ctx: any) => restoreOwnedTasks(ctx));
+  pi.on("session_start", async (_event, ctx: any) => {
+    await restoreOwnedTasks(ctx);
+    automaticRetention(ctx);
+  });
   pi.on("session_tree", (_event, ctx: any) => restoreOwnedTasks(ctx));
+  pi.on("agent_settled", (_event, ctx: any) => automaticRetention(ctx));
 
   pi.on("session_shutdown", (_event, ctx: any) => {
     for (const task of activeTasks.values()) clearInterval(task.timer);
@@ -1154,35 +1336,41 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   pi.registerTool({
     name: "subagent_close",
     label: "Close subagent",
-    description: "Close a terminal subagent Task's retained Herdr tab and clean its artifacts.",
+    description:
+      "Close a terminal Task's retained Herdr tab. Already-closed Tasks succeed without changes. Saved Results remain retrievable with subagent_wait.",
     parameters: Type.Object({
       id: Type.String({ description: "Task ID returned by subagent" }),
     }),
     async execute(_toolCallId: string, params: any) {
       const id = params.id.trim();
-      const task = retainedTasks.get(id);
-      if (!task) throw new Error(`Unknown or active subagent Task: ${id}`);
-      if (!task.delivered) {
-        throw new Error(`Subagent Task belongs to another conversation branch: ${id}`);
+      const task = ownedManifest(id);
+      if (!task) throw new Error(`Unknown subagent Task: ${id}`);
+      if (["working", "waiting_for_human", "interrupted"].includes(task.status)) {
+        throw new Error(`Subagent Task is still active: ${id}. Finish or cancel it before closing.`);
+      }
+      if (task.cleaned) {
+        return {
+          content: [{
+            type: "text",
+            text: `Subagent Task ${task.name} is already closed. Use subagent_wait to retrieve its report.`,
+          }],
+          details: { id, name: task.name, status: "closed", alreadyClosed: true },
+        };
       }
       if (closingTasks.has(id)) throw new Error(`Subagent Task is already closing: ${id}`);
       closingTasks.add(id);
       try {
-        const tabPresence = await herdr.getTabPresence(task.tabId);
-        if (tabPresence === "unknown") {
-          throw new Error(`Could not verify whether subagent tab ${task.tabId} is still open`);
-        }
-        if (tabPresence === "present") await herdr.closeTab(task.tabId);
+        await closeTaskTab(task);
+        task.cleaned = true;
+        persistTaskManifest(task);
+        finalizeCleanedTask(task);
         retainedTasks.delete(id);
-        if (!task.retainArtifacts) {
-          rmSync(task.resultDirectory, { recursive: true, force: true });
-        } else {
-          rmSync(join(task.resultDirectory, "task.json"), { force: true });
-          rmSync(join(task.resultDirectory, "state.json"), { force: true });
-        }
         renderTasks();
         return {
-          content: [{ type: "text", text: `Closed subagent Task ${task.name}.` }],
+          content: [{
+            type: "text",
+            text: `Closed subagent Task ${task.name}. Use subagent_wait to retrieve its report.`,
+          }],
           details: { id, name: task.name, status: "closed" },
         };
       } finally {
@@ -1269,14 +1457,29 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     name: "subagent_wait",
     label: "Wait for subagent",
     description:
-      "Wait for a started subagent by Task ID and return its result. Claiming a Task prevents automatic redelivery.",
+      "Wait for a Task or retrieve its saved Result, even after automatic delivery, tab closure, or reload. Repeated retrieval is safe and does not trigger a follow-up. Waiting on an active Task claims its Result instead of automatic delivery.",
     parameters: Type.Object({
       id: Type.String({ description: "Task ID returned by subagent" }),
     }),
     async execute(_toolCallId: string, params: any, signal: AbortSignal | undefined) {
       const id = params.id.trim();
+      if (signal?.aborted) throw signal.reason ?? new Error("Subagent wait aborted");
       const task = activeTasks.get(id);
-      if (!task) throw new Error(`Unknown or completed subagent Task: ${id}`);
+      if (!task) {
+        const manifest = ownedManifest(id);
+        if (manifest && ["completed", "failed", "cancelled"].includes(manifest.status)) {
+          const result = terminalResult(manifest);
+          manifest.delivered = true;
+          persistTaskManifest(manifest);
+          const retained = retainedTasks.get(id);
+          if (retained) retained.delivered = true;
+          renderTasks();
+          return result;
+        }
+        const recorded = recordedResult(id);
+        if (recorded) return recorded;
+        throw new Error(`Unknown subagent Task: ${id}. No saved Result is available on this conversation branch.`);
+      }
       if (!currentBranchOwns(task)) {
         throw new Error(`Subagent Task belongs to another conversation branch: ${id}`);
       }
@@ -1316,7 +1519,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       "For direct human collaboration, set interactive true and set focus true only when the human is expected to engage immediately. Call subagent_wait instead of inspecting or waiting through raw Herdr commands.",
       "Call subagent_wait for every child whose result the response depends on. After all required waits return, synthesize the combined result once.",
       "Use subagent_send to steer a running child or resume an interrupted saved Agent. Do not treat idle or a normal child response as Task completion.",
-      "Use subagent_cancel to terminally cancel active work. After collecting a completed interactive Task or reviewing a failed or cancelled Task, call subagent_close when its retained tab is no longer needed.",
+      "Use subagent_cancel to terminally cancel active work. Completed autonomous tabs close automatically. After collecting a completed interactive Task or reviewing a failed or cancelled Task, call subagent_close when its retained tab is no longer needed. Closing a tab does not delete its saved Result; subagent_wait can retrieve it again.",
       "When a Task has a designated existing checkout or worktree outside the parent cwd, pass its absolute path as subagent cwd so Pi loads the correct primary project context. Do not rely on a later child cd to establish that primary context.",
     ],
     parameters: Type.Object({
@@ -1398,6 +1601,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       const id = randomUUID();
       const token = randomBytes(16).toString("hex");
       const parentSessionId = ctx.sessionManager.getSessionId();
+      const parentSessionFile = ctx.sessionManager.getSessionFile?.();
       const parentEntryId = ctx.sessionManager.getLeafId?.() ?? null;
       const resultDirectory = join(artifactRoot, id);
       const resultFile = join(resultDirectory, "result.json");
@@ -1429,6 +1633,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
         id,
         token,
         parentSessionId,
+        parentSessionFile,
         parentEntryId,
         name: displayName,
         agentName,
