@@ -1,7 +1,8 @@
+local function new(context)
 local M = {}
 
-local state = require("agent_review.state")
-local sessions = require("agent_review.sessions")
+local state = context.state
+local sessions = context.sessions
 
 local config = {
   enabled = true,
@@ -337,7 +338,7 @@ function M.save_now()
     return false, last_error or "review state cannot be saved after a load failure"
   end
 
-  require("agent_review.render").sync()
+  require("agent_review.render").sync(context)
   local annotations = {}
   for _, annotation in ipairs(state.list()) do
     table.insert(annotations, serialize(annotation))
@@ -384,6 +385,16 @@ function M.save_now()
   return true
 end
 
+function M.dispose()
+  if can_save then
+    local ok, err = M.save_now()
+    if not ok then return false, err end
+  end
+  generation = generation + 1
+  config.enabled = false
+  return true
+end
+
 function M.schedule_save()
   if not config.enabled then
     return
@@ -401,7 +412,7 @@ function M.schedule_save()
 end
 
 function M.reload()
-  require("agent_review.render").clear_all()
+  require("agent_review.render").clear_all(context)
   local ok, result = M.load()
   if ok then
     require("agent_review.render").refresh_visible()
@@ -416,6 +427,7 @@ function M.status()
     count = #state.list(),
     sessions = #sessions.list(nil, { include_archived = true }),
     last_error = last_error,
+    load_failed = not can_save,
   }
 end
 
@@ -425,13 +437,13 @@ function M.setup(opts)
   end
   initialized = true
   config = vim.tbl_deep_extend("force", config, opts or {})
+  config.path = storage_path()
 
   local ok, result = M.load()
   if not ok then
     vim.notify(result, vim.log.levels.ERROR, { title = "Agent Review" })
   end
   state.on_change(function()
-    can_save = true
     M.schedule_save()
   end)
   if needs_migration then
@@ -441,3 +453,6 @@ function M.setup(opts)
 end
 
 return M
+end
+
+return require("agent_review.context").proxy("persistence", new)

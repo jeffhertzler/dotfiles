@@ -3,6 +3,7 @@ local M = {}
 local state = require("agent_review.state")
 local target = require("agent_review.target")
 local render = require("agent_review.render")
+local contexts = require("agent_review.context")
 
 local initialized = false
 
@@ -10,20 +11,21 @@ local function notify(message, level)
   vim.notify(message, level, { title = "Agent Review" })
 end
 
-local function create_annotation(capture, body)
+local function create_annotation(capture, body, context)
+  if context.closed then return false end
   body = vim.trim(body or "")
   if body == "" then
     return nil
   end
 
-  local session, session_err = require("agent_review.sessions").ensure_for_capture(capture)
+  local session, session_err = context.sessions.ensure_for_capture(capture)
   if not session then
     notify(session_err, vim.log.levels.ERROR)
     return nil
   end
 
   local now = os.date("!%Y-%m-%dT%H:%M:%SZ")
-  local annotation = state.add({
+  local annotation = context.state.add({
     session_id = session.id,
     author = { kind = "human", name = vim.env.USER or "human" },
     body = body,
@@ -50,13 +52,14 @@ local function create_annotation(capture, body)
 end
 
 local function prompt_annotation(capture, opts)
+  local context = contexts.for_buffer(capture.bufnr)
   if opts.body ~= nil then
-    return create_annotation(capture, opts.body)
+    return create_annotation(capture, opts.body, context)
   end
   return require("agent_review.input").open({
     capture = capture,
     on_accept = function(body)
-      return create_annotation(capture, body)
+      return create_annotation(capture, body, context)
     end,
   })
 end
@@ -204,8 +207,9 @@ function M.send(opts)
   }, opts.done)
 end
 
-local function annotation_at_cursor()
+local function annotation_at_cursor(store)
   local bufnr = vim.api.nvim_get_current_buf()
+  if store and store ~= contexts.for_buffer(bufnr) then return nil end
   render.refresh_buffer(bufnr)
   local context = target.context_for_buffer(bufnr)
   if not context then
@@ -242,13 +246,15 @@ local function annotation_at_cursor()
   end
 end
 
-function M.remove(id)
+function M.remove(id, opts)
+  local store = contexts.for_operation(opts)
+  if store.closed then return false end
   local annotation
   if id then
-    annotation = state.remove(id)
+    annotation = store.state.remove(id)
   else
-    local current = annotation_at_cursor()
-    annotation = current and state.remove(current.id) or nil
+    local current = annotation_at_cursor(store)
+    annotation = current and store.state.remove(current.id) or nil
   end
   if not annotation then
     notify("No annotation found", vim.log.levels.WARN)
@@ -259,7 +265,8 @@ function M.remove(id)
   return true
 end
 
-local function update_annotation(annotation, body, on_done)
+local function update_annotation(annotation, body, on_done, context)
+  if context.closed then return false end
   body = vim.trim(body or "")
   if body == "" then
     notify("Annotation text cannot be empty", vim.log.levels.WARN)
@@ -268,7 +275,7 @@ local function update_annotation(annotation, body, on_done)
 
   annotation.body = body
   annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
-  state.changed()
+  context.state.changed()
   render.refresh_annotation(annotation)
   if on_done then
     on_done(annotation)
@@ -276,8 +283,10 @@ local function update_annotation(annotation, body, on_done)
   return annotation
 end
 
-function M.set_status(id, status)
-  local annotation = id and state.get(id) or annotation_at_cursor()
+function M.set_status(id, status, opts)
+  local store = contexts.for_operation(opts)
+  if store.closed then return false end
+  local annotation = id and store.state.get(id) or (not id and annotation_at_cursor(store))
   if not annotation then
     notify("No annotation found", vim.log.levels.WARN)
     return false
@@ -289,17 +298,17 @@ function M.set_status(id, status)
 
   annotation.status = status
   annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
-  state.changed()
+  store.state.changed()
   render.refresh_annotation(annotation)
   return annotation
 end
 
-function M.resolve(id)
-  return M.set_status(id, "resolved")
+function M.resolve(id, opts)
+  return M.set_status(id, "resolved", opts)
 end
 
-function M.reopen(id)
-  return M.set_status(id, "open")
+function M.reopen(id, opts)
+  return M.set_status(id, "open", opts)
 end
 
 function M.edit(id, opts)
@@ -308,14 +317,16 @@ function M.edit(id, opts)
     id = nil
   end
   opts = opts or {}
-  local annotation = id and state.get(id) or annotation_at_cursor()
+  local context = contexts.for_operation(opts)
+  if context.closed then return false end
+  local annotation = id and context.state.get(id) or (not id and annotation_at_cursor(context))
   if not annotation then
     notify("No annotation found", vim.log.levels.WARN)
     return false
   end
 
   if opts.body ~= nil then
-    return update_annotation(annotation, opts.body, opts.on_done)
+    return update_annotation(annotation, opts.body, opts.on_done, context)
   end
 
   return require("agent_review.input").open({
@@ -323,7 +334,7 @@ function M.edit(id, opts)
     editing = true,
     initial = annotation.body,
     on_accept = function(body)
-      return update_annotation(annotation, body, opts.on_done)
+      return update_annotation(annotation, body, opts.on_done, context)
     end,
   })
 end
@@ -388,7 +399,7 @@ function M.setup(opts)
   opts = opts or {}
 
   render.setup_highlights()
-  local persistence = require("agent_review.persistence").setup(opts.persistence)
+  contexts.ordinary().persistence.setup(opts.persistence)
   require("agent_review.status").setup()
   require("agent_review.patch").setup()
   local group = vim.api.nvim_create_augroup("AgentReview", { clear = true })
@@ -396,7 +407,7 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd("VimLeavePre", {
     group = group,
     callback = function()
-      persistence.save_now()
+      contexts.save_all()
     end,
   })
 
@@ -436,9 +447,10 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd({ "BufWritePost", "FileChangedShellPost" }, {
     group = group,
     callback = function(event)
-      if #state.list() > 0 then
+      local context = contexts.for_buffer(event.buf)
+      if #context.state.list() > 0 then
         render.revalidate_buffer(event.buf)
-        persistence.schedule_save()
+        context.persistence.schedule_save()
       end
     end,
   })
@@ -471,6 +483,7 @@ local function public_annotation(annotation)
 end
 
 local API = {
+  feedback_context_version = 1,
   setup = M.setup,
   payload = M.payload,
   send = M.send,
@@ -503,9 +516,9 @@ API.annotation = {
   add_old = function(opts) return public_annotation_result(M.add_old(opts)) end,
   edit = function(id, opts) return public_annotation_result(M.edit(id, opts)) end,
   remove = M.remove,
-  resolve = function(id) return public_annotation_result(M.resolve(id)) end,
-  reopen = function(id) return public_annotation_result(M.reopen(id)) end,
-  set_status = function(id, status) return public_annotation_result(M.set_status(id, status)) end,
+  resolve = function(id, opts) return public_annotation_result(M.resolve(id, opts)) end,
+  reopen = function(id, opts) return public_annotation_result(M.reopen(id, opts)) end,
+  set_status = function(id, status, opts) return public_annotation_result(M.set_status(id, status, opts)) end,
   at_cursor = function()
     return public_annotation(annotation_at_cursor())
   end,

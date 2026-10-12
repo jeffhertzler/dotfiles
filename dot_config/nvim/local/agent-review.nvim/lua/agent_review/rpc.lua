@@ -1,8 +1,15 @@
 local M = {}
 
 local render = require("agent_review.render")
-local state = require("agent_review.state")
+local contexts = require("agent_review.context")
 local target_util = require("agent_review.target")
+
+-- The v1 wire contract addresses code files, not feedback buffers. All IDs,
+-- session IDs, and `all` queries belong to the ordinary store, regardless of
+-- focus. Retain its instances rather than the current-buffer proxies.
+local store = contexts.ordinary()
+local state = store.state
+local sessions = store.sessions
 
 local valid_kinds = { note = true, question = true, suggestion = true, issue = true, praise = true }
 local valid_sides = { working = true, old = true, new = true, file = true, hunk = true }
@@ -36,8 +43,32 @@ local function normalized_file(file, root)
   return file
 end
 
+local function code_context(bufnr)
+  if contexts.metadata(bufnr) then return nil end
+  return target_util.context_for_buffer(bufnr)
+end
+
 local function default_context()
-  return target_util.current_context()
+  local current = code_context(vim.api.nvim_get_current_buf())
+  if current and current.path then return current end
+
+  -- Match UI target discovery, but never infer code defaults from feedback.
+  -- No visible code target means no default session, not all code sessions.
+  local best, latest = nil, -1
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_is_valid(winid) then
+      local bufnr = vim.api.nvim_win_get_buf(winid)
+      local candidate = code_context(bufnr)
+      if candidate and candidate.path then
+        local info = vim.fn.getbufinfo(bufnr)[1]
+        local lastused = info and info.lastused or 0
+        if lastused > latest then
+          best, latest = candidate, lastused
+        end
+      end
+    end
+  end
+  return best
 end
 
 local function current_session()
@@ -46,13 +77,13 @@ local function current_session()
     return nil
   end
   local workspace = require("agent_review.scope").key(context.root, context.path)
-  return require("agent_review.sessions").current(workspace)
+  return sessions.current(workspace)
 end
 
 local function find_target_buffer(annotation)
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(bufnr) then
-      local context = target_util.context_for_buffer(bufnr)
+      local context = code_context(bufnr)
       local same_revision = annotation.target.side == "working"
         or (context and annotation.revision.selected_expression == context.selected_revision)
       if context
@@ -74,6 +105,7 @@ local function find_target_buffer(annotation)
     return nil
   end
   local existing = vim.fn.bufnr(path)
+  if existing >= 0 and contexts.metadata(existing) then return nil end
   local bufnr = existing >= 0 and existing or vim.fn.bufadd(path)
   vim.fn.bufload(bufnr)
   local cleanup = existing < 0 and function()
@@ -207,7 +239,7 @@ local function validate_comment(comment, index, defaults, batch_ids)
   }
 
   if requested_session then
-    local session = require("agent_review.sessions").get(requested_session)
+    local session = sessions.get(requested_session)
     if not session then
       return nil, failure("session not found: " .. requested_session, index, "sessionId")
     end
@@ -308,7 +340,7 @@ function M.apply(payload)
 
   local ids = {}
   for _, annotation in ipairs(pending) do
-    local session, session_err = require("agent_review.sessions").assign(annotation, annotation._requested_session_id)
+    local session, session_err = sessions.assign(annotation, annotation._requested_session_id)
     if not session then
       return failure(session_err)
     end
@@ -450,13 +482,13 @@ function M.refresh()
   for _, winid in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_is_valid(winid) then
       local bufnr = vim.api.nvim_win_get_buf(winid)
-      if not seen[bufnr] then
+      if not seen[bufnr] and not contexts.metadata(bufnr) then
         seen[bufnr] = true
         render.revalidate_buffer(bufnr)
       end
     end
   end
-  require("agent_review.persistence").schedule_save()
+  store.persistence.schedule_save()
   return { ok = true, count = #state.list() }
 end
 
@@ -466,10 +498,10 @@ function M.list(payload)
   if payload.all then
     source = state.list()
   elseif payload.sessionId then
-    source = require("agent_review.sessions").annotations(payload.sessionId)
+    source = sessions.annotations(payload.sessionId)
   else
     local session = current_session()
-    source = session and require("agent_review.sessions").annotations(session.id) or {}
+    source = session and sessions.annotations(session.id) or {}
   end
   local comments = {}
   for _, annotation in ipairs(source) do

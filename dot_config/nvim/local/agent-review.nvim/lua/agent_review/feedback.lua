@@ -56,7 +56,9 @@ local function validate_metadata(metadata, bufnr, metadata_path)
 end
 
 local function current_context()
-  return contexts[vim.api.nvim_get_current_buf()]
+  local bufnr = vim.api.nvim_get_current_buf()
+  local context = contexts[bufnr]
+  if context and not require("agent_review.context").for_buffer(bufnr).closed then return context end
 end
 
 local function comment_payload(annotation)
@@ -77,10 +79,15 @@ local function comment_payload(annotation)
   }
 end
 
-local function open_comments()
+local function open_comments(context)
   local comments = {}
   for _, annotation in ipairs(require("agent_review").annotation.list()) do
-    if annotation.status ~= "resolved" and annotation.freshness ~= "stale" then
+    local path = annotation.target.file
+    if annotation.root and path:sub(1, 1) ~= "/" then
+      path = annotation.root .. "/" .. path
+    end
+    if normalized_absolute(path) == context.metadata.sourcePath
+      and annotation.status ~= "resolved" and annotation.freshness ~= "stale" then
       table.insert(comments, comment_payload(annotation))
     end
   end
@@ -120,10 +127,30 @@ local function write_json_atomically(path, value)
   return true
 end
 
-local function quit()
-  vim.schedule(function()
-    vim.cmd("qa!")
-  end)
+local function prompt(metadata, comments)
+  local lines = {
+    "# Feedback on your selected response", "",
+    "I added line-specific feedback to this assistant response. Address each comment below.",
+    "Assistant response ID: `" .. metadata.assistantMessageId .. "`",
+  }
+  for _, comment in ipairs(comments) do
+    local first = "L" .. comment.startLine .. (comment.startCol and ":C" .. comment.startCol or "")
+    local last = "L" .. comment.endLine .. (comment.endCol and ":C" .. comment.endCol or "")
+    vim.list_extend(lines, { "", "## " .. comment.id .. ": " .. (first == last and first or first .. "-" .. last) })
+    if #comment.quotedText > 0 then
+      lines[#lines + 1] = ""
+      for _, line in ipairs(comment.quotedText) do lines[#lines + 1] = "> " .. line end
+    end
+    vim.list_extend(lines, { "", comment.body })
+  end
+  return table.concat(lines, "\n") .. "\n\n"
+end
+
+local function quit(context)
+  if context and context.metadata.reader then
+    return require("agent_review.feedback_reader").close_view()
+  end
+  vim.schedule(function() vim.cmd("qa!") end)
 end
 
 local function remove_feedback_directory(context)
@@ -140,13 +167,48 @@ function M.submit(opts)
     return false
   end
 
-  local comments = open_comments()
+  if context.submitting then return false end
+  local comments = open_comments(context)
   if #comments == 0 then
     notify("Add at least one annotation before submitting", vim.log.levels.WARN)
     return false
   end
 
   local metadata = context.metadata
+  local saved, save_err = require("agent_review.persistence").save_now()
+  if not saved then
+    if not metadata.reader then pcall(vim.fn.delete, metadata.feedbackPath) end
+    notify(save_err, vim.log.levels.ERROR)
+    return false
+  end
+
+  if metadata.reader then
+    -- Capture the actual view before Agent Bridge can open a target picker.
+    -- Its callback must not close a different conversation or a code tab.
+    local view = require("agent_review.feedback_reader").for_buffer(vim.api.nvim_get_current_buf())
+    if not view then return false end
+    context.submitting = true
+    local called, accepted = pcall(function()
+      return require("agent_bridge").send(prompt(metadata, comments), {
+        submit = false,
+        switch_to_target = true,
+      }, function(staged)
+        context.submitting = false
+        if not staged then return end
+        context.disposition = "submit"
+        if opts.quit ~= false then view.close_view() end
+      end)
+    end)
+    if not called then
+      context.submitting = false
+      notify("Failed to stage feedback: " .. tostring(accepted), vim.log.levels.ERROR)
+      return false
+    end
+    if not accepted then context.submitting = false end
+    return accepted
+  end
+
+  -- Legacy standalone feedback still returns its payload through this file.
   local ok, err = write_json_atomically(metadata.feedbackPath, {
     schemaVersion = 1,
     piSessionId = metadata.piSessionId,
@@ -160,17 +222,8 @@ function M.submit(opts)
     return false
   end
 
-  local saved, save_err = require("agent_review.persistence").save_now()
-  if not saved then
-    pcall(vim.fn.delete, metadata.feedbackPath)
-    notify(save_err, vim.log.levels.ERROR)
-    return false
-  end
-
   context.disposition = "submit"
-  if opts.quit ~= false then
-    quit()
-  end
+  if opts.quit ~= false then quit(context) end
   return true
 end
 
@@ -188,7 +241,7 @@ function M.keep(opts)
   end
   context.disposition = "keep"
   if opts.quit ~= false then
-    quit()
+    quit(context)
   end
   return true
 end
@@ -196,12 +249,27 @@ end
 function M.discard(opts)
   opts = opts or {}
   local context = current_context()
+  if not context then return false end
   if context then
+    if context.metadata.reader then
+      local reader = require("agent_review.feedback_reader")
+      require("agent_review.render").clear_all()
+      require("agent_review.state").replace({})
+      local saved, err = require("agent_review.persistence").save_now()
+      if not saved then
+        notify(err, vim.log.levels.ERROR)
+        return false
+      end
+      vim.fn.delete(context.metadata.feedbackPath)
+      reader.set_notice("Discarded this message's feedback")
+    else
+      require("agent_review.context").release(require("agent_review.context").for_buffer())
+      remove_feedback_directory(context)
+    end
     context.disposition = "discard"
-    remove_feedback_directory(context)
   end
-  if opts.quit ~= false then
-    quit()
+  if opts.quit == true or (opts.quit ~= false and not (context and context.metadata.reader)) then
+    quit(context)
   end
   return true
 end
@@ -228,8 +296,12 @@ function M.attach(opts)
     return false
   end
 
+  local store, err = require("agent_review.context").attach(bufnr, metadata)
+  if not store then
+    notify(err, vim.log.levels.ERROR)
+    return false
+  end
   contexts[bufnr] = { metadata = metadata, metadata_path = metadata_path }
-  vim.b[bufnr].pi_feedback = vim.deepcopy(metadata)
   vim.b[bufnr].pi_feedback_disable_lint = true
   vim.diagnostic.enable(false, { bufnr = bufnr })
   vim.diagnostic.reset(nil, bufnr)
@@ -238,17 +310,20 @@ function M.attach(opts)
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
 
-  local review = require("agent_review")
-  if not review.session.current() then
-    local short_id = metadata.assistantMessageId:sub(1, 8)
-    review.session.create("Pi feedback " .. short_id)
+  local target = require("agent_review.target").context_for_buffer(bufnr)
+  local workspace = require("agent_review.scope").key(target.root, target.path)
+  if not store.sessions.current(workspace) then
+    store.sessions.create({ name = "Pi feedback " .. metadata.assistantMessageId:sub(1, 8),
+      workspace = workspace, root = target.root, file = target.root and nil or target.path })
   end
 
   local map_opts = { buffer = bufnr, silent = true }
   vim.keymap.set("n", "<leader>rs", M.submit, vim.tbl_extend("force", map_opts, { desc = "Submit feedback" }))
   vim.keymap.set("n", "<leader>rk", M.keep, vim.tbl_extend("force", map_opts, { desc = "Keep feedback draft" }))
   vim.keymap.set("n", "<leader>rq", M.discard, vim.tbl_extend("force", map_opts, { desc = "Discard feedback" }))
-  vim.keymap.set("n", "q", M.discard, vim.tbl_extend("force", map_opts, { desc = "Discard feedback" }))
+  if not metadata.reader then
+    vim.keymap.set("n", "q", M.discard, vim.tbl_extend("force", map_opts, { desc = "Discard feedback" }))
+  end
   vim.api.nvim_buf_create_user_command(bufnr, "AgentFeedbackSubmit", function()
     M.submit()
   end, { desc = "Submit Pi feedback annotations" })
@@ -265,14 +340,13 @@ function M.attach(opts)
     once = true,
     callback = function()
       local context = contexts[bufnr]
-      if context and context.disposition ~= "keep" and context.disposition ~= "submit" then
+      if context and not context.metadata.reader and context.disposition ~= "keep" and context.disposition ~= "submit" then
         remove_feedback_directory(context)
       end
     end,
   })
 
-  vim.api.nvim_win_set_cursor(0, { 1, 0 })
-  review.refresh()
+  require("agent_review.render").refresh_buffer(bufnr)
   return true
 end
 

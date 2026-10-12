@@ -67,16 +67,27 @@ function M.open(opts)
   if type(opts) == "number" then
     opts = { tabpage = opts }
   end
-  opts = opts or {}
-  local tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
+  opts = vim.tbl_extend("force", {}, opts or {})
+  local context = require("agent_review.context").for_operation(opts)
+  if context.closed then return end
+  local origin = { _context = context }
+  opts._context = context
+  opts.tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
+  local tabpage = opts.tabpage
   local scope = require("agent_review.scope")
-  local sessions = require("agent_review.sessions")
-  local scope_key = opts.all and nil or (opts.scope or scope.current())
-  local active_session = opts.session and sessions.get(opts.session) or (not opts.all and not opts.scope and sessions.current(scope_key))
+  local sessions = context.sessions
+  -- false pins the absence of a workspace too. Never infer it from picker focus.
+  if opts._scope == nil then
+    opts._scope = not opts.all and (opts.scope or scope.current(opts.bufnr)) or false
+  end
+  local scope_key = opts._scope or nil
+  local active_session = opts.session and sessions.get(opts.session)
+    or (not opts.session and not opts.all and not opts.scope and scope_key and sessions.current(scope_key))
+  if active_session then opts.session = active_session.id end
   local annotations = opts.annotations
-    or (opts.all and scope.list())
+    or (opts.all and scope.list(nil, context))
     or (active_session and sessions.annotations(active_session.id))
-    or (opts.scope and scope.list(scope_key))
+    or (opts.scope and scope.list(scope_key, context))
     or {}
   if #annotations == 0 then
     return
@@ -104,12 +115,12 @@ function M.open(opts)
       actions = {
         toggle_resolved = function(picker, item)
           picker:close()
-          if item then
+          if item and not context.closed then
             local review = require("agent_review")
             if item.annotation.status == "resolved" then
-              review.annotation.reopen(item.annotation.id)
+              review.annotation.reopen(item.annotation.id, origin)
             else
-              review.annotation.resolve(item.annotation.id)
+              review.annotation.resolve(item.annotation.id, origin)
             end
             vim.schedule(function()
               M.open(opts)
@@ -118,15 +129,16 @@ function M.open(opts)
         end,
         edit_annotation = function(picker, item)
           picker:close()
-          if item then
-            require("agent_review").annotation.edit(item.annotation.id)
+          if item and not context.closed then
+            require("agent_review").annotation.edit(item.annotation.id, origin)
           end
         end,
         remove_annotation = function(picker, item)
           picker:close()
-          if item and require("agent_review").annotation.remove(item.annotation.id) then
+          if item and not context.closed and require("agent_review").annotation.remove(item.annotation.id, origin) then
             vim.schedule(function()
-              local remaining = active_session and sessions.annotations(active_session.id) or scope.list(scope_key)
+              if context.closed then return end
+              local remaining = active_session and sessions.annotations(active_session.id) or scope.list(scope_key, context)
               if #remaining > 0 then
                 M.open(opts)
               end
@@ -145,7 +157,7 @@ function M.open(opts)
       },
       confirm = function(picker, item)
         picker:close()
-        if item then
+        if item and not context.closed then
           navigate(tabpage, item.annotation)
         end
       end,
@@ -159,18 +171,27 @@ function M.open(opts)
       return item.text
     end,
   }, function(choice)
-    if choice then
+    if choice and not context.closed then
       navigate(tabpage, choice.annotation)
     end
   end)
 end
 
 function M.sessions(opts)
-  opts = opts or {}
-  local store = require("agent_review.sessions")
-  local workspace = opts.workspace or require("agent_review.scope").current()
+  opts = vim.tbl_extend("force", {}, opts or {})
+  local context = require("agent_review.context").for_operation(opts)
+  if context.closed then return end
+  opts._context = context
+  local store = context.sessions
+  local workspace = opts.workspace or require("agent_review.scope").current(opts.bufnr)
   if not workspace then
     return
+  end
+  opts.workspace = workspace
+  opts.tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
+  local function open_session(session)
+    M.open({ _context = context, scope = workspace, tabpage = opts.tabpage,
+      session = session.id, title = session.name })
   end
   local available = store.list(workspace, { include_archived = true })
   if #available == 0 then
@@ -208,7 +229,7 @@ function M.sessions(opts)
       actions = {
         toggle_archive = function(picker, item)
           picker:close()
-          if item then
+          if item and not context.closed then
             if item.session.status == "archived" then
               store.activate(item.session.id)
             else
@@ -230,10 +251,10 @@ function M.sessions(opts)
       },
       confirm = function(picker, item)
         picker:close()
-        if item then
+        if item and not context.closed then
           store.activate(item.session.id)
           require("agent_review.render").refresh_visible()
-          M.open({ session = item.session.id, title = item.session.name })
+          open_session(item.session)
         end
       end,
     })
@@ -246,16 +267,23 @@ function M.sessions(opts)
       return item.text
     end,
   }, function(choice)
-    if choice then
+    if choice and not context.closed then
       store.activate(choice.session.id)
       require("agent_review.render").refresh_visible()
-      M.open({ session = choice.session.id, title = choice.session.name })
+      open_session(choice.session)
     end
   end)
 end
 
-function M.workspaces()
-  local groups = require("agent_review.scope").groups()
+function M.workspaces(opts)
+  opts = opts or {}
+  local context = require("agent_review.context").for_operation(opts)
+  if context.closed then return end
+  local tabpage = opts.tabpage or vim.api.nvim_get_current_tabpage()
+  local groups = require("agent_review.scope").groups(context)
+  local function open_workspace(group)
+    M.sessions({ _context = context, tabpage = tabpage, workspace = group.key, title = group.label })
+  end
   if #groups == 0 then
     return
   end
@@ -278,8 +306,8 @@ function M.workspaces()
       layout = { preset = "select", preview = false },
       confirm = function(picker, item)
         picker:close()
-        if item then
-          M.sessions({ workspace = item.group.key, title = item.group.label })
+        if item and not context.closed then
+          open_workspace(item.group)
         end
       end,
     })
@@ -292,8 +320,8 @@ function M.workspaces()
       return item.text
     end,
   }, function(choice)
-    if choice then
-      M.sessions({ workspace = choice.group.key, title = choice.group.label })
+    if choice and not context.closed then
+      open_workspace(choice.group)
     end
   end)
 end

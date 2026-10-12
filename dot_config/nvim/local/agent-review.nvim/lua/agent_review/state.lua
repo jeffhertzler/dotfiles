@@ -1,3 +1,4 @@
+local function new()
 local M = {}
 
 local annotations = {}
@@ -86,3 +87,6 @@ function M.on_change(listener)
 end
 
 return M
+end
+
+return require("agent_review.context").proxy("state", new)

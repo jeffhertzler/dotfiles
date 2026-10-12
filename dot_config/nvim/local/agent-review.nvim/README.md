@@ -80,31 +80,113 @@ working lines there.
 
 ## Pi feedback
 
-The Pi `feedback.ts` extension opens the latest assistant response as a
-read-only Markdown file in a temporary Neovim process. Normal Agent Review
-mappings add line or character-range feedback, while feedback buffers override
-`<leader>rs` to export those annotations back to Pi and close Neovim. Submitted
-annotations are consumed and their temporary feedback workspace is removed. `q`
-or `<leader>rq` discards the workspace, including when quitting through another
-Neovim command. `<leader>rk` explicitly keeps a resumable draft, and
-`<leader>rc` clears its annotations while the feedback buffer is open.
-`/feedback clear` removes all kept feedback drafts for the current Pi session.
+Pi's `/feedback` opens the latest completed reply in a reader tab while Pi keeps
+running. It prefers a unique Neovim in the same Herdr tab, then a unique editor
+in the same workspace, using the existing Neovim server registry. `NVIM_SERVER`
+or an inherited `NVIM` socket explicitly selects an editor. Multiple matches
+require an explicit choice; failed or uncertain RPC calls never launch a competing
+reader. With no suitable editor, it opens a dedicated reader pane.
 
-In Pi, run:
+Each Pi catalogue owns one reader, so conversations coexist without replacing
+code windows or other reader tabs. Replies are fixed, read-only Markdown snapshots. New
+replies update the catalogue and winbar indicator, never your text or cursor.
+Reading and closing send nothing.
 
-```text
-/feedback
+| Key | Reader action |
+| --- | --- |
+| `<leader>rmb` / `<leader>rmn` | Older / newer reply |
+| `<leader>rmp` | Search replies, prompts, titles, and timestamps with full Markdown preview |
+| `<leader>rml` | Refresh catalogue and open latest completed reply |
+| `<leader>ra` | Add an optional annotation, also in visual mode |
+| `<leader>rs` | Stage feedback in the agent's input, focus the agent, and close this feedback view |
+| `<leader>rq` | Discard only this reply's annotations and submitted payload |
+| `:q` / `<leader>rk` | Save drafts and close the reader view, not the shared editor |
+
+Reader mappings are buffer-local under `<leader>rm`. Standard Vim keys and global
+file/project shortcuts remain unchanged.
+
+The picker starts with up to 20 finished replies on the current branch. If none
+exists, `/feedback` reports `No completed reply yet` rather than opening progress
+text or another branch's reply. An already-open reader remains available for
+browsing; its latest-message action leaves the selection unchanged in this case.
+`Ctrl-a` in the picker toggles all messages. Drafts survive switching replies, reopening,
+and ordinary Neovim quits. Discard never removes a reader's source or metadata.
+Submit uses Agent Bridge's existing target selection and staging transport,
+just like ordinary review annotations and composer Alt-S. It pastes at the
+agent input cursor without clearing existing text or pressing Enter, focuses
+the target, then closes only the originating feedback view. Failed or cancelled
+staging leaves that view and its drafts available for retry. The normal Neovim
+statusline stays under Lualine's control. Reader submission saves annotations but
+does not write a `feedback.json` handoff file; that file is only produced by the
+legacy standalone flow. Existing saved payloads are left untouched.
+
+A dedicated launcher sets `PI_FEEDBACK_CATALOG` to an absolute schema-version-1
+catalogue, then runs `require('agent_review.feedback_reader').open()`. The initial
+selection is the latest completed current-branch entry. An empty `latestEntryId`
+means there is no such reply. `open({ catalog_path = path, feedback_state_path =
+state_path })` can select a specific draft. `NVIM_AGENT_REVIEW_STATE` configures
+only the ordinary review store and must not point at a message's annotations;
+the dedicated launcher uses a separate `reader-state.json`. Shared editors keep
+their environment unchanged.
+
+Each catalogue entry must point to its own direct child directory containing
+`source.md` and `metadata.json`; `annotations.json` is created when needed. Metadata must have `reader: true` and matching session/message
+identities. Paths must be canonical and may not traverse symlinks; entry IDs are
+opaque, not paths. Each open reader polls once per second and updates only
+its own windows. It retains the last valid catalogue if a refresh fails and
+stops polling when its view closes.
+
+`agent_review.context` is the only storage-selection module. It reads the buffer's
+`pi_feedback` metadata and returns an instance containing annotations, sessions,
+and persistence. Ordinary code review keeps its original instance. Each feedback
+message has an independent instance backed by its own `annotations.json`.
+Switching buffers never swaps a global store. Input callbacks capture their
+original instance; rendering and debounced saves use the associated instance.
+
+Closing a reader flushes its drafts, disables pending saves, and invalidates
+outstanding annotation accepts. Hidden snapshot buffers survive, but cannot
+submit or save until reopened. Reopening reuses those buffers and reloads drafts.
+If flushing fails, the reader remains protected from catalogue clearing.
+
+### Existing-editor RPC
+
+Restart running Neovim instances after installing this update. Do not hot-reload
+Agent Review modules. Both callers and the reader check
+`require('agent_review').feedback_context_version == 1`; an older loaded init
+module requires a restart even when the new files are already installed.
+
+```lua
+require('agent_review.feedback_reader').remote({
+  action = 'open', -- 'open', 'focus', or 'status'
+  cataloguePath = '/absolute/catalogue.json',
+  feedbackStatePath = '/absolute/message/annotations.json', -- optional
+})
 ```
 
-After Neovim closes, submitted comments are staged in Pi's editor as structured
-feedback rather than sent automatically.
+- `open` creates or focuses the catalogue's owned tab. An optional draft path
+  selects that message; otherwise an existing reader keeps its selection.
+- `focus` targets an existing reader. If its view closed but a failed save left
+  drafts protected in memory, it restores that reader's tab for recovery.
+- `status` is read-only: no focus, refresh, loading of drafts, or scheduled work.
 
-Deferred feedback plans:
+Success returns `{ ok = true, open = true/false }`, with optional `paneId` and
+`socketPath` from `HERDR_PANE_ID` and `HERDR_SOCKET_PATH`. Failure returns
+`{ ok = false, error = '...' }`. Results are JSON-serializable Lua tables.
+`open = false` means this reader has no timers, pending editors, or saves that
+can recreate its catalogue files. A failed final save keeps `open = true` to
+prevent clearing. The RPC path never exits Neovim.
 
-- [`FEEDBACK_V1_1.md`](./FEEDBACK_V1_1.md): combine response and active-session
-  code feedback in one staged Pi draft.
-- [`FEEDBACK_V2.md`](./FEEDBACK_V2.md): optionally reuse an existing Neovim,
-  including the routing, state-isolation, and lifecycle tradeoffs.
+The separate `agent-review` CLI/RPC remains scoped to ordinary code reviews,
+including ID-based actions and `list --all`. Viewing feedback cannot redirect an
+agent's code annotations into a feedback draft. Feedback submission uses its own
+reader controls and Agent Bridge staging.
+
+Legacy standalone `feedback.attach()` buffers without `reader: true` retain their
+original submit-and-quit and discard-on-quit behavior.
+
+[`FEEDBACK_V2.md`](./FEEDBACK_V2.md) summarizes the implemented reader design.
+Combining response and active-session code feedback in one Pi draft remains a
+separate plan in [`FEEDBACK_V1_1.md`](./FEEDBACK_V1_1.md).
 
 ## Sessions and persistence
 
@@ -158,7 +240,10 @@ review.compose(opts)
 review.refresh({ checktime = true })
 ```
 
-Returned annotations are copies rather than mutable internal state.
+Returned annotations are copies rather than mutable internal state. Calls use
+the current buffer's review context by default, including `list({ all = true })`.
+ID-based `edit`, `remove`, `resolve`, `reopen`, and `set_status` also accept
+`opts.bufnr` for UI callbacks that retain an originating buffer.
 
 ## Agent workflow
 

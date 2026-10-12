@@ -1,6 +1,6 @@
 local M = {}
 
-local state = require("agent_review.state")
+local contexts = require("agent_review.context")
 local target_util = require("agent_review.target")
 
 local anchor_ns = vim.api.nvim_create_namespace("agent_review_anchor")
@@ -82,7 +82,7 @@ local function ensure_anchor(annotation, bufnr)
   annotation.freshness = freshness
   if changed then
     annotation.updated_at = os.date("!%Y-%m-%dT%H:%M:%SZ")
-    state.changed()
+    contexts.for_buffer(bufnr).state.changed()
   end
 
   local target = clamped_target(bufnr, annotation.target)
@@ -232,9 +232,9 @@ local function same_root(first, second)
   return (first or "") == (second or "")
 end
 
-local function matches_context(annotation, context)
+local function matches_context(annotation, context, store)
   if annotation.session_id then
-    local active = require("agent_review.sessions").current(require("agent_review.scope").for_annotation(annotation))
+    local active = store.sessions.current(require("agent_review.scope").for_annotation(annotation))
     if not active or active.id ~= annotation.session_id then
       return false
     end
@@ -267,8 +267,9 @@ local function render_agent_diff_inline(modified_buf)
   end
   local modified_line_count = vim.api.nvim_buf_line_count(modified_buf)
   local adapter = require("agent_review.agent_diff")
-  for _, annotation in ipairs(state.list()) do
-    if matches_context(annotation, original_context) then
+  local store = contexts.for_buffer(original_buf)
+  for _, annotation in ipairs(store.state.list()) do
+    if matches_context(annotation, original_context, store) then
       ensure_anchor(annotation, original_buf)
       sync_anchor(annotation)
       local descriptor = adapter.old_line_descriptor(session.diff_result, annotation.target.end_line, modified_line_count)
@@ -304,8 +305,9 @@ local function render_inline_old(tabpage, original_buf, modified_buf)
   local modified_line_count = vim.api.nvim_buf_line_count(modified_buf)
   local adapter = require("agent_review.codediff")
 
-  for _, annotation in ipairs(state.list()) do
-    if matches_context(annotation, original_context) then
+  local store = contexts.for_buffer(original_buf)
+  for _, annotation in ipairs(store.state.list()) do
+    if matches_context(annotation, original_context, store) then
       ensure_anchor(annotation, original_buf)
       sync_anchor(annotation)
       local descriptor = adapter.old_line_descriptor(
@@ -337,8 +339,9 @@ function M.revalidate_buffer(bufnr)
     return
   end
 
-  for _, annotation in ipairs(state.list()) do
-    if matches_context(annotation, context) then
+  local store = contexts.for_buffer(bufnr)
+  for _, annotation in ipairs(store.state.list()) do
+    if matches_context(annotation, context, store) then
       sync_anchor(annotation)
       local runtime = annotation._runtime
       if runtime and valid_buffer(runtime.bufnr) then
@@ -361,8 +364,9 @@ function M.refresh_buffer(bufnr)
     return
   end
 
-  for _, annotation in ipairs(state.list()) do
-    if matches_context(annotation, context) then
+  local store = contexts.for_buffer(bufnr)
+  for _, annotation in ipairs(store.state.list()) do
+    if matches_context(annotation, context, store) then
       ensure_anchor(annotation, bufnr)
       sync_anchor(annotation)
       render_range(bufnr, annotation)
@@ -381,8 +385,8 @@ function M.refresh_buffer(bufnr)
   end
 end
 
-function M.sync()
-  for _, annotation in ipairs(state.list()) do
+function M.sync(context)
+  for _, annotation in ipairs((context or contexts.for_buffer()).state.list()) do
     sync_anchor(annotation)
   end
 end
@@ -430,10 +434,6 @@ end
 
 function M.refresh(tabpage)
   tabpage = tabpage or vim.api.nvim_get_current_tabpage()
-  for _, annotation in ipairs(state.list()) do
-    sync_anchor(annotation)
-  end
-
   local ok, lifecycle = pcall(require, "codediff.ui.lifecycle")
   local session = ok and lifecycle.get_session(tabpage) or nil
   if not session then
@@ -455,7 +455,7 @@ function M.refresh_annotation(annotation)
   if runtime and valid_buffer(runtime.bufnr) then
     M.refresh_buffer(runtime.bufnr)
   else
-    M.refresh()
+    M.refresh_visible()
   end
 end
 
@@ -471,12 +471,13 @@ function M.remove(annotation)
   if valid_buffer(bufnr) then
     M.refresh_buffer(bufnr)
   else
-    M.refresh()
+    M.refresh_visible()
   end
 end
 
-function M.clear_all()
-  for _, annotation in ipairs(state.list()) do
+function M.clear_all(context)
+  context = context or contexts.for_buffer()
+  for _, annotation in ipairs(context.state.list()) do
     local runtime = annotation._runtime
     if runtime and valid_buffer(runtime.bufnr) then
       pcall(vim.api.nvim_buf_del_extmark, runtime.bufnr, anchor_ns, runtime.mark_id)
@@ -484,7 +485,7 @@ function M.clear_all()
     annotation._runtime = nil
   end
   for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-    if valid_buffer(bufnr) then
+    if valid_buffer(bufnr) and contexts.for_buffer(bufnr) == context then
       vim.api.nvim_buf_clear_namespace(bufnr, render_ns, 0, -1)
       vim.api.nvim_buf_clear_namespace(bufnr, anchor_ns, 0, -1)
     end

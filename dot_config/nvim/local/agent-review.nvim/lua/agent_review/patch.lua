@@ -153,12 +153,13 @@ function M.render(current)
   if not current then
     return
   end
-  local session = require("agent_review.sessions").current(require("agent_review.scope").key(current.root, current.path))
   for _, pane in pairs(current.panes or {}) do
     if vim.api.nvim_buf_is_valid(pane.buf) then
+      local sessions = require("agent_review.context").for_buffer(pane.buf).sessions
+      local session = sessions.current(require("agent_review.scope").key(current.root, current.path))
       vim.api.nvim_buf_clear_namespace(pane.buf, ns, 0, -1)
       if session then
-        for _, annotation in ipairs(require("agent_review.sessions").annotations(session.id)) do
+        for _, annotation in ipairs(sessions.annotations(session.id)) do
           if annotation.target.file == current.path and annotation.status ~= "resolved" then
             local row = annotation_row(pane, annotation)
             if row then

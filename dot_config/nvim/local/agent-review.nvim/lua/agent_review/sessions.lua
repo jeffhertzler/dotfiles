@@ -1,6 +1,7 @@
+local function new(context)
 local M = {}
 
-local state = require("agent_review.state")
+local state = context.state
 local scope = require("agent_review.scope")
 
 local sessions = {}
@@ -269,3 +270,6 @@ function M.migrate_annotations(annotations)
 end
 
 return M
+end
+
+return require("agent_review.context").proxy("sessions", new)

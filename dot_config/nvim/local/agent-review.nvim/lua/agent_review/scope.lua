@@ -16,20 +16,27 @@ function M.for_annotation(annotation)
   return key(annotation.root, annotation.target and annotation.target.file)
 end
 
-function M.current()
-  local context = target.current_context()
+function M.current(bufnr)
+  local context
+  if bufnr then
+    context = target.context_for_buffer(bufnr == 0 and vim.api.nvim_get_current_buf() or bufnr)
+  else
+    context = target.current_context()
+  end
   if not context or not context.path then
     return nil
   end
   return key(context.root, context.path)
 end
 
-function M.list(scope_key)
+function M.list(scope_key, context)
+  if context and context.closed then return {} end
+  local store = context and context.state or state
   if not scope_key then
-    return state.list()
+    return store.list()
   end
   local result = {}
-  for _, annotation in ipairs(state.list()) do
+  for _, annotation in ipairs(store.list()) do
     if M.for_annotation(annotation) == scope_key then
       table.insert(result, annotation)
     end
@@ -42,9 +49,9 @@ function M.current_annotations()
   return current and M.list(current) or {}
 end
 
-function M.groups()
+function M.groups(context)
   local groups = {}
-  for _, annotation in ipairs(state.list()) do
+  for _, annotation in ipairs(M.list(nil, context)) do
     local scope_key = M.for_annotation(annotation)
     local group = groups[scope_key]
     if not group then
