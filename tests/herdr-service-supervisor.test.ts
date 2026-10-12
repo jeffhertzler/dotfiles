@@ -56,6 +56,7 @@ case "\${args[0]:-} \${args[1]:-}" in
   "server ")
     printf 'start %s\n' "$$" >> "$root/events.log"
     printf '%s\n' "$$" > "$root/direct.pid"
+    ps -o sid= -p "$$" | tr -d ' ' > "$root/direct.sid"
     touch "$root/running"
     sleep 1000 &
     pane=$!
@@ -134,6 +135,17 @@ test("starts Herdr when status returns running false with exit zero", async (t) 
   const events = readFileSync(harness.eventLog, "utf8");
   assert.equal(events.match(/^start /gm)?.length, 1);
   assert.equal(harness.child.exitCode, null, harness.stderr());
+});
+
+test("starts its server as a session leader for Herdr SSH detach safety", async (t) => {
+  const harness = createHarness(t);
+  await waitFor(
+    () => existsSync(join(harness.root, "running")),
+    "supervisor did not start a ready Herdr process",
+  );
+  const pid = Number(readFileSync(join(harness.root, "direct.pid"), "utf8").trim());
+  const sid = Number(readFileSync(join(harness.root, "direct.sid"), "utf8").trim());
+  assert.equal(sid, pid, "Herdr requires getsid(0) == getpid() for detached_server_daemon");
 });
 
 test("adopts a running server without starting a competitor", async (t) => {

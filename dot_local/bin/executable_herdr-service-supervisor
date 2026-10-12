@@ -18,6 +18,10 @@ command -v jq >/dev/null 2>&1 || {
   printf 'herdr-service-supervisor: jq is unavailable\n' >&2
   exit 1
 }
+command -v setsid >/dev/null 2>&1 || {
+  printf 'herdr-service-supervisor: setsid is unavailable\n' >&2
+  exit 1
+}
 [[ -x $herdr ]] || {
   printf 'herdr-service-supervisor: Herdr is unavailable at %s\n' "$herdr" >&2
   exit 1
@@ -42,7 +46,11 @@ direct_child_running() {
 
 launch_server() {
   printf 'herdr-service-supervisor: starting session %s\n' "$session"
-  "$herdr" --session "$session" server &
+  # Herdr's SSH detach-safety check requires the server PID to equal its
+  # session ID. systemd makes this supervisor the leader, not its children.
+  # Keep our stable MainPID across handoffs, but give Herdr its own session.
+  # --wait preserves child tracking if setsid needs to fork.
+  setsid --wait "$herdr" --session "$session" server &
   direct_pid=$!
   direct_was_ready=0
   state=direct
