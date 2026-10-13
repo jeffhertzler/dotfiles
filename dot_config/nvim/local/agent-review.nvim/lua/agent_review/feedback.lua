@@ -309,6 +309,10 @@ function M.attach(opts)
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
+  for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
+    vim.wo[win].wrap = true
+    vim.wo[win].linebreak = true
+  end
 
   local target = require("agent_review.target").context_for_buffer(bufnr)
   local workspace = require("agent_review.scope").key(target.root, target.path)
