@@ -47,16 +47,27 @@ private `origin` and public `upstream`, fast-forwards only from the matching
 `origin` branch, fetches public upstream for comparison, and links the checkout
 into Herdr. It never merges upstream or pushes either remote.
 
-Worktrunk and Command Palette use maintained private repositories. Linux,
-macOS, and WSL link each repository's `main`; Windows links
-`agent/windows-support`. Public `devashish2203/herdr-worktrunk` and
-`fabiogaliano/herdr-command-palette` remain their respective `upstream`
-remotes. Reviewed upstream changes land on maintained `main` before a separate
-reviewed merge carries them into each Windows branch.
+Worktrunk and Command Palette use maintained private repositories, with public
+upstream remotes retained for comparison. Command Palette keeps a separate
+`agent/windows-support` branch. Worktrunk uses **one maintained `main` on every
+profile**, following upstream's platform-filtered manifest: Bash on Unix and
+native Windows PowerShell on Windows. Test that same commit on both platforms
+before pushing Worktrunk `main`.
 
-Worktrunk's Windows branch uses a PowerShell entry adapter to resolve real Node,
-Worktrunk, jq, and fzf executables before handing off to Git Bash, avoiding
-Windows Terminal's `wt` alias and inaccessible package-manager shims.
+Worktrunk's Windows actions and pane IDs end in `-windows`. The maintained native
+picker, current-branch creation, PR hooks, and pinned removal behavior exist in
+both implementations. The Windows plugin no longer invokes Node, Git Bash, or
+jq; Git Bash remains the default interactive shell. Native executable discovery
+avoids Windows Terminal's `wt` alias, prefers real Worktrunk installations over
+Mise shims, and resolves fzf's WinGet link target. These preserve compatibility
+with the restricted SSH environment without weakening Windows protections.
+
+The reconciler accepts an explicit `--previous-ref` for the old Worktrunk Windows
+branch. It changes branches only when both the old checkout and any existing
+local target branch are ancestors of the fetched target, and the checkout is
+clean. It updates tracking for single-branch clones and never discards local
+commits. Other unexpected branches still fail. The inventory supplies this
+one-time migration; future reconciliations simply fast-forward `main`.
 
 The Worktrunk fork reports a checkout's PR as the `$pr` workspace token. Herdr's
 second space row keeps `$session`, branch, and Git status, then adds that token.
@@ -64,7 +75,8 @@ Opening a native worktree workspace starts a nonblocking refresh. Startup
 restores PR metadata for resumed workspaces, and workspace focus refreshes each
 checkout with a five-minute cooldown. Run
 `herdr plugin action invoke refresh-pr --plugin worktrunk` to bypass the cooldown
-and refresh the focused workspace after a PR changes state. A branch with no PR clears an old value;
+and refresh the focused workspace after a PR changes state (use `refresh-pr-windows`
+on Windows). A branch with no PR clears an old value;
 missing GitHub CLI authentication and network failures do not stop checkout
 opening.
 
@@ -97,6 +109,12 @@ restricted fzf package through Git Bash. Chezmoi links both profiles from
 does not install the public package directly.
 
 ## Worktrunk picker
+
+The action names below are Unix IDs. Windows keybindings use the corresponding
+`-windows` IDs while retaining the same keys. Workspace mode works with Git Bash
+as the interactive shell. Windows compatibility tab mode checks the newly opened
+pane's shell and rejects non-PowerShell shells rather than injecting incompatible
+commands; it closes only that newly created tab. Prefer workspace mode.
 
 `prefix+shift+g` invokes `worktrunk.open`, which runs Worktrunk's native switch
 picker with linked worktrees, local branches, and open pull or merge requests.
@@ -135,8 +153,7 @@ and are not intended as supported public packages.
 | Command Palette | `jeffhertzler/herdr-command-palette` | `agent/windows-support` | Windows | `~/dev/herdr-command-palette` |
 | Layout Tools | `jeffhertzler/herdr-layout-tools-windows` | `agent/windows-support` | Windows | `~/dev/herdr-layout-tools-windows` |
 | Herdr Splits | `jeffhertzler/herdr-splits-windows` | `agent/windows-support` | Windows | `~/dev/herdr-splits-windows` |
-| Worktrunk | `jeffhertzler/herdr-worktrunk` | `main` | Linux, macOS, WSL | `~/dev/herdr-worktrunk` |
-| Worktrunk | `jeffhertzler/herdr-worktrunk` | `agent/windows-support` | Windows | `~/dev/herdr-worktrunk` |
+| Worktrunk | `jeffhertzler/herdr-worktrunk` | `main` | All | `~/dev/herdr-worktrunk` |
 | Window Title Sync | `jeffhertzler/herdr-window-title-sync-windows` | `agent/windows-support` | Windows | `~/dev/herdr-window-title-sync-windows` |
 
 Window Title Sync uses Bun on every profile. The Windows compatibility branch
