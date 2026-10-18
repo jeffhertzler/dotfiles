@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "1.3.0",
   "defaultProvider": "openai-codex-personal",
   "defaultModel": "gpt-6-astra",
   "defaultThinkingLevel": "high",
@@ -14,7 +14,6 @@
       "extensions": []
     },
     "npm:@sentixx/pi-info",
-    "npm:pi-mcp-adapter",
     "npm:pi-web-access",
     "git:git@github.com:jeffhertzler/pi-cursor-provider",
     "npm:pi-herdr-sudo-task",
