@@ -35,7 +35,8 @@ if (-not (Test-Path -LiteralPath $reconciler -PathType Leaf)) {
   --path (Join-Path $HOME {{ .windowsLink | quote }}) `
   --origin-url {{ printf "git@github.com:%s.git" .windowsRepo | quote }} `
   --upstream-url {{ printf "https://github.com/%s.git" .source | quote }} `
-  --ref {{ .windowsRef | quote }}
+  --ref {{ .windowsRef | quote }}{{ if hasKey . "windowsPreviousRef" }} `
+  --previous-ref {{ .windowsPreviousRef | quote }}{{ end }}
 if ($LASTEXITCODE -ne 0) {
   throw "Failed to reconcile Herdr plugin {{ .id }}"
 }

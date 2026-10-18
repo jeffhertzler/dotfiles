@@ -148,3 +148,73 @@ test("fast-forwards only from origin and refuses a dirty checkout", (t) => {
 	assert.notEqual(aheadRun.status, 0);
 	assert.match(aheadRun.stderr, /does not match origin\/main/);
 });
+
+for (const scenario of ["clean", "local work", "diverged target", "dirty", "wrong branch"] as const) {
+	test(`explicit branch migration: ${scenario}`, (t) => {
+		const root = mkdtempSync(join(tmpdir(), "herdr-plugin-migrate-"));
+		t.after(() => rmSync(root, { recursive: true, force: true }));
+		const { origin, seed, upstream } = createRemotePair(root);
+		const oldRef = "agent/windows-support";
+		git(seed, "switch", "-c", oldRef);
+		writeFileSync(join(seed, "windows.txt"), "windows behavior\n");
+		git(seed, "add", "windows.txt");
+		git(seed, "commit", "-m", "Windows behavior");
+		git(seed, "push", "origin", oldRef);
+		git(seed, "switch", "main");
+		git(seed, "merge", "--no-ff", "-m", "Unify platforms", oldRef);
+		git(seed, "push", "origin", "main");
+		const checkout = join(root, "checkout");
+		run("git", ["clone", "--single-branch", "--branch", oldRef, origin, checkout]);
+		git(checkout, "config", "user.email", "test@example.com");
+		git(checkout, "config", "user.name", "Test User");
+		if (scenario === "diverged target") git(checkout, "switch", "-c", "main");
+		if (scenario === "wrong branch") git(checkout, "switch", "-c", "unrelated");
+		if (scenario === "local work" || scenario === "diverged target" || scenario === "dirty") {
+			writeFileSync(join(checkout, "personal.txt"), "must survive\n");
+			if (scenario !== "dirty") {
+				git(checkout, "add", "personal.txt");
+				git(checkout, "commit", "-m", "Personal work");
+			}
+		}
+		if (scenario === "diverged target") git(checkout, "switch", oldRef);
+		const before = git(checkout, "rev-parse", "HEAD");
+		const beforeBranch = git(checkout, "branch", "--show-current");
+		const fake = createFakeHerdr(root);
+		const args = [reconciler, "--id", "worktrunk", "--path", checkout,
+			"--origin-url", origin, "--upstream-url", upstream, "--ref", "main", "--previous-ref", oldRef];
+		const env = { ...process.env, HERDR_TEST_LOG: fake.log, PATH: `${fake.bin}:${process.env.PATH}` };
+		const result = spawnSync(process.execPath, args, { encoding: "utf8", env });
+		if (scenario === "clean") {
+			assert.equal(result.status, 0, result.stderr);
+			assert.equal(git(checkout, "branch", "--show-current"), "main");
+			assert.equal(git(checkout, "rev-parse", "HEAD"), git(seed, "rev-parse", "main"));
+			assert.equal(git(checkout, "rev-parse", "@{upstream}"), git(seed, "rev-parse", "main"));
+			assert.equal(readFileSync(join(checkout, "windows.txt"), "utf8"), "windows behavior\n");
+			run(process.execPath, args, undefined, env); // idempotent after switching
+		} else {
+			assert.notEqual(result.status, 0);
+			assert.equal(git(checkout, "rev-parse", "HEAD"), before);
+			assert.equal(git(checkout, "branch", "--show-current"), beforeBranch);
+			if (scenario === "dirty" || scenario === "local work") {
+				assert.equal(readFileSync(join(checkout, "personal.txt"), "utf8"), "must survive\n");
+			}
+		}
+	});
+}
+
+test("Worktrunk templates use unified main and platform-specific native action IDs", () => {
+	const data = readFileSync(join(sourceRoot, ".chezmoidata/herdr.yaml"), "utf8");
+	const worktrunk = data.split("  - id: worktrunk\n")[1].split("  - id:")[0];
+	assert.match(worktrunk, /managedRef: main/);
+	assert.match(worktrunk, /windowsRef: main/);
+	assert.match(worktrunk, /windowsPreviousRef: agent\/windows-support/);
+	for (const os of ["windows", "linux", "darwin"]) {
+		const rendered = run("chezmoi", ["execute-template", "--source", sourceRoot,
+			"--override-data", JSON.stringify({ chezmoi: { os, homeDir: "C:/Users/Test User" } }),
+			"--file", join(sourceRoot, "dot_config/herdr/config.toml.tmpl")]);
+		for (const action of ["open", "new-current", "remove-current"]) {
+			assert.ok(rendered.includes(`command = "worktrunk.${action}${os === "windows" ? "-windows" : ""}"`));
+		}
+		if (os === "windows") assert.match(rendered, /default_shell = "C:\/Program Files\/Git\/bin\/bash.exe"/);
+	}
+});

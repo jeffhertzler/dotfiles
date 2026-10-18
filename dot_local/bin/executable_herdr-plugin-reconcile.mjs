@@ -26,6 +26,7 @@ function parseArgs(argv) {
 		originUrl: options["origin-url"],
 		upstreamUrl: options["upstream-url"],
 		ref: options.ref,
+		previousRef: options["previous-ref"],
 	};
 }
 
@@ -68,7 +69,9 @@ const changes = run("git", ["status", "--porcelain"], { cwd: options.path, captu
 if (changes) fail(`plugin checkout has uncommitted changes: ${options.path}`);
 
 const branch = run("git", ["branch", "--show-current"], { cwd: options.path, capture: true });
-if (branch !== options.ref) fail(`plugin checkout is on ${branch || "a detached HEAD"}, expected ${options.ref}`);
+if (branch !== options.ref && (!options.previousRef || branch !== options.previousRef)) {
+	fail(`plugin checkout is on ${branch || "a detached HEAD"}, expected ${options.ref}`);
+}
 
 const origin = run("git", ["remote", "get-url", "origin"], {
 	cwd: options.path,
@@ -87,7 +90,30 @@ if (upstreamResult.status !== 0) {
 }
 
 console.log(`Updating Herdr plugin ${options.id} from origin/${options.ref}`);
-run("git", ["fetch", "origin", options.ref], { cwd: options.path });
+// Explicit refspec also updates clones originally made with --single-branch.
+const remoteRef = `refs/remotes/origin/${options.ref}`;
+run("git", ["fetch", "origin", `refs/heads/${options.ref}:${remoteRef}`], { cwd: options.path });
+if (branch !== options.ref) {
+	// A migration may switch names, never throw away local or old-branch work.
+	run("git", ["merge-base", "--is-ancestor", "HEAD", remoteRef], { cwd: options.path });
+	const localRef = `refs/heads/${options.ref}`;
+	const exists = commandResult("git", ["show-ref", "--verify", "--quiet", localRef], { cwd: options.path, capture: true });
+	if (exists.status === 0) {
+		run("git", ["merge-base", "--is-ancestor", localRef, remoteRef], { cwd: options.path });
+		run("git", ["switch", options.ref], { cwd: options.path });
+	} else if (exists.status === 1) {
+		run("git", ["switch", "-c", options.ref, remoteRef], { cwd: options.path });
+	} else {
+		fail(`could not inspect local branch ${options.ref}`);
+	}
+	const fetchSpecs = run("git", ["config", "--get-all", "remote.origin.fetch"], { cwd: options.path, capture: true }).split("\n");
+	const fetchSpec = `+refs/heads/${options.ref}:${remoteRef}`;
+	if (!fetchSpecs.includes(fetchSpec) && !fetchSpecs.includes("+refs/heads/*:refs/remotes/origin/*")) {
+		run("git", ["config", "--add", "remote.origin.fetch", fetchSpec], { cwd: options.path });
+	}
+	run("git", ["config", `branch.${options.ref}.remote`, "origin"], { cwd: options.path });
+	run("git", ["config", `branch.${options.ref}.merge`, `refs/heads/${options.ref}`], { cwd: options.path });
+}
 run("git", ["merge", "--ff-only", `origin/${options.ref}`], { cwd: options.path });
 const head = run("git", ["rev-parse", "HEAD"], { cwd: options.path, capture: true });
 const originHead = run("git", ["rev-parse", `origin/${options.ref}`], {

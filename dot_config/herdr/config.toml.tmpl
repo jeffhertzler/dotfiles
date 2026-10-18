@@ -3,11 +3,13 @@
 {{- $popupPicker := "~/.local/bin/herdr-popup-picker" -}}
 {{- $reorder := "~/.local/bin/herdr-reorder.mjs" -}}
 {{- $herdrSplitsSuffix := "" -}}
+{{- $worktrunkSuffix := "" -}}
 {{- if eq $profile "windows" -}}
 {{-   $directionalSplit = printf "node \"%s/.local/bin/herdr-directional-split.mjs\"" .chezmoi.homeDir -}}
 {{-   $popupPicker = "C:/PROGRA~1/Git/bin/bash.exe \"%USERPROFILE%/.local/bin/herdr-popup-picker\"" -}}
 {{-   $reorder = printf "node \"%s/.local/bin/herdr-reorder.mjs\"" .chezmoi.homeDir -}}
 {{-   $herdrSplitsSuffix = "-windows" -}}
+{{-   $worktrunkSuffix = "-windows" -}}
 {{- else if eq $profile "arch" -}}
 {{-   $popupPicker = "HERDR_POPUP_ENABLE_WORKMUX=1 ~/.local/bin/herdr-popup-picker" -}}
 {{- end -}}
@@ -166,19 +168,19 @@ description = "resize right (neovim/herdr)"
 [[keys.command]]
 key = "prefix+shift+g"
 type = "plugin_action"
-command = "worktrunk.open"
+command = "worktrunk.open{{ $worktrunkSuffix }}"
 description = "worktree: browse / switch / create"
 
 [[keys.command]]
 key = "prefix+ctrl+g"
 type = "plugin_action"
-command = "worktrunk.new-current"
+command = "worktrunk.new-current{{ $worktrunkSuffix }}"
 description = "new worktree from current branch"
 
 [[keys.command]]
 key = "prefix+ctrl+x"
 type = "plugin_action"
-command = "worktrunk.remove-current"
+command = "worktrunk.remove-current{{ $worktrunkSuffix }}"
 description = "worktree: remove current with hooks"
 
 [[keys.command]]
