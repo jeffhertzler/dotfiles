@@ -35,9 +35,15 @@ alias gp='git push'
 function hatw() {
   command herdr --remote archt --session work --remote-keybindings server "$@"
 }
+function haw() {
+  command herdr --remote arch --session work --remote-keybindings server "$@"
+}
 
 function hatv() {
   command herdr --remote archt --session vimme --remote-keybindings server "$@"
+}
+function hav() {
+  command herdr --remote arch --session vimme --remote-keybindings server "$@"
 }
 {{ end -}}
 
