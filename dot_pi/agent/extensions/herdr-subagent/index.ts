@@ -702,8 +702,12 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   const retainedTasks = new Map<string, RetainedTask>();
   const closingTasks = new Set<string>();
   const tabClosures = new Map<string, Promise<void>>();
+  const pendingResults = new Set<string>();
+  let pendingIdleDrain: ReturnType<typeof setInterval> | undefined;
+  let pendingDeliveryPaused = false;
   let parentUi: any;
   let parentSessionManager: any;
+  let parentContext: any;
 
   const mergeReceiptFlags = (task: TaskManifest): void => {
     // A wait may collect the Result while a tab-close request is in flight.
@@ -1042,6 +1046,62 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     }
   };
 
+  const deliverResult = (task: TaskManifest, atBoundary = false): boolean => {
+    if (task.delivered || !currentBranchOwns(task)) return false;
+    if (!atBoundary && (pendingDeliveryPaused || parentContext?.isIdle?.() === false)) {
+      // Keep this cancellable by subagent_wait. Pi's follow-up queue cannot
+      // retract a Result when a later tool call collects it first.
+      pendingResults.add(task.id);
+      if (!pendingIdleDrain) {
+        // Manual compaction can return idle without agent lifecycle events.
+        pendingIdleDrain = setInterval(() => {
+          if (!pendingDeliveryPaused && parentContext?.isIdle?.() === true) flushPendingResults();
+          if (pendingResults.size === 0) {
+            clearInterval(pendingIdleDrain);
+            pendingIdleDrain = undefined;
+          }
+        }, pollIntervalMs);
+        pendingIdleDrain.unref?.();
+      }
+      return false;
+    }
+    const result = terminalResult(task);
+    pi.sendMessage(
+      {
+        customType: "subagent_result",
+        content: result.content[0].text,
+        display: true,
+        details: result.details,
+      },
+      { deliverAs: "followUp", triggerTurn: !atBoundary },
+    );
+    task.delivered = true;
+    pendingResults.delete(task.id);
+    return true;
+  };
+
+  const flushPendingResults = (atBoundary = false): boolean => {
+    let delivered = false;
+    for (const id of pendingResults) {
+      const task = readTaskManifest(join(artifactRoot, id, "task.json"));
+      if (!task || task.delivered) {
+        pendingResults.delete(id);
+        continue;
+      }
+      if (!deliverResult(task, atBoundary)) continue;
+      persistTaskManifest(task);
+      const retained = retainedTasks.get(id);
+      if (retained) retained.delivered = true;
+      if (task.cleaned) {
+        retainedTasks.delete(id);
+        finalizeCleanedTask(task);
+      }
+      delivered = true;
+    }
+    if (delivered) renderTasks();
+    return delivered;
+  };
+
   const settleTask = async (id: string, result: ChildResult): Promise<void> => {
     const task = activeTasks.get(id);
     if (!task || task.settling) return;
@@ -1061,19 +1121,8 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       task.delivered = true;
       persistActiveTask(task);
       task.resolveWait?.(toolResult);
-    } else if (currentBranchOwns(task)) {
-      pi.sendMessage(
-        {
-          customType: "subagent_result",
-          content: toolResult.content[0].text,
-          display: true,
-          details: toolResult.details,
-        },
-        { deliverAs: "followUp", triggerTurn: activeTasks.size === 0 },
-      );
-      task.delivered = true;
-      persistActiveTask(task);
     } else {
+      deliverResult(task);
       persistActiveTask(task);
     }
 
@@ -1173,19 +1222,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   const reconcileTerminalTask = async (manifest: TaskManifest): Promise<void> => {
     if (recordedDeliveryExists(manifest)) manifest.delivered = true;
     const result = readChildResult(manifest.resultFile, manifest.token);
-    if (!manifest.delivered && currentBranchOwns(manifest) && result) {
-      const toolResult = terminalResult(manifest);
-      pi.sendMessage(
-        {
-          customType: "subagent_result",
-          content: toolResult.content[0].text,
-          display: true,
-          details: toolResult.details,
-        },
-        { deliverAs: "followUp", triggerTurn: activeTasks.size === 0 },
-      );
-      manifest.delivered = true;
-    }
+    if (result) deliverResult(manifest);
 
     if (manifest.status === "completed" && !manifest.interactive && !manifest.cleaned) {
       try {
@@ -1218,6 +1255,8 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
   };
 
   const restoreOwnedTasks = async (ctx: any): Promise<void> => {
+    parentContext = ctx;
+    pendingDeliveryPaused = false;
     parentUi = ctx.ui ?? parentUi;
     parentSessionManager = ctx.sessionManager ?? parentSessionManager;
     const parentSessionId = parentSessionManager?.getSessionId?.();
@@ -1271,13 +1310,35 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
     automaticRetention(ctx);
   });
   pi.on("session_tree", (_event, ctx: any) => restoreOwnedTasks(ctx));
-  pi.on("agent_settled", (_event, ctx: any) => automaticRetention(ctx));
+  pi.on("agent_start", () => { pendingDeliveryPaused = false; });
+  const deliverPendingAtBoundary = (event: { outcome: string }, ctx: any) => {
+    pendingDeliveryPaused = event.outcome !== "completed" || ctx.signal?.aborted === true;
+    if (pendingDeliveryPaused) return;
+    // All tools in this turn (including nested/codemode waits) have returned.
+    // Append uncollected Results before the next model request, not in a
+    // follow-up queue that would survive a subsequent explicit collection.
+    if (flushPendingResults(true)) return { continue: true };
+  };
+  pi.on("turn_end", deliverPendingAtBoundary);
+  // Catch completions arriving after the last turn boundary.
+  pi.on("agent_before_settle", deliverPendingAtBoundary);
+  pi.on("agent_settled", (event: any, ctx: any) => {
+    // A child may finish while another pre-settlement handler is awaiting.
+    // Pi is idle here; no completed tool can subsequently claim an old queue item.
+    if (event.aborted) pendingDeliveryPaused = true;
+    if (!pendingDeliveryPaused) flushPendingResults();
+    automaticRetention(ctx);
+  });
 
   pi.on("session_shutdown", (_event, ctx: any) => {
     for (const task of activeTasks.values()) clearInterval(task.timer);
     activeTasks.clear();
     retainedTasks.clear();
     closingTasks.clear();
+    pendingResults.clear();
+    clearInterval(pendingIdleDrain);
+    pendingIdleDrain = undefined;
+    parentContext = undefined;
     parentSessionManager = undefined;
     parentUi = ctx.ui ?? parentUi;
     renderTasks();
@@ -1471,8 +1532,10 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
           const result = terminalResult(manifest);
           manifest.delivered = true;
           persistTaskManifest(manifest);
+          pendingResults.delete(id);
           const retained = retainedTasks.get(id);
-          if (retained) retained.delivered = true;
+          if (manifest.cleaned) retainedTasks.delete(id);
+          else if (retained) retained.delivered = true;
           renderTasks();
           return result;
         }
@@ -1561,6 +1624,7 @@ export function installHerdrSubagent(pi: PiLike, options: InstallOptions = {}): 
       _onUpdate: unknown,
       ctx: any,
     ) {
+      parentContext = ctx;
       parentUi = ctx.ui;
       parentSessionManager = ctx.sessionManager;
       if (env.HERDR_ENV !== "1" || !env.HERDR_WORKSPACE_ID) {

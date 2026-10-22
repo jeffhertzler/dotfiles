@@ -136,6 +136,7 @@ function createContext(widgets: unknown[] = []) {
     cwd: "/repo/task-worktree",
     model: { provider: "openai-codex-personal", id: "gpt-5.6-sol" },
     thinkingLevel: "high",
+    isIdle: () => true,
     sessionManager: {
       getSessionId() {
         return "parent-session-1";
@@ -1802,6 +1803,221 @@ test("a late wait retrieves the Result after automatic delivery and tab cleanup"
   );
   assert.match(result.content[0].text, /No standards violations found/);
   assert.equal(harness.messages.length, 1, "retrieval must not queue another follow-up");
+});
+
+test("collecting a completed Result while busy leaves no automatic delivery after the final answer", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-pending-result-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const harness = createPiHarness();
+  const herdr = new FakeHerdr();
+  const widgets: any[] = [];
+  const ctx = { ...createContext(widgets), isIdle: () => false };
+  installHerdrSubagent(harness.pi as any, {
+    herdr, artifactRoot, pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  const started = await harness.tools.get("subagent").execute(
+    "launch", { name: "Review", task: "Review the changes." }, undefined, undefined, ctx,
+  );
+  const request = herdr.createRequests[0] as any;
+  writeFileSync(request.env.PI_HERDR_SUBAGENT_RESULT_FILE, JSON.stringify({
+    schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN,
+    status: "completed", output: "No blocking findings.",
+  }));
+  await waitFor(() => herdr.closedTabs.length === 1);
+  const result = await harness.tools.get("subagent_wait").execute("collect", { id: started.details.id });
+  assert.match(result.content[0].text, /No blocking findings/);
+  assert.equal(widgets.at(-1).value, undefined, "collected and closed Tasks must leave the widget");
+
+  // The wait may be one of several tools in a turn. Neither the next model
+  // request nor final settlement should receive another copy.
+  for (const event of ["turn_end", "agent_before_settle"]) {
+    const handler = harness.handlers.get(event)![0];
+    const boundary = await handler({ outcome: "completed", context: { canContinue: true } }, ctx) as any;
+    assert.ok(!boundary?.continue, "a collected Result must not trigger another turn");
+  }
+  assert.deepEqual(harness.messages, [], "no old automatic follow-up may remain queued");
+});
+
+test("uncollected busy Results are appended together at turn end with one continuation", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-pending-results-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const harness = createPiHarness();
+  const herdr = new FakeHerdr();
+  const ctx = { ...createContext(), isIdle: () => false };
+  installHerdrSubagent(harness.pi as any, {
+    herdr, artifactRoot, pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  for (const name of ["Standards", "Behavior"]) {
+    await harness.tools.get("subagent").execute("launch", { name, task: "Review." }, undefined, undefined, ctx);
+  }
+  for (const request of herdr.createRequests as any[]) {
+    writeFileSync(request.env.PI_HERDR_SUBAGENT_RESULT_FILE, JSON.stringify({
+      schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN,
+      status: "completed", output: "Review complete.",
+    }));
+  }
+  await waitFor(() => (herdr.createRequests as any[]).every((request) =>
+    JSON.parse(readFileSync(join(dirname(request.env.PI_HERDR_SUBAGENT_RESULT_FILE), "task.json"), "utf8")).cleaned,
+  ));
+  assert.deepEqual(harness.messages, [], "completion while busy must not enter Pi's follow-up queue");
+  const boundary = harness.handlers.get("turn_end")![0];
+  // A final assistant answer cannot continue until the Result adds new context.
+  assert.deepEqual(await boundary({ outcome: "completed", context: { canContinue: false } }, ctx), { continue: true });
+  assert.equal(harness.messages.length, 2);
+  for (const item of harness.messages as any[]) {
+    assert.equal(item.options.triggerTurn, false, "the boundary owns the single continuation");
+  }
+  assert.equal(await boundary({ outcome: "completed" }, ctx), undefined);
+  assert.equal(await harness.handlers.get("agent_before_settle")![0]({ outcome: "completed" }, ctx), undefined);
+  assert.equal(harness.messages.length, 2, "later settlement must not repeat Results");
+});
+
+async function pendingResultHarness(t: test.TestContext) {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-pending-lifecycle-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const first = createPiHarness();
+  const herdr = new FakeHerdr();
+  const ctx = { ...createContext(), isIdle: () => false };
+  const options = { herdr, artifactRoot, pollIntervalMs: 5, env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" } };
+  installHerdrSubagent(first.pi as any, options);
+  t.after(async () => { await first.handlers.get("session_shutdown")![0]({}, ctx); });
+  const started = await first.tools.get("subagent").execute(
+    "launch", { name: "Pending review", task: "Review." }, undefined, undefined, ctx,
+  );
+  const request = herdr.createRequests[0] as any;
+  writeFileSync(request.env.PI_HERDR_SUBAGENT_RESULT_FILE, JSON.stringify({
+    schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN,
+    status: "completed", output: "Saved pending report.",
+  }));
+  await waitFor(() => herdr.closedTabs.length === 1);
+  const manifest = () => JSON.parse(readFileSync(join(artifactRoot, started.details.id, "task.json"), "utf8"));
+  assert.equal(manifest().delivered, false);
+  assert.deepEqual(first.messages, []);
+  return { first, ctx, options, id: started.details.id, manifest };
+}
+
+test("a busy parent receives an uncollected Result at the next turn, before its run settles", async (t) => {
+  const { first, ctx, id } = await pendingResultHarness(t);
+  const turnEnd = first.handlers.get("turn_end")?.[0];
+  assert.ok(turnEnd, "automatic delivery must not wait for the whole run to settle");
+  const event = { outcome: "completed", message: { stopReason: "toolUse" }, toolResults: [] };
+  assert.deepEqual(await turnEnd(event, ctx), { continue: true });
+  assert.equal(first.messages.length, 1);
+  assert.match((first.messages[0] as any).message.content, /Saved pending report/);
+  assert.equal((first.messages[0] as any).options.triggerTurn, false, "append context, not a deferred follow-up turn");
+
+  // Retrieval remains available, but cannot cause another automatic delivery.
+  const result = await first.tools.get("subagent_wait").execute("retrieve", { id });
+  assert.match(result.content[0].text, /Saved pending report/);
+  assert.equal(await turnEnd(event, ctx), undefined);
+  assert.equal(await first.handlers.get("agent_before_settle")![0]({ outcome: "completed" }, ctx), undefined);
+  assert.equal(first.messages.length, 1);
+});
+
+test("a pending Result survives reload and a late wait suppresses restored automatic delivery", async (t) => {
+  const { first, ctx, options, id, manifest } = await pendingResultHarness(t);
+  await first.handlers.get("session_shutdown")![0]({}, ctx);
+  const restored = createPiHarness();
+  installHerdrSubagent(restored.pi as any, options);
+  await restored.handlers.get("session_start")![0]({}, ctx);
+  assert.deepEqual(restored.messages, []);
+  assert.equal(manifest().delivered, false);
+  const result = await restored.tools.get("subagent_wait").execute("late-wait", { id });
+  assert.match(result.content[0].text, /Saved pending report/);
+  assert.equal(manifest().delivered, true);
+  assert.equal(await restored.handlers.get("turn_end")![0]({ outcome: "completed" }, ctx), undefined);
+  assert.equal(await restored.handlers.get("agent_before_settle")![0]({ outcome: "completed" }, ctx), undefined);
+  assert.deepEqual(restored.messages, []);
+});
+
+test("a pending Result is not delivered on another branch, but remains available to its owner", async (t) => {
+  const { first, ctx, id } = await pendingResultHarness(t);
+  const other = { ...ctx, sessionManager: { ...ctx.sessionManager, getBranch: () => [{ id: "other-branch" }] } };
+  await first.handlers.get("session_tree")![0]({}, other);
+  assert.equal(await first.handlers.get("turn_end")![0]({ outcome: "completed" }, other), undefined);
+  assert.equal(await first.handlers.get("agent_before_settle")![0]({ outcome: "completed" }, other), undefined);
+  await assert.rejects(first.tools.get("subagent_wait").execute("foreign", { id }), /another conversation branch/);
+  assert.deepEqual(first.messages, []);
+  await first.handlers.get("session_tree")![0]({}, ctx);
+  assert.deepEqual(await first.handlers.get("agent_before_settle")![0]({ outcome: "completed" }, ctx), { continue: true });
+  assert.equal(first.messages.length, 1);
+});
+
+for (const outcome of ["aborted", "error"]) {
+  test(`${outcome} settlement preserves pending Results without restarting the agent`, async (t) => {
+    const { first, ctx, manifest } = await pendingResultHarness(t);
+    const boundary = first.handlers.get("agent_before_settle")![0];
+    assert.equal(await first.handlers.get("turn_end")![0]({ outcome }, ctx), undefined);
+    assert.equal(await boundary({ outcome }, ctx), undefined);
+    ctx.isIdle = () => true;
+    await first.handlers.get("agent_settled")![0]({ aborted: outcome === "aborted" }, ctx);
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    assert.deepEqual(first.messages, []);
+    assert.equal(manifest().delivered, false);
+    ctx.isIdle = () => false;
+    assert.deepEqual(await boundary({ outcome: "completed" }, ctx), { continue: true });
+    assert.equal(first.messages.length, 1);
+  });
+}
+
+test("aborting during tools does not deliver pending Results at their completed assistant turn boundary", async (t) => {
+  const { first, ctx, id } = await pendingResultHarness(t);
+  // Pi derives outcome from the assistant's stopReason. If cancellation happens
+  // during its tools, the assistant can still have stopReason=toolUse.
+  const abortedContext = { ...ctx, signal: AbortSignal.abort() };
+  assert.equal(await first.handlers.get("turn_end")![0]({ outcome: "completed" }, abortedContext), undefined);
+  assert.deepEqual(first.messages, []);
+  const result = await first.tools.get("subagent_wait").execute("retrieve", { id });
+  assert.match(result.content[0].text, /Saved pending report/);
+});
+
+test("pending Results drain when manual compaction returns idle without agent settlement events", async (t) => {
+  const { first, ctx, manifest } = await pendingResultHarness(t);
+  // Both successful and failed manual compaction clear isIdle without an agent
+  // settlement event. Delivery must not depend on one being emitted.
+  ctx.isIdle = () => true;
+  await waitFor(() => first.messages.length === 1);
+  assert.equal((first.messages[0] as any).options.triggerTurn, true);
+  assert.equal(manifest().delivered, true);
+  await new Promise((resolve) => setTimeout(resolve, 25));
+  assert.equal(first.messages.length, 1);
+});
+
+test("an idle parent is woken by a Result even when another child is still working", async (t) => {
+  const artifactRoot = mkdtempSync(join(tmpdir(), "herdr-idle-result-"));
+  t.after(() => rmSync(artifactRoot, { recursive: true, force: true }));
+  const harness = createPiHarness();
+  const herdr = new FakeHerdr();
+  const ctx = { ...createContext(), isIdle: () => false };
+  installHerdrSubagent(harness.pi as any, {
+    herdr, artifactRoot, pollIntervalMs: 5,
+    env: { HERDR_ENV: "1", HERDR_WORKSPACE_ID: "w1" },
+  });
+  t.after(async () => { await harness.handlers.get("session_shutdown")![0]({}, ctx); });
+  for (const name of ["Quick review", "Long review"]) {
+    await harness.tools.get("subagent").execute("launch", { name, task: "Review." }, undefined, undefined, ctx);
+  }
+  ctx.isIdle = () => true;
+  const request = herdr.createRequests[0] as any;
+  writeFileSync(request.env.PI_HERDR_SUBAGENT_RESULT_FILE, JSON.stringify({
+    schemaVersion: 1, token: request.env.PI_HERDR_SUBAGENT_TOKEN,
+    status: "completed", output: "Quick report.",
+  }));
+  await waitFor(() => harness.messages.length === 1);
+  assert.equal((harness.messages[0] as any).options.triggerTurn, true, "a slow sibling must not delay the idle parent's response");
+});
+
+test("idle settlement delivers a Result that missed the last pre-settlement checkpoint", async (t) => {
+  const { first, ctx, manifest } = await pendingResultHarness(t);
+  ctx.isIdle = () => true;
+  await first.handlers.get("agent_settled")![0]({ aborted: false }, ctx);
+  assert.equal(first.messages.length, 1);
+  assert.equal((first.messages[0] as any).options.triggerTurn, true);
+  assert.equal(manifest().delivered, true);
+  await first.handlers.get("agent_settled")![0]({ aborted: false }, ctx);
+  assert.equal(first.messages.length, 1);
 });
 
 async function completedTaskHarness(t: test.TestContext, interactive = false, output = "Durable report.", status = "completed", closeGate?: Promise<void>) {

@@ -3,12 +3,16 @@
 A Task's completion, Result delivery, and tab cleanup are separate events.
 
 - `finish_task` saves the child's final Result.
-- An active `subagent_wait` claims that Result. Otherwise the parent receives an automatic follow-up, which Pi may queue before saving it to the transcript.
+- An active `subagent_wait` claims that Result. If the child finishes while the parent is busy, its Result stays pending in the extension instead of entering Pi's follow-up queue. A later `subagent_wait` collects it and suppresses automatic delivery.
+- At the next `turn_end`, after all tools in that turn return, still-uncollected Results are appended together for the next model request. They do not wait for the parent’s entire run to finish or interrupt an executing tool. `agent_before_settle` catches completions arriving after the last turn boundary.
+- An idle parent is automatically woken with an available Result, even if another child is still working. Explicit waiting is for synchronizing dependent work, not a requirement for automatic reporting. Pending Results survive reload and remain restricted to their owning conversation branch.
 - Successful autonomous tabs close automatically. Interactive, failed, and cancelled tabs remain available for review.
 - `subagent_wait` also retrieves saved terminal Results. It works after automatic delivery, explicit close, and parent reload or restart. Repeated retrieval does not enqueue another follow-up.
 - `subagent_close` closes a terminal tab, not its Result. Closing an already-cleaned Task succeeds without contacting Herdr. An active Task must finish or be cancelled first.
 
 Results report whether cleanup is automatic, required, or already complete. If automatic cleanup fails, a later wait reports that explicit cleanup is required.
+
+A pending-result idle check also handles manual compaction, which can return idle without an agent-settled event. Aborted or failed runs keep pending Results without automatically restarting the parent; a later run, explicit wait, or session restoration can collect them. The idle check stops when no Results remain pending or the session shuts down.
 
 ## Storage and ownership
 
@@ -53,6 +57,6 @@ Run from the dotfiles repository root:
 tsx --test tests/*.test.ts
 ```
 
-The tests cover late waits, queued-but-not-recorded delivery followed by restart, repeat retrieval, terminal close, concurrent automatic/explicit cleanup, branch and session ownership, cancelled Tasks, large reports, and recovery of pre-fix transcript Results. Retention tests use temporary stores and controlled timestamps to exercise expiry, preview, configuration, ownership checks, and protection of unrelated histories.
+The tests cover completion while the parent is busy followed by a late wait, automatic next-turn delivery and batching, no redelivery after subsequent retrieval or final settlement, pending Results across reload/branch changes/abort, idle wake-up while other children are still working, legacy queued-but-not-recorded delivery followed by restart, repeat retrieval, terminal close, concurrent automatic/explicit cleanup, branch and session ownership, cancelled Tasks, large reports, and recovery of pre-fix transcript Results. Retention tests use temporary stores and controlled timestamps to exercise expiry, preview, configuration, ownership checks, and protection of unrelated histories.
 
 Canonical issue: [dotfiles #8](https://github.com/jeffhertzler/dotfiles/issues/8). The linked papercut IDs are reproduction history, not separate fixes.
