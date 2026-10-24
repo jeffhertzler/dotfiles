@@ -97,3 +97,24 @@ test("ignores non-bash tools", async () => {
 
 	assert.deepEqual(calls, []);
 });
+
+test("records structured and bracketed failure statuses from the bundled hook", async () => {
+	for (const [result, expected] of [
+		[{ details: { exitCode: 9 } }, "9"],
+		[{ details: { timedOut: true, exitCode: 1 } }, "124"],
+		[{ content: [{ type: "text", text: "[Command cancelled] by user" }] }, "130"],
+		[{ content: [{ type: "text", text: "[Command aborted]" }] }, "130"],
+		[{ content: [{ type: "text", text: "[Command timed out]" }] }, "124"],
+		[{ content: [{ type: "text", text: "Command timed out after 5 seconds" }] }, "124"],
+	] as const) {
+		const { calls, handlers } = createHarness();
+		const context = { cwd: "/repo" };
+		await handlers.get("tool_call")?.[0]?.(
+			{ toolName: "bash", toolCallId: "failure", input: { command: "test" } }, context,
+		);
+		await handlers.get("tool_execution_end")?.[0]?.(
+			{ toolCallId: "failure", isError: true, result }, context,
+		);
+		assert.deepEqual(calls[1].args, ["history", "end", "history-id", "--exit", expected]);
+	}
+});
