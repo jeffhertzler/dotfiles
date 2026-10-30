@@ -19,6 +19,11 @@
     "npm:pi-herdr-sudo-task",
     "npm:pi-blackhole"
   ],
+  "litellm": {
+    "mcp": {
+      "enabled": false
+    }
+  },
   "piBolt": {
     "packages": [],
     "packagesOverlay": true
