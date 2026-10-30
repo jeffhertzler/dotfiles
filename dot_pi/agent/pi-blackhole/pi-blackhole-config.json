@@ -6,6 +6,7 @@
   "skipForProviders": [],
   "tailBehavior": "pi-default",
   "midRunCompaction": "off",
+  "showPreCompactionMessage": false,
   "observeAfterTokens": 20000,
   "reflectAfterTokens": 40000,
   "compactAfterTokens": 180000,
