@@ -1,5 +1,6 @@
 {{- $profile := includeTemplate "profile" . | trim -}}
 [settings]
+self_update.auto = true
 idiomatic_version_file_enable_tools = ["java", "node", "python"]
 {{ if eq $profile "arch" -}}
 system_packages.managers = ["pacman"]
