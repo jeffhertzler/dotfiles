@@ -79,4 +79,9 @@ state="$tmp/codediff.json"
 make_file "$file"
 run_case codediff "$state" "$file" 30
 
+# A real attached screen catches redraw failures that headless cases cannot.
+AGENT_REVIEW_PLUGIN_ROOT="$plugin_root" \
+  timeout 20s "${NVIM_TEST_PYTHON:-pynvim-python}" \
+    "$tests_root/feedback_redraw_test.py" "$plugin_root" "$tmp/feedback-redraw"
+
 printf '\nAll agent-review tests passed.\n'

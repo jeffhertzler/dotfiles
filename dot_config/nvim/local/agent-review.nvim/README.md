@@ -188,6 +188,29 @@ original submit-and-quit and discard-on-quit behavior.
 Combining response and active-session code feedback in one Pi draft remains a
 separate plan in [`FEEDBACK_V1_1.md`](./FEEDBACK_V1_1.md).
 
+### Neovim nightly compatibility
+
+On Neovim 0.13 nightlies, feedback windows temporarily disable word-boundary
+wrapping (`linebreak`) while keeping wrapping and Markdown conceal enabled.
+Neovim commit `6b98b23694` introduced a redraw regression when concealed text
+and comment virtual lines below EOF are visible together: `E315: ml_get: Invalid
+lnum`. This window-local workaround avoids the error without changing response
+text, annotations, or submission behavior. Restore `linebreak` after the upstream
+EOF conceal regression is fixed and the screen regression test passes.
+
+**Removal follow-up (last checked 2026-11-03):** installed `7437121ea3` is affected;
+latest published nightly `6332ba64fe` is eight commits ahead, with no relevant fix
+and no changes to `src/nvim/drawline.c`. No upstream report was filed. Revisit after
+a Neovim upgrade; the historical issue [#17816](https://github.com/neovim/neovim/issues/17816)
+is similar but was fixed in 2022 and does not track this regression.
+
+To verify removal, temporarily restore `vim.wo[win].linebreak = true` in
+`lua/agent_review/feedback.lua`, then run `bash tests/run.sh` from this plugin's
+directory. The embedded-screen test must pass **without the workaround**, including
+reopening and restoring a saved EOF comment; passing with `linebreak` disabled
+is not evidence of an upstream fix. Once verified, remove the version guard and
+update the wrapping expectations in `tests/cases/feedback_shared.lua` and this note.
+
 ## Sessions and persistence
 
 Each repository or plain-file workspace has one active named session. Normal
@@ -270,6 +293,16 @@ require("agent_review.rpc").dispatch(request)
 ```
 
 RPC wire schema is v1; persistence schema is v2.
+
+## Tests
+
+```sh
+bash dot_config/nvim/local/agent-review.nvim/tests/run.sh
+```
+
+The suite includes an embedded-screen feedback regression test. It uses the
+Mise-managed `pynvim-python` provider (`NVIM_TEST_PYTHON` can override the Python
+executable) so real redraw failures are tested, not just headless API calls.
 
 ## Current limitations
 

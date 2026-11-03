@@ -309,9 +309,14 @@ function M.attach(opts)
   vim.bo[bufnr].swapfile = false
   vim.bo[bufnr].modifiable = false
   vim.bo[bufnr].readonly = true
+  local version = vim.version()
+  -- TODO(neovim-0.13): Restore word-boundary wrapping after the EOF conceal
+  -- regression introduced by 6b98b23694 is fixed upstream. With linebreak,
+  -- conceal and virt_lines below EOF, redraw reads line_count + 1 (E315).
+  local eof_conceal_bug = version.major == 0 and version.minor == 13 and version.prerelease ~= nil
   for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
     vim.wo[win].wrap = true
-    vim.wo[win].linebreak = true
+    vim.wo[win].linebreak = not eof_conceal_bug
   end
 
   local target = require("agent_review.target").context_for_buffer(bufnr)
