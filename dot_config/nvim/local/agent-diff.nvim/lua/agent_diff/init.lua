@@ -10,6 +10,7 @@ local config = {
   live_timeout_ms = 100,
   initial_timeout_ms = 500,
   default_revision = "HEAD",
+  ignore_trim_whitespace = true,
 }
 local active
 local initialized = false
@@ -57,7 +58,7 @@ local function compute(session, timeout)
   local ok, result = pcall(require("codediff.core.diff").compute_diff, session.original_lines, session.modified_lines, {
     max_computation_time_ms = timeout,
     compute_moves = false,
-    ignore_trim_whitespace = false,
+    ignore_trim_whitespace = session.ignore_trim_whitespace,
   })
   if not ok then
     notify(result, vim.log.levels.ERROR)
@@ -203,7 +204,7 @@ local function start_autocmds(session)
 end
 
 function M.open(opts)
-  opts = opts or {}
+  opts = vim.tbl_extend("keep", opts or {}, { ignore_trim_whitespace = config.ignore_trim_whitespace })
   local bufnr = opts.bufnr or vim.api.nvim_get_current_buf()
   local context, err = git.context(bufnr)
   if not context then
@@ -235,6 +236,7 @@ function M.open(opts)
     root = context.root,
     path = context.relative_path,
     layout = opts.layout or "inline",
+    ignore_trim_whitespace = opts.ignore_trim_whitespace,
     generation = 1,
   }
   active = session
@@ -429,10 +431,26 @@ function M.get_session(bufnr)
 end
 
 function M.open_changeset(opts)
+  opts = vim.tbl_extend("keep", opts or {}, { ignore_trim_whitespace = config.ignore_trim_whitespace })
   if active then
     M.close()
   end
   return changeset().open(opts)
+end
+
+function M.toggle_whitespace()
+  local session = M.get_session()
+  if not session then
+    notify("Open an Agent Diff first")
+    return
+  end
+  if session.kind == "changeset" then
+    changeset().toggle_whitespace()
+  else
+    session.ignore_trim_whitespace = not session.ignore_trim_whitespace
+    compute(session, config.initial_timeout_ms)
+  end
+  notify(session.ignore_trim_whitespace and "Ignoring leading/trailing whitespace changes" or "Showing whitespace changes")
 end
 
 function M.next_file()
@@ -465,9 +483,10 @@ function M.toggle_sidebar()
       modified_revision = "WORKING",
       layout = session.layout,
       explorer = true,
+      ignore_trim_whitespace = session.ignore_trim_whitespace,
     }
     M.close()
-    changeset().open(opts)
+    M.open_changeset(opts)
   end
   local codediff_git = require("codediff.core.git")
   if session.revision == "INDEX" then
@@ -509,6 +528,9 @@ function M.setup(opts)
   end, { nargs = "?", desc = "Toggle a side-by-side Agent Diff" })
   vim.api.nvim_create_user_command("AgentDiffToggle", M.toggle, { desc = "Switch Agent Diff layout" })
   vim.api.nvim_create_user_command("AgentDiffClose", M.close, { desc = "Close Agent Diff" })
+  vim.api.nvim_create_user_command("AgentDiffWhitespace", M.toggle_whitespace, {
+    desc = "Toggle whitespace changes in the active diff",
+  })
   vim.api.nvim_create_user_command("AgentDiffRefresh", function()
     M.refresh({ reload = true })
   end, { desc = "Reload and refresh Agent Diff" })

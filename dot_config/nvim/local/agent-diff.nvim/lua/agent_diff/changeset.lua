@@ -144,6 +144,7 @@ local function compute(session, timeout)
   local ok, result = pcall(require("codediff.core.diff").compute_diff, session.original_lines, session.modified_lines, {
     max_computation_time_ms = timeout or 100,
     compute_moves = false,
+    ignore_trim_whitespace = session.ignore_trim_whitespace,
   })
   if not ok then
     vim.notify(result, vim.log.levels.ERROR, { title = "Agent Diff" })
@@ -360,6 +361,13 @@ function M.select(index)
   end)
 end
 
+function M.toggle_whitespace()
+  if active then
+    active.ignore_trim_whitespace = not active.ignore_trim_whitespace
+    compute(active, 500)
+  end
+end
+
 function M.next_file()
   if active then
     M.select(active.index + 1)
@@ -500,6 +508,7 @@ function M.open(opts)
     modified_revision = opts.modified_revision,
     revision = opts.original_revision,
     layout = opts.layout or "inline",
+    ignore_trim_whitespace = opts.ignore_trim_whitespace ~= false,
     host_win = host_win,
     modified_win = host_win,
     return_buf = return_buf,

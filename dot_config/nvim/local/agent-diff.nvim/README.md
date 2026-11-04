@@ -10,10 +10,20 @@ CodeDiff's tab-based UI.
 - Repeating the active mode's command closes the diff.
 - `:AgentDiffToggle` switches an active diff between layouts.
 - `:AgentDiffRefresh` reloads the baseline and recomputes the diff.
+- `:AgentDiffWhitespace` or `<leader>gW` toggles whitespace changes in the active diff.
 - `:AgentDiffClose` clears the view.
 - `:AgentPatch` or `<leader>gw` toggles the current file's patch workspace.
 
 `HEAD` is the default baseline. `INDEX` compares against the Git index.
+
+Single-file and changeset views ignore leading/trailing whitespace changes by
+default, hiding indentation-only and trailing-space noise. Whitespace inside a
+line remains significant. `:AgentDiffWhitespace` shows whitespace changes for
+the active view; repeat it to ignore them again. The choice survives layout and
+file switches, but new views start with the configured default. Set
+`ignore_trim_whitespace = false` in `setup()` to change that default, or pass it
+to `open()` / `open_changeset()` for one view. This affects diff rendering only:
+file contents, patch workspaces, and canonical staging/reset hunks are unchanged.
 
 ## Changesets and files
 

@@ -39,6 +39,13 @@ return {
         end,
         desc = "Git Patch Workspace",
       },
+      {
+        "<leader>gW",
+        function()
+          require("agent_diff").toggle_whitespace()
+        end,
+        desc = "Git Diff Toggle Whitespace",
+      },
     },
   },
   {

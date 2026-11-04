@@ -52,6 +52,7 @@ function M.diff()
     "<leader>gw   Toggle patch workspace",
     "<leader>b    Toggle changed-files sidebar",
     "[f / ]f      Previous / next changed file",
+    "<leader>gW   Toggle whitespace changes",
     "<leader>ra   Add review annotation",
     "?            Show or close this help",
   })
