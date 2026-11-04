@@ -74,6 +74,11 @@ grep -Ev '^\s*(#|$)' packages/arch-aur.txt |
   xargs yay -S --needed --
 ```
 
+On the NVIDIA gaming workstation, separately activate the narrow
+[Pacman → gaming Flatpak GL hook](arch/README.md) so host driver upgrades also
+prepare the exact loaded and installed NVIDIA runtime versions. This is an
+explicit root-owned installation, not a Chezmoi apply step.
+
 The Mise declarations restore the user-facing remote development layer, not a
 bare-metal Arch installation or every project-specific AUR package. The AUR
 list contains only the 1Password CLI needed for optional secret bootstrap.

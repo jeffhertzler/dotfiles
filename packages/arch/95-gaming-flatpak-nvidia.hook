@@ -1,0 +1,13 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = nvidia-580xx-utils
+
+[Action]
+Description = Ensure gaming Flatpak GL runtimes for installed and loaded NVIDIA drivers
+When = PostTransaction
+Depends = python
+Depends = flatpak
+Depends = coreutils
+Exec = /usr/bin/python3 -I /usr/local/libexec/gaming-flatpak-nvidia --sync
