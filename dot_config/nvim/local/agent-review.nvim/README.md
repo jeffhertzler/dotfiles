@@ -92,6 +92,11 @@ code windows or other reader tabs. Replies are fixed, read-only Markdown snapsho
 replies update the catalogue and winbar indicator, never your text or cursor.
 Reading and closing send nothing.
 
+Response snapshots are listed, read-only buffers: use the normal buffer picker,
+`:buffer`, or `:bnext` to return after viewing code. `/feedback` restores the
+selected response even if its old window now displays a code file. Neither normal
+buffer navigation nor `/feedback` clears code annotations or response drafts.
+
 | Key | Reader action |
 | --- | --- |
 | `<leader>rmb` / `<leader>rmn` | Older / newer reply |
@@ -165,8 +170,9 @@ require('agent_review.feedback_reader').remote({
 
 - `open` creates or focuses the catalogue's owned tab. An optional draft path
   selects that message; otherwise an existing reader keeps its selection.
-- `focus` targets an existing reader. If its view closed but a failed save left
-  drafts protected in memory, it restores that reader's tab for recovery.
+- `focus` restores the existing reader's selected response, preferring a split
+  already displaying it over replacing a code split. If its view closed but a
+  failed save left drafts protected in memory, it restores that reader's tab for recovery.
 - `status` is read-only: no focus, refresh, loading of drafts, or scheduled work.
 
 Success returns `{ ok = true, open = true/false }`, with optional `paneId` and

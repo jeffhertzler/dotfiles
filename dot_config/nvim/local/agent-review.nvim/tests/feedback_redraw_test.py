@@ -62,6 +62,13 @@ try:
         -- Reopen the persisted EOF comment through the real /feedback path.
         local reopened = reader.remote(request)
         if not reopened.ok then return reopened end
+        local response = vim.api.nvim_get_current_buf()
+        vim.cmd('enew')
+        assert(vim.api.nvim_get_current_buf() ~= response)
+        local focused = reader.remote({action='focus', cataloguePath=catalogue})
+        assert(focused.ok, focused.error)
+        assert(vim.api.nvim_get_current_buf() == response, '/feedback did not restore the hidden response')
+        assert(vim.bo[response].buflisted, 'response must be listed for normal buffer navigation')
         vim.cmd('redrawstatus')
         vim.cmd('redraw!')
         assert(vim.api.nvim_buf_line_count(0) == 29)

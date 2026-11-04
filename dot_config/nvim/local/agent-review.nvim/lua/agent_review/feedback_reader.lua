@@ -184,6 +184,21 @@ function M.owns_tab(tab)
   return M.is_open() and tabpage == tab
 end
 
+local function focus_window(id)
+  if not M.is_open() then return false end
+  -- The original window can now show code. Prefer an existing response split
+  -- before restoring the response into the reader's remembered window.
+  for _, win in ipairs(vim.api.nvim_tabpage_list_wins(tabpage)) do
+    if buffers[vim.api.nvim_win_get_buf(win)] == id then
+      window = win
+      break
+    end
+  end
+  vim.api.nvim_set_current_tabpage(tabpage)
+  vim.api.nvim_set_current_win(window)
+  return true
+end
+
 function M.focus(state_path)
   if not M.is_open() then return false end
   if state_path then
@@ -192,8 +207,10 @@ function M.focus(state_path)
     end
     return false, "Requested feedback draft is not in this catalogue"
   end
-  vim.api.nvim_set_current_tabpage(tabpage)
-  vim.api.nvim_set_current_win(window)
+  if not focus_window(current) then return false end
+  if buffers[vim.api.nvim_get_current_buf()] ~= current then
+    return M.select(current)
+  end
   return true
 end
 
@@ -212,7 +229,7 @@ function M.select(id)
   if not entry then
     return false
   end
-  if not M.focus() then return false end
+  if not focus_window(id) then return false end
   local previous = vim.api.nvim_get_current_buf()
   if buffers[previous] then
     views[buffers[previous]] = vim.fn.winsaveview()
@@ -223,6 +240,7 @@ function M.select(id)
   vim.b[bufnr].pi_feedback_disable_lint = true
   vim.fn.bufload(bufnr)
   vim.bo[bufnr].bufhidden = "hide"
+  vim.bo[bufnr].buflisted = true
   vim.bo[bufnr].autoread = false
   vim.api.nvim_set_current_buf(bufnr)
   local ok = require("agent_review.feedback").attach({ bufnr = bufnr, metadata_path = entry.metadataPath })
@@ -404,6 +422,14 @@ function M.open(opts)
   local previous_tab = vim.api.nvim_get_current_tabpage()
   if not was_open then
     if shared then vim.cmd("tabnew") end
+    -- Only discard the empty placeholder created for a new reader tab or by
+    -- its dedicated launcher. Never wipe an existing user buffer.
+    if (shared or vim.env.PI_FEEDBACK_CATALOG == catalog_path)
+      and vim.api.nvim_buf_get_name(0) == "" and vim.bo.buftype == "" and not vim.bo.modified
+      and vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), { "" }) then
+      vim.bo.bufhidden = "wipe"
+      vim.bo.buflisted = false
+    end
     tabpage = vim.api.nvim_get_current_tabpage()
     window = vim.api.nvim_get_current_win()
   end

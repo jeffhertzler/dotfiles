@@ -68,15 +68,100 @@ async function harness(t: test.TestContext) {
     setTimeout: () => { timeout = true; }, failFocus: () => { focusError = true; }, failList: () => { listError = true; } };
 }
 
-test("standalone readers use the same exact-pane focus even outside the calling tab", async (t) => {
+for (const legacy of [true, false]) {
+  test(`dedicated pane focus restores its response through RPC after switching to code (${legacy ? "legacy" : "catalogue-bound"} handle)`, async (t) => {
+    const h = await harness(t);
+    const server = h.editor("dedicated", "w1:t2", { dedicated: true, cataloguePath: h.request.cataloguePath });
+    const pane = h.panes[0];
+    const handle: PaneReaderHandle = JSON.parse(JSON.stringify({ paneId: pane.pane_id, terminalId: pane.terminal_id,
+      socketPath: h.env.HERDR_SOCKET_PATH, ...(!legacy ? { cataloguePath: h.request.cataloguePath } : {}) }));
+    h.openReaders.add(`${server}:${h.request.cataloguePath}`);
+    const reader = createFeedbackReader(h.pi, h.env);
+    assert.equal(await reader.isOpen(handle), true, "a code buffer does not close the owned reader pane");
+    await reader.focus(handle);
+    assert.deepEqual(h.calls.filter(call => call.request).map(call => call.request), [
+      { action: "focus", cataloguePath: h.request.cataloguePath },
+    ], "pane focus alone cannot restore the response buffer; focus the existing reader, never reopen/reset it");
+    assert.deepEqual(h.focusRequests.map(request => [request.method, request.params]), [
+      ["pane.focus", { pane_id: pane.pane_id }],
+    ]);
+    assert.ok(h.calls.filter(call => call.command === "nvim").every(call => call.args.includes(server)), "only the exact pane's registered server is contacted");
+    assert.ok(h.calls.filter(call => call.command === "herdr").every(call => call.args[1] === "get"), "no neighbour search or launch");
+    h.failFocus();
+    await assert.rejects(reader.focus(handle), /Focus failed/);
+  });
+}
+
+for (const failure of ["terminal", "pane", "session", "missing-registry", "empty-registry", "dead-server", "foreign-editor", "foreign-socket",
+  "shared-editor", "missing-catalogue", "relative-catalogue", "unnormalized-catalogue", "different-catalogue", "old-plugin", "timeout",
+  "rpc-error", "rpc-rejected", "closed-reader"]) {
+  test(`dedicated focus fails closed without editor takeover or plain pane focus: ${failure}`, async (t) => {
+    const h = await harness(t);
+    const patch = failure === "foreign-editor" ? { paneId: "w1:other" }
+      : failure === "foreign-socket" ? { socketPath: "/foreign.sock" }
+      : failure === "shared-editor" ? { dedicated: false }
+      : failure === "missing-catalogue" ? { cataloguePath: undefined }
+      : failure === "relative-catalogue" ? { cataloguePath: "relative.json" }
+      : failure === "unnormalized-catalogue" ? { cataloguePath: "/tmp/../catalogue.json" }
+      : failure === "different-catalogue" ? { cataloguePath: "/another/catalogue.json" }
+      : failure === "old-plugin" ? { version: 0 } : {};
+    const server = h.editor("dedicated", "w1:t2", { dedicated: true, cataloguePath: h.request.cataloguePath, ...patch });
+    const pane = h.panes[0];
+    const handle: PaneReaderHandle = { kind: "pane", paneId: pane.pane_id, terminalId: pane.terminal_id,
+      socketPath: h.env.HERDR_SOCKET_PATH, cataloguePath: h.request.cataloguePath };
+    h.openReaders.add(`${server}:${h.request.cataloguePath}`);
+    // Even explicit/shared editor hints must not redirect an owned reader.
+    h.env.NVIM_SERVER = h.editor("other");
+    const registryFile = join(h.env.XDG_RUNTIME_DIR, "herdr-nvim", "w1_dedicated.server");
+    if (failure === "terminal") pane.terminal_id = "replacement-terminal";
+    if (failure === "pane") pane.pane_id = "w1:replaced";
+    if (failure === "session") h.env.HERDR_SOCKET_PATH = "/another-session.sock";
+    if (failure === "missing-registry") rmSync(registryFile);
+    if (failure === "empty-registry") writeFileSync(registryFile, "\n");
+    if (failure === "dead-server") h.editors.delete(server);
+    if (failure === "timeout") h.setTimeout();
+    if (failure === "rpc-error") h.fail("focus");
+    if (failure === "rpc-rejected") h.invalid("focus");
+    if (failure === "closed-reader") h.openReaders.clear();
+    const reader = createHerdrFeedbackReader(h.pi, h.env);
+    await assert.rejects(reader.focus(handle));
+    assert.equal(h.focusRequests.length, 0, "never report success by merely focusing a pane");
+    assert.ok(h.calls.filter(call => call.command === "nvim").every(call => call.args.includes(server)));
+    assert.ok(h.calls.filter(call => call.command === "herdr").every(call => call.args[1] === "get"), "no competing editor/pane launch");
+    assert.ok(h.calls.filter(call => call.request).every(call => call.request.action === "focus"));
+    if (!["rpc-error", "rpc-rejected", "closed-reader"].includes(failure)) {
+      assert.equal(h.calls.filter(call => call.request).length, 0, "identity must be verified before mutating the reader");
+    }
+  });
+}
+
+test("legacy dedicated ownership remains conservative for clear, even when RPC discovery is unavailable", async (t) => {
   const h = await harness(t);
-  const standalone = createHerdrFeedbackReader(h.pi, h.env);
-  await standalone.focus(h.paneHandle);
-  assert.equal(h.focusRequests[0].method, "pane.focus");
-  assert.deepEqual(h.focusRequests[0].params, { pane_id: h.paneHandle.paneId });
-  assert.equal(h.calls.length, 0, "no directional neighbour search");
-  h.failFocus();
-  await assert.rejects(standalone.focus(h.paneHandle), /Focus failed/);
+  h.panes.push({ pane_id: h.paneHandle.paneId, terminal_id: h.paneHandle.terminalId });
+  const reader = createHerdrFeedbackReader(h.pi, h.env);
+  assert.equal(await reader.isOpen(h.paneHandle), true, "missing registry cannot authorize deleting drafts");
+  await assert.rejects(reader.focus(h.paneHandle), /not registered/);
+  assert.equal(await reader.isOpen(h.paneHandle), true);
+  h.panes[0].terminal_id = "replacement";
+  assert.equal(await reader.isOpen(h.paneHandle), false);
+});
+
+test("new dedicated launches persist catalogue identity, including uncertain launch failures", async () => {
+  let failed = false;
+  const pi: any = { async exec(_command: string, args: string[]) {
+    if (args[1] === "run" && failed) return { code: 1, stderr: "Response lost", stdout: "" };
+    return { code: 0, stderr: "", stdout: JSON.stringify({ result: args[1] === "split"
+      ? { pane: { pane_id: "w1:reader", terminal_id: "term-reader" } } : {} }) };
+  } };
+  const reader = createHerdrFeedbackReader(pi, { HERDR_ENV: "1", HERDR_PANE_ID: "w1:caller", HERDR_SOCKET_PATH: "/herdr.sock" });
+  const request = { cataloguePath: "/feedback/catalogue.json", feedbackStatePath: "/feedback/state.json", cwd: "/repo" };
+  const handle = await reader.open(request);
+  assert.deepEqual(handle, { paneId: "w1:reader", terminalId: "term-reader", socketPath: "/herdr.sock", cataloguePath: request.cataloguePath });
+  failed = true;
+  await assert.rejects(reader.open(request), (error: any) => {
+    assert.deepEqual(error.readerHandle, handle);
+    return /Response lost/.test(error.message);
+  });
 });
 
 test("reuses same-tab Neovim, passes paths as data, and focuses exact pane without a process/pane launch", async (t) => {

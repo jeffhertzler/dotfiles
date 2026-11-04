@@ -2,10 +2,11 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { createConnection } from "node:net";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join, normalize } from "node:path";
 
 export interface PaneReaderHandle {
   kind?: "pane"; // Unlabelled handles from the original launcher remain valid.
+  cataloguePath?: string; // Legacy launchers recover this from the verified dedicated editor.
   paneId: string;
   terminalId: string;
   socketPath: string;
@@ -91,6 +92,26 @@ export function createHerdrFeedbackReader(pi: Executor, env: Environment = proce
       if (handle.socketPath !== (env.HERDR_SOCKET_PATH ?? "")) {
         throw new Error("This feedback reader belongs to another Herdr session");
       }
+      const pane = (await herdr(pi, ["pane", "get", handle.paneId]))?.pane;
+      if (pane?.pane_id !== handle.paneId || pane?.terminal_id !== handle.terminalId) {
+        throw new Error("Feedback reader pane changed; switch to its editor manually");
+      }
+      // The registry is pane-specific. Never use NVIM_SERVER, a neighbour, or
+      // shared-editor discovery to recover an owned dedicated reader.
+      const server = registeredServer(env, handle.paneId);
+      if (!server) throw new Error("Feedback reader Neovim is not registered yet; run /feedback again");
+      const info = await nvim(pi, server, probe);
+      if (!info || info.paneId !== handle.paneId || info.socketPath !== handle.socketPath || info.dedicated !== true) {
+        throw new Error("Feedback reader Neovim identity changed; switch to its editor manually");
+      }
+      const cataloguePath = info.cataloguePath;
+      if (typeof cataloguePath !== "string" || !isAbsolute(cataloguePath) || cataloguePath.includes("\u0000") ||
+          normalize(cataloguePath) !== cataloguePath || (handle.cataloguePath !== undefined && handle.cataloguePath !== cataloguePath)) {
+        throw new Error("Feedback reader catalogue identity changed; switch to its editor manually");
+      }
+      if (info.version !== 1) throw new Error("Restart Neovim to load feedback context isolation");
+      const reply = await remote(pi, { kind: "nvim", server, cataloguePath }, "focus");
+      if (!reply?.open) throw new Error("Feedback reader closed before it could be focused; run /feedback again");
       await focusPane(handle.socketPath, handle.paneId);
     },
     async open(request) {
@@ -103,7 +124,8 @@ export function createHerdrFeedbackReader(pi: Executor, env: Environment = proce
       const created = await herdr(pi, ["pane", "split", "--current", "--direction", direction, "--cwd", request.cwd, "--focus"]);
       const pane = created?.pane;
       if (typeof pane?.pane_id !== "string" || typeof pane?.terminal_id !== "string") throw new Error("Herdr returned no reader pane identity");
-      const handle = { paneId: pane.pane_id, terminalId: pane.terminal_id, socketPath: env.HERDR_SOCKET_PATH ?? "" };
+      const handle: PaneReaderHandle = { paneId: pane.pane_id, terminalId: pane.terminal_id,
+        socketPath: env.HERDR_SOCKET_PATH ?? "", cataloguePath: request.cataloguePath };
       // Keep the standalone editor's unused normal context private too, without
       // aliasing any feedback context or the user's ordinary annotation store.
       const launch = ["env", `PI_FEEDBACK_CATALOG=${request.cataloguePath}`, `NVIM_AGENT_REVIEW_STATE=${join(dirname(request.cataloguePath), "reader-state.json")}`,
@@ -118,7 +140,12 @@ export function createHerdrFeedbackReader(pi: Executor, env: Environment = proce
 
 // Payloads are data, not interpolated Lua or Ex commands. Probe is read-only and
 // rejects editors with the pre-context-isolation plugin already loaded.
-const probe = `return {version=require('agent_review').feedback_context_version or 0, paneId=vim.env.HERDR_PANE_ID, socketPath=vim.env.HERDR_SOCKET_PATH, dedicated=vim.env.PI_FEEDBACK_CATALOG ~= nil}`;
+const probe = `return {version=require('agent_review').feedback_context_version or 0, paneId=vim.env.HERDR_PANE_ID, socketPath=vim.env.HERDR_SOCKET_PATH, dedicated=vim.env.PI_FEEDBACK_CATALOG ~= nil, cataloguePath=vim.env.PI_FEEDBACK_CATALOG}`;
+function registeredServer(env: Environment, paneId: string): string | undefined {
+  const registry = env.XDG_RUNTIME_DIR ? join(env.XDG_RUNTIME_DIR, "herdr-nvim") : `/tmp/herdr-nvim-${process.getuid?.()}`;
+  try { return readFileSync(join(registry, `${paneId.replace(/[^A-Za-z0-9_.-]/g, "_")}.server`), "utf8").split(/\r?\n/)[0] || undefined; }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }
+}
 function expression(lua: string): string {
   const encoded = Buffer.from(lua).toString("base64");
   return `luaeval("vim.json.encode(assert(loadstring(vim.base64.decode([[${encoded}]])))())")`;
@@ -146,7 +173,6 @@ async function remote(pi: Executor, handle: NvimReaderHandle, action: "open" | "
 export function createFeedbackReader(pi: Executor, env: Environment = process.env,
   options: { fallback?: FeedbackReader<PaneReaderHandle> } = {}): FeedbackReader {
   const fallback = options.fallback ?? createHerdrFeedbackReader(pi, env);
-  const registry = env.XDG_RUNTIME_DIR ? join(env.XDG_RUNTIME_DIR, "herdr-nvim") : `/tmp/herdr-nvim-${process.getuid?.()}`;
 
   function checkSession(handle: NvimReaderHandle) {
     if (handle.socketPath && handle.socketPath !== env.HERDR_SOCKET_PATH) throw new Error("Feedback reader belongs to another Herdr session");
@@ -177,9 +203,7 @@ export function createFeedbackReader(pi: Executor, env: Environment = process.en
     if (!Array.isArray(response?.panes)) throw new Error("Invalid Herdr workspace response; cannot safely choose an editor");
     const candidates = await Promise.all(response.panes.map(async (pane: any) => {
       if (pane.workspace_id !== env.HERDR_WORKSPACE_ID || typeof pane.pane_id !== "string" || typeof pane.terminal_id !== "string") return undefined;
-      let server: string;
-      try { server = readFileSync(join(registry, `${pane.pane_id.replace(/[^A-Za-z0-9_.-]/g, "_")}.server`), "utf8").split(/\r?\n/)[0]; }
-      catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined; throw error; }
+      const server = registeredServer(env, pane.pane_id);
       if (!server) return undefined;
       const info = await nvim(pi, server, probe);
       if (!info || info.dedicated || info.paneId !== pane.pane_id || info.socketPath !== env.HERDR_SOCKET_PATH) return undefined;
